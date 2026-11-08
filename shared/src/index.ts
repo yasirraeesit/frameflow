@@ -4,3 +4,8 @@ export * from './schemas/asset.schema.js';
 export * from './events/job.events.js';
 export * from './timeline/types.js';
 export * from './timeline/schema.js';
+export * from './commands/command.interface.js';
+export * from './commands/clip.commands.js';
+export * from './commands/track.commands.js';
+export * from './commands/composite.command.js';
+export * from './commands/history.js';
