@@ -1,4 +1,4 @@
-export type ExportPreset = '1080p_h264' | '720p_h264';
+export type { ExportPreset } from '../schemas/render.schema.js';
 
 export interface PresetConfig {
   width: number;
