@@ -1,7 +1,7 @@
-import { buildServer } from '../apps/api/src/server.js';
-import { startWorker } from '../apps/worker/src/index.js';
+import { buildServer } from '../server/api/src/server.js';
+import { startWorker } from '../server/worker/src/index.js';
 import { prisma } from '@frameflow/database';
-import { createWorkerS3Client, CONFIG } from '../apps/worker/src/config.js';
+import { createWorkerS3Client, CONFIG } from '../server/worker/src/config.js';
 import { HeadObjectCommand } from '@aws-sdk/client-s3';
 import { JobProgressEvent } from '@frameflow/shared';
 import fs from 'node:fs';
