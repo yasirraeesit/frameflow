@@ -30,3 +30,4 @@ export const JobProgressEventSchema = z.object({
 });
 
 export type JobProgressEvent = z.infer<typeof JobProgressEventSchema>;
+
