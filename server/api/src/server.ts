@@ -10,6 +10,7 @@ import { authRoutes } from './modules/auth/auth.routes.js';
 import { projectsRoutes } from './modules/projects/projects.routes.js';
 import { assetsRoutes } from './modules/assets/assets.routes.js';
 import { timelineRoutes } from './modules/timeline/timeline.routes.js';
+import { rendersRoutes } from './modules/renders/renders.routes.js';
 import { wsGatewayPlugin } from './ws/ws.gateway.js';
 
 // Global BigInt JSON serialization
@@ -60,6 +61,7 @@ export function buildServer(): FastifyInstance {
   server.register(projectsRoutes, { prefix: '/api/projects' });
   server.register(assetsRoutes, { prefix: '/api/projects' });
   server.register(timelineRoutes, { prefix: '/api/projects' });
+  server.register(rendersRoutes, { prefix: '/api/projects' });
 
   // WebSocket Gateway
   server.register(wsGatewayPlugin);
