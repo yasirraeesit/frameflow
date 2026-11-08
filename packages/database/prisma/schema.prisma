@@ -1,0 +1,140 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  passwordHash      String
+  name              String?
+  storageQuotaBytes BigInt    @default(10737418240) // 10 GB
+  usedStorageBytes  BigInt    @default(0)
+  projects          Project[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model Project {
+  id          String            @id @default(uuid())
+  title       String
+  description String?
+  ownerId     String
+  owner       User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  width       Int               @default(1920)
+  height      Int               @default(1080)
+  fps         Float             @default(30.0)
+  assets      Asset[]
+  timeline    Timeline?
+  renderJobs  RenderJob[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("projects")
+}
+
+enum AssetStatus {
+  QUEUED
+  PROCESSING
+  READY
+  FAILED
+}
+
+model Asset {
+  id                 String          @id @default(uuid())
+  projectId          String
+  project            Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  originalName       String
+  s3Key              String
+  mimeType           String
+  sizeBytes          BigInt
+  duration           Float?
+  width              Int?
+  height             Int?
+  fps                Float?
+  videoCodec         String?
+  audioCodec         String?
+  proxyKey           String?
+  thumbnailSpriteKey String?
+  status             AssetStatus     @default(QUEUED)
+  errorMessage       String?
+  scenes             SceneAnalysis[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@map("assets")
+}
+
+model Timeline {
+  id        String            @id @default(uuid())
+  projectId String            @unique
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  data      Json              // Serializable JSON timeline document: tracks, clips, transitions, markers
+  version   Int               @default(1)
+  versions  TimelineVersion[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@map("timelines")
+}
+
+model TimelineVersion {
+  id          String   @id @default(uuid())
+  timelineId  String
+  timeline    Timeline @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  version     Int
+  description String   // e.g. "Autosave", "AI assembly: 60s reel"
+  snapshot    Json
+  createdBy   String   // User ID or "AI_AGENT"
+  createdAt   DateTime @default(now())
+
+  @@unique([timelineId, version])
+  @@map("timeline_versions")
+}
+
+model SceneAnalysis {
+  id              String   @id @default(uuid())
+  assetId         String
+  asset           Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  startTime       Float
+  endTime         Float
+  label           String
+  description     String
+  transcript      String?
+  importanceScore Float    @default(0.0) // 0.0 - 1.0
+  tags            String[]
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  @@map("scene_analyses")
+}
+
+enum RenderStatus {
+  QUEUED
+  RENDERING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model RenderJob {
+  id           String       @id @default(uuid())
+  projectId    String
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  preset       String       // "1080p_h264", "720p_h264"
+  status       RenderStatus @default(QUEUED)
+  progress     Int          @default(0) // 0 - 100
+  outputS3Key  String?
+  errorMessage String?
+  createdAt    DateTime     @default(now())
+  completedAt  DateTime?
+
+  @@map("render_jobs")
+}
+
