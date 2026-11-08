@@ -8,9 +8,9 @@
 
 [![Version](https://img.shields.io/github/v/tag/yasirraeesit/frameflow?label=version&color=6366f1&style=flat-square)](https://github.com/yasirraeesit/frameflow/tags)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Strict_100%25-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Next.js 14](https://img.shields.io/badge/Next.js-14_App_Router-000000?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org/)
-[![Fastify](https://img.shields.io/badge/Fastify-v4_REST_%2B_WS-000000?style=flat-square&logo=fastify&logoColor=white)](https://www.fastify.io/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict_Mode-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Next.js 14](https://img.shields.io/badge/Next.js-14_App_Router-000000?style=flat-square&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![Fastify](https://img.shields.io/badge/Fastify-v4_REST_and_WS-000000?style=flat-square&logo=fastify&logoColor=white)](https://www.fastify.io/)
 [![BullMQ](https://img.shields.io/badge/BullMQ-Redis_Worker_Mesh-DC382D?style=flat-square&logo=redis&logoColor=white)](https://bullmq.io/)
 [![FFmpeg](https://img.shields.io/badge/FFmpeg-Hardware_Accelerated-007808?style=flat-square&logo=ffmpeg&logoColor=white)](https://ffmpeg.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Prisma_ORM-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
