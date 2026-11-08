@@ -161,6 +161,11 @@ describe('Timeline-to-FFmpeg Filtergraph Compiler', () => {
     assert.ok(result.filterComplex.includes('Welcome to FrameFlow'));
     assert.ok(result.filterComplex.includes('fontsize=48'));
     assert.ok(result.filterComplex.includes("enable='between(t,1,4)'"));
+
+    const resultWithFont = compileTimelineToFFmpeg(textTimeline, {}, '1080p_h264', {
+      fontFile: 'C:\\Windows\\Fonts\\arial.ttf',
+    });
+    assert.ok(resultWithFont.filterComplex.includes("fontfile='C\\:/Windows/Fonts/arial.ttf'"));
   });
 
   it('throws descriptive error if clip references an asset missing from assetPathMap', () => {

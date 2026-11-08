@@ -8,6 +8,10 @@ export interface PresetConfig {
   crf: number;
 }
 
+export interface CompilerOptions {
+  fontFile?: string;
+}
+
 export interface CompilerOutput {
   inputs: string[];
   filterComplex: string;

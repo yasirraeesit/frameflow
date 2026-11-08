@@ -18,6 +18,38 @@ export interface RenderJobPayload {
 export const s3 = createWorkerS3Client();
 export const redisPub = createRedisClient();
 
+export function resolveDefaultFontFile(): string | undefined {
+  const candidates: string[] = [];
+  if (process.platform === 'win32') {
+    const winDir = process.env.WINDIR || 'C:\\Windows';
+    candidates.push(
+      path.join(winDir, 'Fonts', 'arial.ttf'),
+      path.join(winDir, 'Fonts', 'segoeui.ttf'),
+      path.join(winDir, 'Fonts', 'tahoma.ttf')
+    );
+  } else if (process.platform === 'darwin') {
+    candidates.push(
+      '/System/Library/Fonts/Supplemental/Arial.ttf',
+      '/System/Library/Fonts/Helvetica.ttc'
+    );
+  } else {
+    // Linux
+    candidates.push(
+      '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+      '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+      '/usr/share/fonts/dejavu/DejaVuSans.ttf',
+      '/usr/share/fonts/truetype/freefont/FreeSans.ttf'
+    );
+  }
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return undefined;
+}
+
 async function publishProgress(event: JobProgressEvent) {
   try {
     const channel = `events:project:${event.projectId}`;
@@ -154,7 +186,8 @@ export async function processRenderJob(job: Job<RenderJobPayload>) {
     });
 
     // 5. Compile timeline document into FFmpeg filtergraph
-    const compilerOutput = compileTimelineToFFmpeg(timelineDoc, assetPathMap, preset);
+    const fontFile = resolveDefaultFontFile();
+    const compilerOutput = compileTimelineToFFmpeg(timelineDoc, assetPathMap, preset, { fontFile });
 
     // 6. Build ffmpeg argument array
     const ffmpegArgs: string[] = ['-y'];

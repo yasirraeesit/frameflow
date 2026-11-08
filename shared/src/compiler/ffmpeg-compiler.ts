@@ -1,5 +1,5 @@
 import { TimelineDocument } from '../timeline/types.js';
-import { ExportPreset, PresetConfig, CompilerOutput } from './types.js';
+import { ExportPreset, PresetConfig, CompilerOutput, CompilerOptions } from './types.js';
 
 const PRESET_CONFIGS: Record<ExportPreset, PresetConfig> = {
   '1080p_h264': {
@@ -21,7 +21,8 @@ const PRESET_CONFIGS: Record<ExportPreset, PresetConfig> = {
 export function compileTimelineToFFmpeg(
   timeline: TimelineDocument,
   assetPathMap: Record<string, string>,
-  preset: ExportPreset
+  preset: ExportPreset,
+  options?: CompilerOptions
 ): CompilerOutput {
   const config = PRESET_CONFIGS[preset] || PRESET_CONFIGS['1080p_h264'];
   const width = config.width;
@@ -110,8 +111,12 @@ export function compileTimelineToFFmpeg(
       const posX = position.x / 100;
       const posY = position.y / 100;
 
+      const fontFileOpt = options?.fontFile
+        ? `fontfile='${options.fontFile.replace(/\\/g, '/').replace(/:/g, '\\:')}':`
+        : '';
+
       filtergraphParts.push(
-        `[${currentVideoOut}]drawtext=text='${escapedText}':fontsize=${fontSize}:fontcolor=${color}:` +
+        `[${currentVideoOut}]drawtext=${fontFileOpt}text='${escapedText}':fontsize=${fontSize}:fontcolor=${color}:` +
           `x=(w*${posX})-(tw/2):y=(h*${posY})-(th/2):enable='between(t,${start},${end})'[${textLabel}]`
       );
 

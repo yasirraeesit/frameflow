@@ -167,6 +167,7 @@
   - Runs `ffprobe` on rendered output to verify duration, resolution, codec (h264/aac), and validity
   - Tests cancellation and error recovery on corrupt input
 
-- [ ] **Step 1: Write E2E test script `scripts/test-phase3-e2e.ts`**
-- [ ] **Step 2: Run E2E test script and confirm all assertions pass**
-- [ ] **Step 3: Tag `phase-3-complete`**
+- [x] **Step 1: Write E2E test script `scripts/test-phase3-e2e.ts`**
+- [x] **Step 2: Run E2E test script and confirm all assertions pass**
+- [x] **Step 3: Tag `phase-3-complete`**
+
