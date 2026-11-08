@@ -51,3 +51,4 @@ export const TimelineDocumentSchema = z.object({
   tracks: z.array(TrackSchema),
   markers: z.array(MarkerSchema).default([]),
 });
+

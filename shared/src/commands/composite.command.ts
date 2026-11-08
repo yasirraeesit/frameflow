@@ -31,3 +31,4 @@ export class CompositeCommand implements ICommand {
     return current;
   }
 }
+

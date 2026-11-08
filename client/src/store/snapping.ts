@@ -68,3 +68,4 @@ export function findSnapTime(
 
   return { snappedTime: candidateTime, isSnapped: false };
 }
+

@@ -40,3 +40,4 @@ export class ToggleTrackMuteCommand implements ICommand {
     return this.execute(timeline);
   }
 }
+

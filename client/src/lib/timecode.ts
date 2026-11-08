@@ -28,3 +28,4 @@ export function formatDuration(seconds: number): string {
 
   return `${pad(minutes)}:${pad(secs)}.${ms}s`;
 }
+

@@ -340,3 +340,4 @@ export class DeleteClipCommand implements ICommand {
     return { ...updated, duration: computeTimelineDuration(updated) };
   }
 }
+

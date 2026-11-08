@@ -235,3 +235,4 @@ export function TimelineToolbar({ onOpenHistory, onSave }: TimelineToolbarProps)
     </div>
   );
 }
+

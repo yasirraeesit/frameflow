@@ -25,3 +25,4 @@ export function TimecodeDisplay({ className = '' }: TimecodeDisplayProps) {
     </div>
   );
 }
+

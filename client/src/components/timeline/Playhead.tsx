@@ -82,3 +82,4 @@ export function Playhead({ timelineHeight, containerRef }: PlayheadProps) {
     </div>
   );
 }
+

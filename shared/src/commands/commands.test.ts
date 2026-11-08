@@ -176,3 +176,4 @@ describe('Command Pattern & Undo/Redo Engine', () => {
     assert.strictEqual(timeline.tracks[0]?.clips.length, 0);
   });
 });
+

@@ -137,3 +137,4 @@ describe('Timeline API & Version History Endpoints', () => {
     assert.strictEqual(body.timeline.data.tracks[0].clips.length, 0);
   });
 });
+

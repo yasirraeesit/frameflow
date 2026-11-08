@@ -248,3 +248,4 @@ export function TimelineEditor({ onOpenHistory, onSave }: TimelineEditorProps) {
     </div>
   );
 }
+

@@ -17,3 +17,4 @@ export function computeTimelineDuration(timeline: TimelineDocument): number {
   }
   return parseFloat(maxEnd.toFixed(3));
 }
+

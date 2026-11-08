@@ -101,3 +101,4 @@ export function TimelineRuler({ totalDuration, width, scrollLeft }: TimelineRule
     </div>
   );
 }
+

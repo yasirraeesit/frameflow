@@ -9,8 +9,10 @@ build/
 out/
 
 # Environment files
+.env
 .env.local
 .env.*.local
+server/database/.env
 
 # Logs
 npm-debug.log*
