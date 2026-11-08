@@ -12,6 +12,11 @@ import { assetsRoutes } from './modules/assets/assets.routes.js';
 import { timelineRoutes } from './modules/timeline/timeline.routes.js';
 import { wsGatewayPlugin } from './ws/ws.gateway.js';
 
+// Global BigInt JSON serialization
+(BigInt.prototype as unknown as { toJSON: () => string }).toJSON = function () {
+  return this.toString();
+};
+
 export function buildServer(): FastifyInstance {
   const server = fastify({
     logger: process.env.NODE_ENV !== 'test',

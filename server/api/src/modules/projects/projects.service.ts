@@ -74,7 +74,13 @@ export class ProjectsService {
       throw new Error('PROJECT_NOT_FOUND');
     }
 
-    return project;
+    return {
+      ...project,
+      assets: project.assets.map((a) => ({
+        ...a,
+        sizeBytes: a.sizeBytes.toString(),
+      })),
+    };
   }
 
   async update(userId: string, projectId: string, input: UpdateProjectInput) {
