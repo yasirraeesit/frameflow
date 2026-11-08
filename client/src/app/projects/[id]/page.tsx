@@ -87,13 +87,13 @@ export default function ProjectDetailsPage() {
             )}
           </div>
 
-          <button
-            onClick={() => alert('Phase 2 Timeline Editor will load with this project.')}
+          <Link
+            href={`/editor/${projectId}`}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-blue-600/20"
           >
             <Play className="w-3.5 h-3.5 fill-current" />
             <span>Open Timeline Editor</span>
-          </button>
+          </Link>
         </div>
       </header>
 
