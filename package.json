@@ -1,0 +1,21 @@
+{
+  "name": "frameflow-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "npm --workspace=@frameflow/api run dev",
+    "dev:worker": "npm --workspace=@frameflow/worker run dev",
+    "dev:web": "npm --workspace=@frameflow/web run dev",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
+
