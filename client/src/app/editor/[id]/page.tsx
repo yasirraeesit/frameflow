@@ -11,7 +11,8 @@ import { MediaBin } from '../../../components/media/MediaBin';
 import { PreviewPlayer } from '../../../components/preview/PreviewPlayer';
 import { TimelineEditor } from '../../../components/timeline/TimelineEditor';
 import { VersionHistoryModal } from '../../../components/timeline/VersionHistoryModal';
-import { ArrowLeft, Loader2, Save, CheckCircle2, History } from 'lucide-react';
+import { ExportModal } from '../../../components/export/ExportModal';
+import { ArrowLeft, Loader2, Save, CheckCircle2, History, Download } from 'lucide-react';
 
 export default function EditorStudioPage() {
   const params = useParams();
@@ -22,6 +23,7 @@ export default function EditorStudioPage() {
   const [assets, setAssets] = useState<AssetResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const timeline = useTimelineStore((s) => s.timeline);
   const isDirty = useTimelineStore((s) => s.isDirty);
@@ -180,7 +182,15 @@ export default function EditorStudioPage() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-medium text-zinc-200 border border-zinc-700/80 transition"
           >
             <History className="w-3.5 h-3.5 text-blue-400" />
-            <span>Version History</span>
+            <span>History</span>
+          </button>
+
+          <button
+            onClick={() => setIsExportModalOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white transition shadow-sm shadow-blue-600/30"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Export Video</span>
           </button>
         </div>
       </header>
@@ -221,6 +231,14 @@ export default function EditorStudioPage() {
         projectId={projectId}
         isOpen={isHistoryModalOpen}
         onClose={() => setIsHistoryModalOpen(false)}
+      />
+
+      {/* Video Export Modal */}
+      <ExportModal
+        projectId={projectId}
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        lastWsEvent={lastEvent}
       />
     </div>
   );
