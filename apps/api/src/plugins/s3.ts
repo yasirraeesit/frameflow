@@ -56,3 +56,4 @@ const s3Plugin: FastifyPluginAsync = fp(async (server) => {
 });
 
 export default s3Plugin;
+

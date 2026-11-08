@@ -19,3 +19,4 @@ export async function generateProxy(inputPath: string, outputPath: string): Prom
 
   await execFileAsync('ffmpeg', args);
 }
+

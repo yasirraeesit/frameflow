@@ -33,3 +33,4 @@ export function startWorker() {
 if (process.argv[1]?.endsWith('index.js')) {
   startWorker();
 }
+

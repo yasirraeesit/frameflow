@@ -35,3 +35,4 @@ export async function generateThumbnailStrip(
     await execFileAsync('ffmpeg', fallbackArgs);
   }
 }
+

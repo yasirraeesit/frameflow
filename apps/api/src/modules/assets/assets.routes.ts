@@ -107,3 +107,4 @@ export const assetsRoutes: FastifyPluginAsync = async (server) => {
     }
   });
 };
+

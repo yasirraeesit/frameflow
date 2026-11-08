@@ -32,3 +32,4 @@ const jwtPlugin: FastifyPluginAsync = fp(async (server) => {
 });
 
 export default jwtPlugin;
+

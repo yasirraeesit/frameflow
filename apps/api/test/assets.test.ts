@@ -121,3 +121,4 @@ describe('Assets Chunked Upload API', () => {
     assert.strictEqual(listBody.assets[0].id, asset.id);
   });
 });
+

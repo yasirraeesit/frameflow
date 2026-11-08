@@ -70,3 +70,4 @@ describe('WebSocket Job Progress Gateway', () => {
     ws.close();
   });
 });
+

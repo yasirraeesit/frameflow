@@ -24,3 +24,4 @@ const redisPlugin: FastifyPluginAsync = fp(async (server) => {
 });
 
 export default redisPlugin;
+
