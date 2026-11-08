@@ -9,3 +9,5 @@ export * from './commands/clip.commands.js';
 export * from './commands/track.commands.js';
 export * from './commands/composite.command.js';
 export * from './commands/history.js';
+export * from './compiler/types.js';
+export * from './compiler/ffmpeg-compiler.js';
