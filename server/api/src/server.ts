@@ -9,6 +9,7 @@ import s3Plugin from './plugins/s3.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { projectsRoutes } from './modules/projects/projects.routes.js';
 import { assetsRoutes } from './modules/assets/assets.routes.js';
+import { timelineRoutes } from './modules/timeline/timeline.routes.js';
 import { wsGatewayPlugin } from './ws/ws.gateway.js';
 
 export function buildServer(): FastifyInstance {
@@ -53,6 +54,7 @@ export function buildServer(): FastifyInstance {
   server.register(authRoutes, { prefix: '/api/auth' });
   server.register(projectsRoutes, { prefix: '/api/projects' });
   server.register(assetsRoutes, { prefix: '/api/projects' });
+  server.register(timelineRoutes, { prefix: '/api/projects' });
 
   // WebSocket Gateway
   server.register(wsGatewayPlugin);
