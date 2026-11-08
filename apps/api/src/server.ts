@@ -8,6 +8,7 @@ import redisPlugin from './plugins/redis.js';
 import s3Plugin from './plugins/s3.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { projectsRoutes } from './modules/projects/projects.routes.js';
+import { assetsRoutes } from './modules/assets/assets.routes.js';
 
 export function buildServer(): FastifyInstance {
   const server = fastify({
@@ -28,6 +29,14 @@ export function buildServer(): FastifyInstance {
 
   server.register(fastifyWebsocket);
 
+  // Content type parser for binary chunk uploads
+  server.addContentTypeParser('application/octet-stream', (_request, payload, done) => {
+    const chunks: Buffer[] = [];
+    payload.on('data', (chunk: Buffer) => chunks.push(chunk));
+    payload.on('end', () => done(null, Buffer.concat(chunks)));
+    payload.on('error', (err) => done(err));
+  });
+
   // Custom infrastructure plugins
   server.register(prismaPlugin);
   server.register(jwtPlugin);
@@ -42,6 +51,7 @@ export function buildServer(): FastifyInstance {
   // Modules
   server.register(authRoutes, { prefix: '/api/auth' });
   server.register(projectsRoutes, { prefix: '/api/projects' });
+  server.register(assetsRoutes, { prefix: '/api/projects' });
 
   return server;
 }
