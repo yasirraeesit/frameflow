@@ -40,6 +40,14 @@ export async function processMediaJob(job: Job<ProcessMediaJobData>): Promise<vo
   const thumbLocalPath = path.join(tempDir, 'thumbnails.jpg');
 
   try {
+    const existingAsset = await prisma.asset.findUnique({
+      where: { id: assetId },
+    });
+    if (!existingAsset) {
+      console.warn(`[Worker] Asset ${assetId} not found in database (may have been deleted). Skipping.`);
+      return;
+    }
+
     await prisma.asset.update({
       where: { id: assetId },
       data: { status: 'PROCESSING' },
