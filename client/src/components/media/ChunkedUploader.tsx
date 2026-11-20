@@ -67,8 +67,8 @@ export function ChunkedUploader({ projectId, onUploadComplete }: ChunkedUploader
           throw new Error(`Failed to upload chunk ${partNumber}`);
         }
 
-        const { etag } = await res.json();
-        parts.push({ partNumber, etag });
+        const data = (await res.json()) as { etag: string };
+        parts.push({ partNumber, etag: data.etag });
 
         const pct = Math.round((partNumber / totalParts) * 100);
         setProgress(pct);
@@ -99,7 +99,6 @@ export function ChunkedUploader({ projectId, onUploadComplete }: ChunkedUploader
       setStatusText('');
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -112,72 +111,72 @@ export function ChunkedUploader({ projectId, onUploadComplete }: ChunkedUploader
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) {
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('video/')) {
       void uploadFile(file);
     }
   };
 
   return (
-    <div
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={handleDrop}
-      onClick={() => !isUploading && fileInputRef.current?.click()}
-      className={`border-2 border-dashed rounded-xl p-8 text-center transition cursor-pointer select-none ${
-        isUploading
-          ? 'border-blue-500/50 bg-blue-950/10'
-          : 'border-border hover:border-gray-500 bg-surface/50 hover:bg-surface'
-      }`}
-    >
+    <div className="flex flex-col gap-2">
       <input
         ref={fileInputRef}
         type="file"
-        accept="video/*"
+        accept="video/mp4,video/quicktime,video/webm"
         className="hidden"
         onChange={handleFileChange}
-        disabled={isUploading}
       />
 
-      <div className="flex flex-col items-center justify-center space-y-3">
-        {isUploading ? (
-          <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-        ) : error ? (
-          <AlertCircle className="w-10 h-10 text-red-400" />
-        ) : progress === 100 ? (
-          <CheckCircle2 className="w-10 h-10 text-emerald-400" />
-        ) : (
-          <div className="p-3 bg-blue-500/10 rounded-full text-blue-400">
-            <Upload className="w-6 h-6" />
-          </div>
-        )}
+      <div
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={handleDrop}
+        onClick={() => !isUploading && fileInputRef.current?.click()}
+        className={`border border-dashed rounded-lg p-3 text-center cursor-pointer transition ${
+          isUploading
+            ? 'border-blue-500 bg-studio-surface/50 cursor-wait'
+            : 'border-studio-border hover:border-blue-500/60 bg-studio-surface/30 hover:bg-studio-surface-sub/60'
+        }`}
+      >
+        <div className="flex flex-col items-center justify-center gap-1.5 py-1">
+          {isUploading ? (
+            <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
+          ) : (
+            <Upload className="w-5 h-5 text-zinc-400" />
+          )}
 
-        <div>
-          <h4 className="text-sm font-semibold text-gray-200">
-            {isUploading ? statusText : 'Drop raw footage here or click to browse'}
-          </h4>
-          <p className="text-xs text-gray-400 mt-1">
-            Supports MP4, MOV, MKV, WebM (chunked S3 upload)
+          <div className="text-xs text-zinc-300 font-medium">
+            {isUploading ? 'Uploading Footage...' : 'Drop video here or click to browse'}
+          </div>
+
+          <p className="text-[10px] text-studio-text-dim font-mono">
+            MP4, MOV, WebM • Parallel 5MB Chunks
           </p>
         </div>
-
-        {isUploading && (
-          <div className="w-full max-w-xs mt-2">
-            <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
-              <div
-                className="bg-blue-500 h-2 transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <div className="flex justify-between text-[11px] text-gray-400 mt-1">
-              <span>{statusText}</span>
-              <span>{progress}%</span>
-            </div>
-          </div>
-        )}
-
-        {error && <p className="text-xs text-red-400 font-medium">{error}</p>}
       </div>
+
+      {/* Progress Bar & Status Readout */}
+      {isUploading && (
+        <div className="space-y-1 mt-1 bg-studio-panel p-2 rounded border border-studio-border">
+          <div className="flex justify-between text-[11px] font-mono">
+            <span className="text-zinc-300 truncate">{statusText}</span>
+            <span className="text-blue-400 font-bold tabular-nums">{progress}%</span>
+          </div>
+          <div className="h-1.5 w-full bg-studio-bg rounded-full overflow-hidden border border-studio-border">
+            <div
+              className="h-full bg-blue-500 transition-all duration-200"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && (
+        <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-950/40 border border-red-900/60 p-2 rounded">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span className="truncate">{error}</span>
+        </div>
+      )}
     </div>
   );
 }
-

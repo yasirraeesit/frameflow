@@ -3,14 +3,82 @@
 @tailwind utilities;
 
 :root {
-  --foreground: #f3f4f6;
-  --background: #0d0f12;
+  /* Surface Hierarchy (4-tier obsidian/zinc system, zero muddy grays) */
+  --studio-canvas: #09090b;
+  --studio-panel: #111114;
+  --studio-surface: #18181c;
+  --studio-surface-hover: #222228;
+  --studio-border: #27272a;
+  --studio-border-hover: #3f3f46;
+
+  /* Typography & Text Contrast */
+  --studio-text-main: #f4f4f5;
+  --studio-text-muted: #a1a1aa;
+  --studio-text-dim: #71717a;
+
+  /* Primary Studio Accent: Electric Indigo */
+  --studio-accent: #6366f1;
+  --studio-accent-hover: #4f46e5;
+  --studio-accent-subtle: rgba(99, 102, 241, 0.15);
+  --playhead-accent: #6366f1;
+
+  /* Semantic Track Colors */
+  --track-video-bg: #1e3a5f;
+  --track-video-border: #3b82f6;
+  --track-video-hover: #60a5fa;
+
+  --track-audio-bg: #134e4a;
+  --track-audio-border: #14b8a6;
+  --track-audio-hover: #2dd4bf;
+
+  --track-text-bg: #4c1d95;
+  --track-text-border: #a855f7;
+  --track-text-hover: #c084fc;
+
+  --foreground: var(--studio-text-main);
+  --background: var(--studio-canvas);
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: var(--studio-text-main);
+  background: var(--studio-canvas);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
+  user-select: none;
 }
 
+/* Tabular numbers for all timecode readouts */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom Studio Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--studio-panel);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--studio-border);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--studio-border-hover);
+}
+
+/* Diagonal hash pattern for locked tracks */
+.locked-track-pattern {
+  background-color: var(--studio-panel);
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 255, 255, 0.015) 10px,
+    rgba(255, 255, 255, 0.015) 20px
+  );
+}

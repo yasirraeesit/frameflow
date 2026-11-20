@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { AssetResponse, Clip } from '@frameflow/shared';
 import { useTimelineStore } from '../../store/timeline.store';
 import { AddClipCommand } from '@frameflow/shared';
@@ -14,14 +14,18 @@ interface MediaBinProps {
   onUploadComplete: () => void;
 }
 
-export function MediaBin({ projectId, assets, onUploadComplete }: MediaBinProps) {
+export const MediaBin = memo(function MediaBin({
+  projectId,
+  assets,
+  onUploadComplete,
+}: MediaBinProps) {
   const [showUploader, setShowUploader] = useState(false);
   const timeline = useTimelineStore((s) => s.timeline);
-  const playhead = useTimelineStore((s) => s.playhead);
   const executeCommand = useTimelineStore((s) => s.executeCommand);
 
   const handleAddClipToTimeline = (asset: AssetResponse) => {
     if (!timeline) return;
+    const playhead = useTimelineStore.getState().playhead;
 
     // Find first non-locked video track
     const videoTrack = timeline.tracks.find((t) => t.type === 'VIDEO' && !t.locked);
@@ -70,20 +74,20 @@ export function MediaBin({ projectId, assets, onUploadComplete }: MediaBinProps)
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-950 border-r border-zinc-800">
+    <div className="flex flex-col h-full bg-studio-panel border-r border-studio-border select-none">
       {/* Media Bin Header */}
-      <div className="p-3 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/60">
+      <div className="p-3 border-b border-studio-border flex items-center justify-between bg-studio-surface">
         <div className="flex items-center gap-2">
           <Film className="w-4 h-4 text-blue-400" />
-          <h2 className="text-xs font-semibold text-white">Media Bin</h2>
-          <span className="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded-full font-mono">
+          <h2 className="text-xs font-semibold text-white tracking-wide">Media Bin</h2>
+          <span className="text-[10px] bg-studio-panel text-studio-text-muted px-1.5 py-0.5 rounded border border-studio-border font-mono">
             {assets.length}
           </span>
         </div>
 
         <button
           onClick={() => setShowUploader(!showUploader)}
-          className="p-1 px-2 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-md font-medium transition flex items-center gap-1"
+          className="p-1 px-2.5 text-xs bg-primary hover:bg-primary-hover text-white rounded font-medium transition flex items-center gap-1.5 shadow-sm"
         >
           <Upload className="w-3 h-3" />
           <span>Upload</span>
@@ -92,7 +96,7 @@ export function MediaBin({ projectId, assets, onUploadComplete }: MediaBinProps)
 
       {/* Collapsible Upload Panel */}
       {showUploader && (
-        <div className="p-3 border-b border-zinc-800 bg-zinc-900/40">
+        <div className="p-3 border-b border-studio-border bg-studio-surface/50">
           <ChunkedUploader
             projectId={projectId}
             onUploadComplete={() => {
@@ -104,10 +108,12 @@ export function MediaBin({ projectId, assets, onUploadComplete }: MediaBinProps)
       )}
 
       {/* Asset Grid / List */}
-      <div className="flex-1 overflow-y-auto p-2.5 space-y-2">
+      <div className="flex-1 overflow-y-auto p-2.5 space-y-2 bg-studio-panel">
         {assets.length === 0 ? (
-          <div className="py-12 px-4 text-center text-zinc-500 text-xs">
-            No footage uploaded yet. Drag and drop raw videos or click Upload above.
+          <div className="py-16 px-4 text-center text-studio-text-dim text-xs">
+            <Film className="w-8 h-8 opacity-20 mx-auto mb-2 text-zinc-400" />
+            <p>No footage in bin.</p>
+            <p className="text-[11px] mt-1 text-zinc-500">Drop raw video clips or click Upload.</p>
           </div>
         ) : (
           assets.map((asset) => {
@@ -121,14 +127,14 @@ export function MediaBin({ projectId, assets, onUploadComplete }: MediaBinProps)
                 key={asset.id}
                 draggable={isReady}
                 onDragStart={(e) => handleDragStart(e, asset)}
-                className={`p-2.5 rounded-lg border bg-zinc-900/80 transition flex items-center gap-3 select-none ${
+                className={`p-2.5 rounded border bg-studio-surface transition flex items-center gap-3 select-none ${
                   isReady
-                    ? 'border-zinc-800 hover:border-zinc-600 cursor-grab active:cursor-grabbing hover:bg-zinc-800/60'
-                    : 'border-zinc-800/40 opacity-70 cursor-not-allowed'
+                    ? 'border-studio-border hover:border-studio-border-sub cursor-grab active:cursor-grabbing hover:bg-studio-surface-sub'
+                    : 'border-studio-border/40 opacity-70 cursor-not-allowed'
                 }`}
               >
-                {/* Thumbnail Preview */}
-                <div className="w-14 h-10 bg-black rounded overflow-hidden flex-shrink-0 flex items-center justify-center border border-zinc-800">
+                {/* 16:9 Thumbnail Preview */}
+                <div className="w-14 h-9 bg-black rounded overflow-hidden flex-shrink-0 flex items-center justify-center border border-studio-border">
                   {thumbUrl ? (
                     <img
                       src={thumbUrl}
@@ -142,13 +148,13 @@ export function MediaBin({ projectId, assets, onUploadComplete }: MediaBinProps)
 
                 {/* Details */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-zinc-200 truncate">
+                  <p className="text-xs font-semibold text-zinc-200 truncate leading-tight">
                     {asset.originalName}
                   </p>
-                  <div className="flex items-center gap-2 mt-0.5 text-[10px] text-zinc-500 font-mono">
+                  <div className="flex items-center gap-2 mt-1 text-[10px] text-studio-text-muted font-mono tabular-nums">
                     {asset.duration && <span>{formatDuration(asset.duration)}</span>}
                     {asset.width && asset.height && (
-                      <span>
+                      <span className="text-zinc-500">
                         {asset.width}x{asset.height}
                       </span>
                     )}
@@ -159,8 +165,8 @@ export function MediaBin({ projectId, assets, onUploadComplete }: MediaBinProps)
                 {isReady ? (
                   <button
                     onClick={() => handleAddClipToTimeline(asset)}
-                    className="p-1 rounded bg-zinc-800 hover:bg-blue-600 hover:text-white text-zinc-400 transition"
-                    title="Add clip to timeline at playhead"
+                    className="p-1 rounded bg-studio-panel border border-studio-border hover:bg-primary hover:border-primary text-zinc-400 hover:text-white transition flex-shrink-0"
+                    title="Insert onto timeline at playhead"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
@@ -176,4 +182,4 @@ export function MediaBin({ projectId, assets, onUploadComplete }: MediaBinProps)
       </div>
     </div>
   );
-}
+});

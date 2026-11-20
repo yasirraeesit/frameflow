@@ -125,9 +125,9 @@ export default function EditorStudioPage() {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-zinc-950 text-zinc-400 gap-2">
-        <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-        <span className="text-sm">Loading FrameFlow Studio...</span>
+      <div className="h-screen flex items-center justify-center bg-studio-bg text-studio-text-muted gap-2 select-none">
+        <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+        <span className="text-xs font-mono tracking-wider uppercase">Initializing Studio...</span>
       </div>
     );
   }
@@ -135,43 +135,43 @@ export default function EditorStudioPage() {
   if (!project) return null;
 
   return (
-    <div className="h-screen flex flex-col bg-zinc-950 text-white overflow-hidden select-none">
+    <div className="h-screen flex flex-col bg-studio-bg text-white overflow-hidden select-none">
       {/* Studio Header Bar */}
-      <header className="h-12 border-b border-zinc-800 bg-zinc-900/90 px-4 flex items-center justify-between flex-shrink-0">
+      <header className="h-11 border-b border-studio-border bg-studio-surface px-4 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
           <Link
             href={`/projects/${projectId}`}
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition border border-zinc-800"
+            className="p-1 rounded text-zinc-400 hover:text-white hover:bg-studio-surface-sub transition border border-transparent hover:border-studio-border"
             title="Back to Project Overview"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
 
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm text-zinc-100">{project.title}</span>
-            <span className="text-[10px] bg-zinc-800 text-zinc-400 font-mono px-2 py-0.5 rounded-full border border-zinc-700/60">
+            <span className="font-semibold text-xs text-zinc-100 tracking-wide">{project.title}</span>
+            <span className="text-[10px] bg-studio-panel text-studio-text-muted font-mono px-2 py-0.5 rounded border border-studio-border tabular-nums">
               {project.width}x{project.height} • {project.fps}fps
             </span>
           </div>
         </div>
 
         {/* Right Header Status & Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {/* Autosave Status Badge */}
           <div className="flex items-center gap-1.5 text-xs">
             {isSaving ? (
-              <span className="flex items-center text-zinc-400 gap-1 font-mono text-[11px]">
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-400" />
+              <span className="flex items-center text-studio-text-muted gap-1 font-mono text-[10px]">
+                <Loader2 className="w-3 h-3 animate-spin text-blue-400" />
                 <span>Autosaving...</span>
               </span>
             ) : isDirty ? (
-              <span className="flex items-center text-amber-400 gap-1 font-mono text-[11px]">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span className="flex items-center text-amber-400 gap-1 font-mono text-[10px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                 <span>Unsaved changes</span>
               </span>
             ) : (
-              <span className="flex items-center text-emerald-400 gap-1 font-mono text-[11px]">
-                <CheckCircle2 className="w-3.5 h-3.5" />
+              <span className="flex items-center text-emerald-400 gap-1 font-mono text-[10px]">
+                <CheckCircle2 className="w-3 h-3" />
                 <span>Saved</span>
               </span>
             )}
@@ -179,18 +179,18 @@ export default function EditorStudioPage() {
 
           <button
             onClick={() => setIsHistoryModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-medium text-zinc-200 border border-zinc-700/80 transition"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-studio-panel hover:bg-studio-surface-sub text-xs font-medium text-zinc-200 border border-studio-border transition"
           >
             <History className="w-3.5 h-3.5 text-blue-400" />
-            <span>History</span>
+            <span>Snapshots</span>
           </button>
 
           <button
             onClick={() => setIsExportModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white transition shadow-sm shadow-blue-600/30"
+            className="flex items-center gap-1.5 px-3 py-1 rounded bg-primary hover:bg-primary-hover text-xs font-semibold text-white transition shadow-sm"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Export Video</span>
+            <span>Export Master</span>
           </button>
         </div>
       </header>
@@ -210,8 +210,8 @@ export default function EditorStudioPage() {
           />
         </div>
 
-        {/* Right Column: Preview Player & Monitor */}
-        <div className="flex-1 flex flex-col items-center justify-center p-4 bg-zinc-900/30 overflow-hidden">
+        {/* Right Column: Preview Player & Studio Monitor */}
+        <div className="flex-1 flex flex-col items-center justify-center p-4 bg-studio-bg overflow-hidden">
           <div className="w-full max-w-3xl">
             <PreviewPlayer assetProxyMap={assetProxyMap} />
           </div>
@@ -243,4 +243,3 @@ export default function EditorStudioPage() {
     </div>
   );
 }
-

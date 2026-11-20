@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useState, useMemo, memo } from 'react';
 import { useTimelineStore } from '../../store/timeline.store';
 import { Clip, Track } from '@frameflow/shared';
 import { TimecodeDisplay } from './TimecodeDisplay';
@@ -13,15 +13,19 @@ import {
   ChevronRight,
   Maximize2,
   Film,
+  Tv,
 } from 'lucide-react';
 
 interface PreviewPlayerProps {
   assetProxyMap?: Record<string, string>; // Maps assetId to proxyUrl if not set directly on clip
 }
 
-export function PreviewPlayer({ assetProxyMap = {} }: PreviewPlayerProps) {
+export const PreviewPlayer = memo(function PreviewPlayer({
+  assetProxyMap = {},
+}: PreviewPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [fitMode, setFitMode] = useState<'contain' | 'cover'>('contain');
 
   const timeline = useTimelineStore((s) => s.timeline);
   const playhead = useTimelineStore((s) => s.playhead);
@@ -151,25 +155,33 @@ export function PreviewPlayer({ assetProxyMap = {} }: PreviewPlayerProps) {
     }
   };
 
+  const toggleFitMode = () => {
+    setFitMode((prev) => (prev === 'contain' ? 'cover' : 'contain'));
+  };
+
   return (
     <div
       ref={containerRef}
-      className="flex flex-col bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden shadow-lg"
+      className="flex flex-col bg-studio-surface border border-studio-border rounded-lg overflow-hidden shadow-2xl"
     >
-      {/* Video Viewport Area (16:9) */}
-      <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
+      {/* Video Monitor Stage (16:9 Aspect Ratio) */}
+      <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden border-b border-studio-border">
         {currentVideoSrc ? (
           <video
             ref={videoRef}
             src={currentVideoSrc}
             playsInline
             muted
-            className="w-full h-full object-contain"
+            className={`w-full h-full ${
+              fitMode === 'contain' ? 'object-contain' : 'object-cover'
+            }`}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center text-zinc-600 gap-2">
-            <Film className="w-10 h-10 opacity-40" />
-            <span className="text-xs font-mono">No video clip at playhead</span>
+          <div className="flex flex-col items-center justify-center text-zinc-600 gap-2 select-none">
+            <Film className="w-12 h-12 opacity-30 text-zinc-400" />
+            <span className="text-xs font-mono text-zinc-500 uppercase tracking-widest">
+              No Clip Active at Playhead
+            </span>
           </div>
         )}
 
@@ -180,13 +192,14 @@ export function PreviewPlayer({ assetProxyMap = {} }: PreviewPlayerProps) {
           return (
             <div
               key={textClip.id}
-              className="absolute pointer-events-none font-bold drop-shadow-md select-none text-center"
+              className="absolute pointer-events-none font-bold select-none text-center"
               style={{
                 left: `${position.x}%`,
                 top: `${position.y}%`,
                 transform: 'translate(-50%, -50%)',
                 fontSize: `${fontSize}px`,
                 color: color,
+                textShadow: '0 2px 8px rgba(0,0,0,0.85)',
               }}
             >
               {text}
@@ -195,63 +208,81 @@ export function PreviewPlayer({ assetProxyMap = {} }: PreviewPlayerProps) {
         })}
       </div>
 
-      {/* Preview Player Transport Controls */}
-      <div className="h-10 bg-zinc-900 border-t border-zinc-800 px-3 flex items-center justify-between select-none">
+      {/* Transport Control Bar */}
+      <div className="h-11 bg-studio-surface px-3 flex items-center justify-between select-none">
+        {/* Left: Frame Jump & Step Buttons */}
         <div className="flex items-center gap-1">
           <button
             onClick={handleJumpStart}
-            className="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
-            title="Jump to Start"
+            className="p-1.5 rounded border border-transparent text-zinc-400 hover:text-white hover:bg-studio-surface-sub hover:border-studio-border transition"
+            title="Jump to Start (Home)"
           >
-            <SkipBack className="w-4 h-4" />
+            <SkipBack className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={handleStepBack}
-            className="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
-            title="Step 1 Frame Back"
+            className="p-1.5 rounded border border-transparent text-zinc-400 hover:text-white hover:bg-studio-surface-sub hover:border-studio-border transition"
+            title="Step 1 Frame Back (←)"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
+
+          {/* Primary Play/Pause Toggle */}
           <button
             onClick={togglePlay}
-            className="p-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white transition mx-1"
-            title={isPlaying ? 'Pause' : 'Play'}
+            className={`p-2 rounded-full transition mx-1 text-white shadow-sm ${
+              isPlaying
+                ? 'bg-amber-500 hover:bg-amber-400 text-black'
+                : 'bg-primary hover:bg-primary-hover'
+            }`}
+            title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
           >
             {isPlaying ? (
               <Pause className="w-3.5 h-3.5 fill-current" />
             ) : (
-              <Play className="w-3.5 h-3.5 fill-current" />
+              <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
             )}
           </button>
+
           <button
             onClick={handleStepForward}
-            className="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
-            title="Step 1 Frame Forward"
+            className="p-1.5 rounded border border-transparent text-zinc-400 hover:text-white hover:bg-studio-surface-sub hover:border-studio-border transition"
+            title="Step 1 Frame Forward (→)"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
           <button
             onClick={handleJumpEnd}
-            className="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
-            title="Jump to End"
+            className="p-1.5 rounded border border-transparent text-zinc-400 hover:text-white hover:bg-studio-surface-sub hover:border-studio-border transition"
+            title="Jump to End (End)"
           >
-            <SkipForward className="w-4 h-4" />
+            <SkipForward className="w-3.5 h-3.5" />
           </button>
         </div>
 
+        {/* Center: Timecode Readout */}
         <TimecodeDisplay />
 
-        <div>
+        {/* Right: Fit Toggle & Fullscreen */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={toggleFitMode}
+            className="px-2 py-1 rounded border border-studio-border bg-studio-panel text-zinc-300 hover:text-white hover:bg-studio-surface-sub transition text-[10px] font-mono flex items-center gap-1"
+            title={`Toggle Fit Mode (Currently: ${fitMode})`}
+          >
+            <Tv className="w-3 h-3 text-zinc-400" />
+            <span className="uppercase">{fitMode}</span>
+          </button>
+
           <button
             onClick={handleToggleFullscreen}
-            className="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
-            title="Fullscreen"
+            className="p-1.5 rounded border border-transparent text-zinc-400 hover:text-white hover:bg-studio-surface-sub hover:border-studio-border transition"
+            title="Fullscreen Monitor"
           >
-            <Maximize2 className="w-4 h-4" />
+            <Maximize2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
     </div>
   );
-}
-
+});

@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "skills": {
+    "prisma-cli": {
+      "source": "C:/Users/YASIRR~1/AppData/Local/Temp/prisma-skills",
+      "sourceType": "local",
+      "computedHash": "5867232acad55272d7278be9144b2cb8dcadd500d5a60a89260a2332bf70bd62"
+    },
+    "prisma-client-api": {
+      "source": "C:/Users/YASIRR~1/AppData/Local/Temp/prisma-skills",
+      "sourceType": "local",
+      "computedHash": "a4810158b4b436a69e782e6fab95a0ed5e5e0b2786c2ed00322051d29c4c2b64"
+    },
+    "prisma-compute": {
+      "source": "C:/Users/YASIRR~1/AppData/Local/Temp/prisma-skills",
+      "sourceType": "local",
+      "computedHash": "c5bc4413f1e30e464e20b23a12548c7136beb1aa0fbf51fd688342de3f838e88"
+    },
+    "prisma-database-setup": {
+      "source": "C:/Users/YASIRR~1/AppData/Local/Temp/prisma-skills",
+      "sourceType": "local",
+      "computedHash": "79848d903a92d69c3ee173fe26e565381b7b8a2ca66f82da156093e981087ce5"
+    },
+    "prisma-driver-adapter-implementation": {
+      "source": "C:/Users/YASIRR~1/AppData/Local/Temp/prisma-skills",
+      "sourceType": "local",
+      "computedHash": "6786760df68cf983505e8ea085c2ffa5253a0aa70c7b9ed72031d5f106d7d44f"
+    },
+    "prisma-mongodb-upgrade": {
+      "source": "C:/Users/YASIRR~1/AppData/Local/Temp/prisma-skills",
+      "sourceType": "local",
+      "computedHash": "fbe1fb6c9acd7c50aa8cff222bde8da99dbe74016ecf7c7baecc116c6ed02b24"
+    },
+    "prisma-orm-setup": {
+      "source": "C:/Users/YASIRR~1/AppData/Local/Temp/prisma-skills",
+      "sourceType": "local",
+      "computedHash": "04fe23d99323d5f97675b5038d7d42cec0b5d0ff5871929bd73412afb7941218"
+    },
+    "prisma-postgres": {
+      "source": "C:/Users/YASIRR~1/AppData/Local/Temp/prisma-skills",
+      "sourceType": "local",
+      "computedHash": "bc15ea262db09a5372b2308d08d553d1437398b8eaf282d6c811db9b22524d85"
+    },
+    "prisma-postgres-setup": {
+      "source": "C:/Users/YASIRR~1/AppData/Local/Temp/prisma-skills",
+      "sourceType": "local",
+      "computedHash": "0cb1de49d7d9a73dde137522ba8359a56f154630ff228e9c058655457abeece0"
+    },
+    "prisma-postgres-upgrade": {
+      "source": "C:/Users/YASIRR~1/AppData/Local/Temp/prisma-skills",
+      "sourceType": "local",
+      "computedHash": "bfe9cb9f1eb53df56d5c7ad758ad080054979de865cb26adc3a6564c9d2a1d2f"
+    },
+    "prisma-upgrade-v7": {
+      "source": "C:/Users/YASIRR~1/AppData/Local/Temp/prisma-skills",
+      "sourceType": "local",
+      "computedHash": "f6e8519788f89e6ee404091eba28236af67551e450f100c9595b208d840770d9"
+    },
+    "redis-development": {
+      "source": "C:/Users/YASIRR~1/AppData/Local/Temp/redis-skills",
+      "sourceType": "local",
+      "computedHash": "aeb481ae21f197b4646d5a1c4be9294622e30e73bcd717817eb1023d24ae1984",
+      "skillName": "redis-core"
+    },
+    "systematic-debugging": {
+      "source": "C:/Users/YASIRR~1/AppData/Local/Temp/superpowers-skills",
+      "sourceType": "local",
+      "computedHash": "79ff0583175346e39431b0dc713b223edd1bd7a7ea2b6c8b78b2fb9a3fed6782"
+    },
+    "vercel-composition-patterns": {
+      "source": "C:/Users/YASIRR~1/AppData/Local/Temp/vercel-skills",
+      "sourceType": "local",
+      "computedHash": "f711ed8b16162eaa712abbcdbbae6c926f86c57e60127735fecc3ad0dd85b3fa"
+    },
+    "vercel-react-best-practices": {
+      "source": "C:/Users/YASIRR~1/AppData/Local/Temp/vercel-skills",
+      "sourceType": "local",
+      "computedHash": "7991ed4fbecdac23f47c1a40c243e00a212a9e7f3604db93959b3ae11dffe299"
+    },
+    "web-design-guidelines": {
+      "source": "C:/Users/YASIRR~1/AppData/Local/Temp/vercel-skills",
+      "sourceType": "local",
+      "computedHash": "4f68ae07187fb0d1fb78c88b503d089da4cf5a9d9625d1f2e425b1590bf96d92"
+    }
+  }
+}

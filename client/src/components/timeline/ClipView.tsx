@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, memo } from 'react';
 import { Clip, TrackType, MoveClipCommand, TrimClipCommand } from '@frameflow/shared';
 import { useTimelineStore } from '../../store/timeline.store';
 import { findSnapTime, collectSnapTargets } from '../../store/snapping';
@@ -13,36 +13,39 @@ interface ClipViewProps {
   trackLocked: boolean;
 }
 
-export function ClipView({ clip, trackId, trackType, trackLocked }: ClipViewProps) {
+export const ClipView = memo(function ClipView({
+  clip,
+  trackId,
+  trackType,
+  trackLocked,
+}: ClipViewProps) {
   const clipRef = useRef<HTMLDivElement>(null);
   const zoom = useTimelineStore((s) => s.zoom);
-  const selectedClipId = useTimelineStore((s) => s.selectedClipId);
+  const isSelected = useTimelineStore((s) => s.selectedClipId === clip.id);
   const setSelectedClipId = useTimelineStore((s) => s.setSelectedClipId);
   const executeCommand = useTimelineStore((s) => s.executeCommand);
   const snappingEnabled = useTimelineStore((s) => s.snappingEnabled);
   const timeline = useTimelineStore((s) => s.timeline);
-  const playhead = useTimelineStore((s) => s.playhead);
 
-  const isSelected = selectedClipId === clip.id;
-
+  // Distinct track styling: muted dark-mode fills with bright structural borders
   const getTrackStyles = () => {
     switch (trackType) {
       case 'VIDEO':
         return isSelected
-          ? 'bg-blue-600/70 border-white ring-2 ring-blue-400'
-          : 'bg-blue-900/60 border-blue-600 hover:border-blue-400';
+          ? 'bg-track-video-bg border-track-video-border ring-2 ring-studio-accent shadow-sm'
+          : 'bg-track-video-bg/90 border-track-video-border/80 hover:border-track-video-hover hover:bg-track-video-bg';
       case 'AUDIO':
         return isSelected
-          ? 'bg-emerald-600/70 border-white ring-2 ring-emerald-400'
-          : 'bg-emerald-900/60 border-emerald-600 hover:border-emerald-400';
+          ? 'bg-track-audio-bg border-track-audio-border ring-2 ring-studio-accent shadow-sm'
+          : 'bg-track-audio-bg/90 border-track-audio-border/80 hover:border-track-audio-hover hover:bg-track-audio-bg';
       case 'TEXT':
         return isSelected
-          ? 'bg-purple-600/70 border-white ring-2 ring-purple-400'
-          : 'bg-purple-900/60 border-purple-600 hover:border-purple-400';
+          ? 'bg-track-text-bg border-track-text-border ring-2 ring-studio-accent shadow-sm'
+          : 'bg-track-text-bg/90 border-track-text-border/80 hover:border-track-text-hover hover:bg-track-text-bg';
     }
   };
 
-  // Drag-to-move handler
+  // Drag-to-move handler (GPU-accelerated; zero re-renders during playhead scrubbing)
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       if (trackLocked) return;
@@ -52,7 +55,11 @@ export function ClipView({ clip, trackId, trackType, trackLocked }: ClipViewProp
       const startX = e.clientX;
       const initialStart = clip.start;
       const thresholdSeconds = 8 / zoom;
-      const targets = timeline && snappingEnabled ? collectSnapTargets(timeline, playhead, clip.id) : [];
+      const currentPlayhead = useTimelineStore.getState().playhead;
+      const targets =
+        timeline && snappingEnabled
+          ? collectSnapTargets(timeline, currentPlayhead, clip.id)
+          : [];
 
       let currentStart = initialStart;
 
@@ -67,7 +74,11 @@ export function ClipView({ clip, trackId, trackType, trackLocked }: ClipViewProp
             candidateStart = snapStart.snappedTime;
           } else {
             // Also test snapping end edge
-            const snapEnd = findSnapTime(candidateStart + clip.duration, targets, thresholdSeconds);
+            const snapEnd = findSnapTime(
+              candidateStart + clip.duration,
+              targets,
+              thresholdSeconds
+            );
             if (snapEnd.isSnapped) {
               candidateStart = snapEnd.snappedTime - clip.duration;
             }
@@ -96,7 +107,7 @@ export function ClipView({ clip, trackId, trackType, trackLocked }: ClipViewProp
       window.addEventListener('pointermove', handlePointerMove);
       window.addEventListener('pointerup', handlePointerUp);
     },
-    [trackLocked, clip, trackId, zoom, timeline, snappingEnabled, playhead, setSelectedClipId, executeCommand]
+    [trackLocked, clip, trackId, zoom, timeline, snappingEnabled, setSelectedClipId, executeCommand]
   );
 
   // Left trim handle (adjusts start, inPoint, duration)
@@ -111,7 +122,11 @@ export function ClipView({ clip, trackId, trackType, trackLocked }: ClipViewProp
       const initialDuration = clip.duration;
       const initialInPoint = clip.inPoint;
       const thresholdSeconds = 8 / zoom;
-      const targets = timeline && snappingEnabled ? collectSnapTargets(timeline, playhead, clip.id) : [];
+      const currentPlayhead = useTimelineStore.getState().playhead;
+      const targets =
+        timeline && snappingEnabled
+          ? collectSnapTargets(timeline, currentPlayhead, clip.id)
+          : [];
 
       let finalStart = initialStart;
       let finalDuration = initialDuration;
@@ -169,7 +184,7 @@ export function ClipView({ clip, trackId, trackType, trackLocked }: ClipViewProp
       window.addEventListener('pointermove', handlePointerMove);
       window.addEventListener('pointerup', handlePointerUp);
     },
-    [trackLocked, clip, trackId, zoom, timeline, snappingEnabled, playhead, setSelectedClipId, executeCommand]
+    [trackLocked, clip, trackId, zoom, timeline, snappingEnabled, setSelectedClipId, executeCommand]
   );
 
   // Right trim handle (adjusts duration, outPoint)
@@ -183,7 +198,11 @@ export function ClipView({ clip, trackId, trackType, trackLocked }: ClipViewProp
       const initialDuration = clip.duration;
       const initialOutPoint = clip.outPoint;
       const thresholdSeconds = 8 / zoom;
-      const targets = timeline && snappingEnabled ? collectSnapTargets(timeline, playhead, clip.id) : [];
+      const currentPlayhead = useTimelineStore.getState().playhead;
+      const targets =
+        timeline && snappingEnabled
+          ? collectSnapTargets(timeline, currentPlayhead, clip.id)
+          : [];
 
       let finalDuration = initialDuration;
       let finalOutPoint = initialOutPoint;
@@ -232,7 +251,7 @@ export function ClipView({ clip, trackId, trackType, trackLocked }: ClipViewProp
       window.addEventListener('pointermove', handlePointerMove);
       window.addEventListener('pointerup', handlePointerUp);
     },
-    [trackLocked, clip, trackId, zoom, timeline, snappingEnabled, playhead, setSelectedClipId, executeCommand]
+    [trackLocked, clip, trackId, zoom, timeline, snappingEnabled, setSelectedClipId, executeCommand]
   );
 
   return (
@@ -243,35 +262,55 @@ export function ClipView({ clip, trackId, trackType, trackLocked }: ClipViewProp
         left: `${clip.start * zoom}px`,
         width: `${clip.duration * zoom}px`,
       }}
-      className={`absolute top-1 bottom-1 rounded border overflow-hidden select-none cursor-move flex items-center justify-between text-white transition-shadow ${getTrackStyles()}`}
+      className={`absolute top-1.5 bottom-1.5 rounded-sm border select-none cursor-grab active:cursor-grabbing flex items-stretch justify-between text-white overflow-hidden transition-colors ${
+        trackLocked ? 'opacity-50 cursor-not-allowed' : ''
+      } ${getTrackStyles()}`}
     >
       {/* Left Trim Handle */}
-      <div
-        onPointerDown={handleLeftTrimDown}
-        className="w-2.5 h-full bg-black/20 hover:bg-white/40 cursor-ew-resize flex items-center justify-center group flex-shrink-0 z-10"
-        title="Trim Start"
-      >
-        <div className="w-0.5 h-4 bg-white/60 group-hover:bg-white" />
-      </div>
+      {!trackLocked && (
+        <div
+          onPointerDown={handleLeftTrimDown}
+          className="w-2.5 hover:w-3.5 h-full bg-black/40 hover:bg-white/40 cursor-ew-resize flex items-center justify-center group flex-shrink-0 z-10 transition-all border-r border-black/30"
+          title="Trim Start Edge"
+        >
+          <div className="w-0.5 h-3.5 bg-white/50 group-hover:bg-white rounded-full" />
+        </div>
+      )}
 
       {/* Clip Content Details */}
-      <div className="flex-1 px-2 overflow-hidden flex flex-col justify-center min-w-0">
-        <span className="text-xs font-medium truncate drop-shadow-sm leading-tight">
-          {clip.name}
-        </span>
-        <span className="text-[10px] text-zinc-300 font-mono drop-shadow-sm leading-tight">
-          {formatDuration(clip.duration)}
-        </span>
+      <div className="flex-1 px-2 overflow-hidden flex flex-col justify-center min-w-0 pointer-events-none">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-medium truncate text-zinc-100 leading-tight">
+            {clip.name}
+          </span>
+          {clip.speed !== 1.0 && (
+            <span className="text-[9px] font-mono px-1 rounded bg-black/50 text-amber-300 font-bold">
+              {clip.speed}x
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="text-[10px] text-zinc-300 font-mono tabular-nums leading-none font-medium">
+            {formatDuration(clip.duration)}
+          </span>
+          {clip.inPoint > 0 && (
+            <span className="text-[9px] text-zinc-400 font-mono tabular-nums leading-none">
+              in: {formatDuration(clip.inPoint)}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Right Trim Handle */}
-      <div
-        onPointerDown={handleRightTrimDown}
-        className="w-2.5 h-full bg-black/20 hover:bg-white/40 cursor-ew-resize flex items-center justify-center group flex-shrink-0 z-10"
-        title="Trim End"
-      >
-        <div className="w-0.5 h-4 bg-white/60 group-hover:bg-white" />
-      </div>
+      {!trackLocked && (
+        <div
+          onPointerDown={handleRightTrimDown}
+          className="w-2.5 hover:w-3.5 h-full bg-black/40 hover:bg-white/40 cursor-ew-resize flex items-center justify-center group flex-shrink-0 z-10 transition-all border-l border-black/30"
+          title="Trim End Edge"
+        >
+          <div className="w-0.5 h-3.5 bg-white/50 group-hover:bg-white rounded-full" />
+        </div>
+      )}
     </div>
   );
-}
+});

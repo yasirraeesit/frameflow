@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback, memo } from 'react';
 import { useTimelineStore } from '../../store/timeline.store';
 import { TimelineToolbar } from './TimelineToolbar';
 import { TimelineRuler } from './TimelineRuler';
@@ -14,13 +14,15 @@ interface TimelineEditorProps {
   onSave?: () => Promise<void>;
 }
 
-export function TimelineEditor({ onOpenHistory, onSave }: TimelineEditorProps) {
+export const TimelineEditor = memo(function TimelineEditor({
+  onOpenHistory,
+  onSave,
+}: TimelineEditorProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [scrollLeft, setScrollLeft] = useState(0);
 
   const timeline = useTimelineStore((s) => s.timeline);
   const zoom = useTimelineStore((s) => s.zoom);
-  const playhead = useTimelineStore((s) => s.playhead);
   const togglePlay = useTimelineStore((s) => s.togglePlay);
   const selectedClipId = useTimelineStore((s) => s.selectedClipId);
   const executeCommand = useTimelineStore((s) => s.executeCommand);
@@ -30,11 +32,11 @@ export function TimelineEditor({ onOpenHistory, onSave }: TimelineEditorProps) {
   const canRedo = useTimelineStore((s) => s.canRedo());
 
   // Handle horizontal scrolling to keep ruler and playhead synced
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     setScrollLeft(e.currentTarget.scrollLeft);
-  };
+  }, []);
 
-  // Global keyboard shortcuts
+  // Global keyboard shortcuts (reads playhead via getState to avoid 60fps re-renders)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if typing in an input or textarea
@@ -56,12 +58,14 @@ export function TimelineEditor({ onOpenHistory, onSave }: TimelineEditorProps) {
       if (e.key === 's' || e.key === 'S') {
         if (!timeline) return;
         e.preventDefault();
+        const currentPlayhead = useTimelineStore.getState().playhead;
 
         let targetTrackId: string | null = null;
         let targetClipId: string | null = null;
 
         if (selectedClipId) {
           for (const track of timeline.tracks) {
+            if (track.locked) continue;
             const found = track.clips.find((c) => c.id === selectedClipId);
             if (found) {
               targetTrackId = track.id;
@@ -73,7 +77,7 @@ export function TimelineEditor({ onOpenHistory, onSave }: TimelineEditorProps) {
           for (const track of timeline.tracks) {
             if (track.locked) continue;
             const found = track.clips.find(
-              (c) => playhead > c.start && playhead < c.start + c.duration
+              (c) => currentPlayhead > c.start && currentPlayhead < c.start + c.duration
             );
             if (found) {
               targetTrackId = track.id;
@@ -85,7 +89,9 @@ export function TimelineEditor({ onOpenHistory, onSave }: TimelineEditorProps) {
 
         if (targetTrackId && targetClipId) {
           const newRightId = `clip-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
-          executeCommand(new SplitClipCommand(targetTrackId, targetClipId, playhead, newRightId));
+          executeCommand(
+            new SplitClipCommand(targetTrackId, targetClipId, currentPlayhead, newRightId)
+          );
         }
         return;
       }
@@ -126,12 +132,12 @@ export function TimelineEditor({ onOpenHistory, onSave }: TimelineEditorProps) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [timeline, selectedClipId, playhead, canUndo, canRedo, togglePlay, executeCommand, undo, redo]);
+  }, [timeline, selectedClipId, canUndo, canRedo, togglePlay, executeCommand, undo, redo]);
 
   if (!timeline) {
     return (
-      <div className="h-64 flex items-center justify-center bg-zinc-950 text-zinc-500 text-sm">
-        No timeline loaded
+      <div className="h-64 flex items-center justify-center bg-studio-bg text-studio-text-dim text-xs font-mono">
+        NO TIMELINE LOADED
       </div>
     );
   }
@@ -139,7 +145,7 @@ export function TimelineEditor({ onOpenHistory, onSave }: TimelineEditorProps) {
   // Calculate track canvas width (based on duration + minimum 60 seconds padding)
   const totalDuration = Math.max(timeline.duration + 30, 60);
   const canvasWidth = Math.max(1200, totalDuration * zoom);
-  const trackCanvasHeight = timeline.tracks.length * 64 + 28; // 64px per track lane + 28px ruler
+  const trackCanvasHeight = timeline.tracks.length * 56 + 28; // 56px per track lane + 28px ruler
 
   // Drop asset onto timeline track handler
   const handleDragOver = (e: React.DragEvent) => {
@@ -187,17 +193,18 @@ export function TimelineEditor({ onOpenHistory, onSave }: TimelineEditorProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-950 border-t border-zinc-800 select-none">
+    <div className="flex flex-col h-full bg-studio-bg border-t border-studio-border select-none">
       {/* Toolbar */}
       <TimelineToolbar onOpenHistory={onOpenHistory} onSave={onSave} />
 
       {/* Main Track Workspace */}
       <div className="flex flex-1 overflow-hidden">
         {/* Track Headers Column */}
-        <div className="w-52 flex-shrink-0 flex flex-col border-r border-zinc-800 bg-zinc-900 z-10">
+        <div className="w-52 flex-shrink-0 flex flex-col border-r border-studio-border bg-studio-surface z-10">
           {/* Top spacer matching ruler height */}
-          <div className="h-7 border-b border-zinc-800 bg-zinc-900 flex items-center px-3 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
-            Tracks
+          <div className="h-7 border-b border-studio-border bg-studio-surface px-3 flex items-center justify-between text-[10px] font-semibold text-studio-text-muted uppercase tracking-wider">
+            <span>Tracks</span>
+            <span className="font-mono text-[9px] text-zinc-500">{timeline.tracks.length}</span>
           </div>
           {/* Track Headers */}
           <div className="flex-1 overflow-hidden">
@@ -211,7 +218,7 @@ export function TimelineEditor({ onOpenHistory, onSave }: TimelineEditorProps) {
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-x-auto overflow-y-auto relative bg-zinc-950"
+          className="flex-1 overflow-x-auto overflow-y-auto relative bg-studio-panel"
         >
           <div
             className="relative"
@@ -247,5 +254,4 @@ export function TimelineEditor({ onOpenHistory, onSave }: TimelineEditorProps) {
       </div>
     </div>
   );
-}
-
+});
