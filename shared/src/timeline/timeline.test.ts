@@ -49,6 +49,79 @@ describe('Timeline Document Schema & Validation', () => {
     assert.strictEqual(parsed.success, true);
   });
 
+  it('validates a 9:16 vertical short timeline document with reframe, captions, and word timing', () => {
+    const verticalShortDoc: TimelineDocument = {
+      id: 'short-doc-1',
+      projectId: 'project-1',
+      clipId: 'clip-short-1',
+      version: 1,
+      fps: 30,
+      duration: 35.5,
+      aspectRatio: '9:16',
+      reframeConfig: {
+        mode: 'auto',
+        cropX: 0.5,
+        cropY: 0.5,
+        scale: 1.0,
+        speakerTracking: true,
+      },
+      captionConfig: {
+        preset: 'hormozi_pop',
+        position: 'bottom',
+        primaryColor: '#FFFFFF',
+        highlightColor: '#FBBF24',
+        fontSize: 48,
+        uppercase: true,
+      },
+      brandKit: {
+        primaryColor: '#FFFFFF',
+        highlightColor: '#FBBF24',
+        fontFamily: 'Inter',
+        captionPreset: 'hormozi_pop',
+        logoPosition: 'top_right',
+        logoScale: 0.15,
+      },
+      tracks: [
+        {
+          id: 'v-track',
+          type: 'VIDEO',
+          name: 'Main Video',
+          locked: false,
+          muted: false,
+          clips: [
+            {
+              id: 'c-1',
+              assetId: 'asset-1',
+              name: 'Interview Snippet',
+              start: 0,
+              duration: 35.5,
+              inPoint: 120.0,
+              outPoint: 155.5,
+              speed: 1.0,
+              proxyUrl: null,
+              thumbnailUrl: null,
+              textConfig: null,
+              words: [
+                { word: 'Welcome', start: 0.0, end: 0.4, highlighted: true },
+                { word: 'back', start: 0.45, end: 0.8 },
+              ],
+              reframe: { cropX: 0.52, cropY: 0.5, scale: 1.0 },
+            },
+          ],
+        },
+      ],
+      markers: [],
+    };
+
+    const parsed = TimelineDocumentSchema.safeParse(verticalShortDoc);
+    assert.strictEqual(parsed.success, true);
+    if (parsed.success) {
+      assert.strictEqual(parsed.data.aspectRatio, '9:16');
+      assert.strictEqual(parsed.data.captionConfig?.preset, 'hormozi_pop');
+      assert.strictEqual(parsed.data.tracks[0]?.clips[0]?.words?.[0]?.word, 'Welcome');
+    }
+  });
+
   it('rejects clips with negative start or duration', () => {
     const invalidClip = {
       id: 'clip-bad',
