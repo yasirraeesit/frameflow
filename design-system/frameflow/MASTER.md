@@ -1,96 +1,59 @@
-# FrameFlow Studio Master Design System
-*Architecture: Next.js 14 + Tailwind CSS + Zustand • Profile: Professional Dark-Mode NLE*
+# Design System Master File — FrameFlow
+
+> **LOGIC:** This Master file documents FrameFlow's **Warm Carbon & Cinema Amber** visual design system.
+> Built for a real, high-craft creator tool—never an AI template.
 
 ---
 
-## 1. System Philosophy & Aesthetic Directives
-
-FrameFlow is engineered for frame-accurate, high-density non-linear editing. The interface removes visual noise to center attention on footage, timecode alignment, and audio waveforms.
-
-### Invariants:
-1. **Zero Muddy Grays:** Every surface belongs to a strict 4-tier obsidian/zinc ramp anchored by absolute black and cold zinc undertones.
-2. **Sharp 1px Structural Dividers:** Floating cards with thick margins and heavy drop shadows are banished. Panels interface cleanly via `1px solid #27272A` hairline dividers.
-3. **Single Studio Accent:** A single Electric Indigo accent (`#6366F1`) commands all active visual states (Playhead, active clip selection ring, play button, primary export CTA). Everything else remains disciplined and neutral.
-4. **Tabular Monospace Timing:** All timecodes, durations, FPS counters, and tick labels enforce `font-mono tabular-nums tracking-wider` to eliminate layout shift during scrubbing.
-5. **Distinct Semantic Track Signatures:**
-   - **VIDEO:** Deep Steel Blue (`#1E3A5F` fill / `#3B82F6` border)
-   - **AUDIO:** Deep Emerald/Teal (`#134E4A` fill / `#14B8A6` border)
-   - **TEXT:** Deep Plum/Violet (`#4C1D95` fill / `#A855F7` border)
+**Project:** FrameFlow (AI-Assisted Video Repurposing Studio & Multi-Track Editor)  
+**Theme:** Warm Carbon & Cinema Amber  
+**Philosophy:** Concrete, functional video editing tool aesthetics. High contrast, precise layout, zero AI buzzwords.
 
 ---
 
-## 2. 4-Tier Surface Hierarchy
+## Global Color Palette
 
-| Tier | Token | Hex Value | Purpose |
-| :--- | :--- | :--- | :--- |
-| **Tier 0** | `--studio-canvas` | `#09090B` | Root app shell, base workspace, modal backdrops |
-| **Tier 1** | `--studio-panel` | `#111114` | Media Bin, Timeline track area, Inspector panels |
-| **Tier 2** | `--studio-surface` | `#18181C` | Headers, toolbars, transport bar, clip card base, input fields |
-| **Tier 3** | `--studio-surface-hover` | `#222228` | Hover states, active segmented buttons, selected rows |
-| **Border** | `--studio-border` | `#27272A` | Structural 1px hairline dividers across all panes |
-| **Border Active** | `--studio-border-hover` | `#3F3F46` | Focused elements, hovered clip edges |
-
----
-
-## 3. Accent & Track Tokens
-
-### Studio Accent (Electric Indigo)
-```css
---studio-accent:          #6366F1; /* Primary CTA, Playhead, Active Ring */
---studio-accent-hover:    #4F46E5;
---studio-accent-subtle:   rgba(99, 102, 241, 0.15);
---studio-accent-glow:     rgba(99, 102, 241, 0.35);
-```
-
-### Semantic Track Tokens
-```css
-/* VIDEO TRACKS */
---track-video-bg:         #1E3A5F; /* Deep Steel Blue fill */
---track-video-border:     #3B82F6; /* Bright structural edge */
---track-video-hover:      #60A5FA;
---track-video-selected:   #93C5FD;
-
-/* AUDIO TRACKS */
---track-audio-bg:         #134E4A; /* Deep Teal fill */
---track-audio-border:     #14B8A6; /* Bright structural edge */
---track-audio-hover:      #2DD4BF;
---track-audio-selected:   #5EEAD4;
-
-/* TEXT / TITLE TRACKS */
---track-text-bg:          #4C1D95; /* Deep Plum/Violet fill */
---track-text-border:      #A855F7; /* Bright structural edge */
---track-text-hover:       #C084FC;
---track-text-selected:    #E9D5FF;
-```
+| Role | Hex | CSS Variable | Usage |
+|------|-----|--------------|-------|
+| **Canvas Base** | `#0C0C0E` | `--shell-bg` | Full app backdrop, theater viewport frame |
+| **Card / Panel Surface** | `#141417` | `--card-bg` / `--sidebar-bg` | Workstation panels, cards, navigation rails |
+| **Elevated Surface / Hover** | `#1E1E23` | `--elevated-bg` | Inputs, dropdown menus, button hovers |
+| **Hover Accent Surface** | `#26262D` | `--elevated-hover` | Active hover states on elevated items |
+| **Structural Hairline Border** | `#28282F` | `--border-color` | 1px hairline rules, component dividers |
+| **Subtle Border** | `#202026` | `--border-subtle` | Inset borders, nested track lanes |
+| **Border Hover** | `#3E3E47` | `--border-hover` | Card and button hover borders |
+| **Primary Brand Accent & Playhead** | `#F59E0B` | `--accent-primary` | Cinema Amber, active scrubber, primary CTA |
+| **Primary Accent Hover** | `#D97706` | `--accent-hover` | Dark amber hover state |
+| **Primary Text on Accent** | `#0C0C0E` | `--accent-text` | Crisp dark text on Amber buttons (WCAG AAA) |
+| **Secondary Accent** | `#FB923C` | `--accent-secondary` | Warm highlight, B-roll tags, secondary glow |
+| **Virality Score & Ready Status** | `#10B981` | `--virality-emerald` | Virality badges, ready states, fast audio stats |
+| **Text Main** | `#F4F4F6` | `--text-main` | Headers, primary titles, timestamps (15:1 contrast) |
+| **Text Muted** | `#9E9EA8` | `--text-muted` | Subheadlines, form labels, parameter descriptions |
+| **Text Dim** | `#71717A` | `--text-dim` | Metadata, shortcut tooltips, inactive states |
 
 ---
 
-## 4. Typography Scale
+## Typography Hierarchy
 
-| Token | Size | Leading | Weight | Usage |
-| :--- | :--- | :--- | :--- | :--- |
-| `text-display` | `14px` | `18px` | `600` | Project titles, modal headers |
-| `text-ui` | `12px` | `16px` | `500` | Button labels, track names, tabs, tooltips |
-| `text-meta` | `11px` | `14px` | `400` | Resolution chips, codecs, secondary status |
-| `text-mono` | `11px–12px` | `none` | `600` | Timecodes (`00:01:24:15`), durations (`tabular-nums`) |
-| `text-badge` | `9px` | `10px` | `700` | Keyboard caps (`S`, `Space`, `Del`, `Ctrl+Z`) |
+- **Display & Headlines:** `Inter` or `Geist` with tight `-0.03em` letter-spacing, font-weight 700/800.
+- **Body & Controls:** `Inter` with neutral letter-spacing, font-weight 400/500/600.
+- **Precision Metrics & Timecodes:** `JetBrains Mono` with `tabular-nums` (`font-variant-numeric: tabular-nums`).
+- **Display Headings Rule:** Keep headlines under 80 characters, avoid single-word color accents in headlines, and use sentence case or natural titling.
 
 ---
 
-## 5. Timeline & Spatial Dimensions
+## Copywriting Invariants
 
-- **Track Height:** Fixed `56px` (`h-14`) per lane.
-- **Track Header Width:** Fixed `208px` (`w-52`) with right border separator `#27272A`.
-- **Ruler Height:** Fixed `28px` (`h-7`) with `1px` tick dividers and monospace labels.
-- **Timeline Toolbar:** Fixed `44px` (`h-11`) with segmented button groups.
-- **Clip Trim Grab Handles:** `10px` hit area on start/end edges with vertical hairline indicator.
-- **Playhead Needle:** `1.5px` vertical hairline (`#6366F1`) with zero horizontal playhead jitter.
-
----
-
-## 6. Prohibited Anti-Patterns
-
-- ❌ **No heavy drop shadows:** Avoid `shadow-xl`, `shadow-2xl` over timeline or canvas.
-- ❌ **No glassmorphism / `backdrop-blur`:** Destroys 60fps scrubbing and adds muddy tinting.
-- ❌ **No proportional numbers for time:** Never use proportional fonts for timecodes or counters.
-- ❌ **No floating cards with thick margins:** Use edge-to-edge docking panels separated by 1px borders.
+- **Banned Words:** Never use generic AI marketing clichés:
+  - ❌ "Unleash"
+  - ❌ "Elevate"
+  - ❌ "Revolutionize"
+  - ❌ "Seamless"
+  - ❌ "Game-changer"
+  - ❌ "Next-gen"
+  - ❌ "Craft" (as marketing verb)
+  - ❌ "Dive into"
+- **Mandated Tone:** Direct, concrete, technical, and written from the perspective of an experienced video editor:
+  - ✅ "Turn one 60-minute video into 15 viral shorts."
+  - ✅ "Paste a YouTube link or drop a raw MP4. FrameFlow finds the sharpest hooks, reframes speakers to 9:16, burns in word-by-word captions, and opens in a full timeline editor if you want to tweak a single frame."
+  - ✅ "Zero monthly credit traps. Plug in your own free Groq or Google AI Studio key and process hours of footage."

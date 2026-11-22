@@ -8,6 +8,7 @@
     "server/*"
   ],
   "scripts": {
+    "dev": "concurrently -k -p \"[{name}]\" -n \"api,worker,web\" -c \"blue.bold,magenta.bold,cyan.bold\" \"npm:dev:api\" \"npm:dev:worker\" \"npm:dev:client\"",
     "dev:client": "npm --workspace=@frameflow/web run dev",
     "dev:api": "npm --workspace=@frameflow/api run dev",
     "dev:worker": "npm --workspace=@frameflow/worker run dev",
@@ -16,6 +17,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {
+    "concurrently": "^10.0.7",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3"
   }
