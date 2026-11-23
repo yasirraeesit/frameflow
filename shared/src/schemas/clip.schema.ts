@@ -42,6 +42,9 @@ export const GeneratedClipSchema = z.object({
   reframeConfig: ReframeConfigSchema.nullable().optional(),
   timelineDocument: TimelineDocumentSchema,
   socialPack: SocialPackSchema.nullable().optional(),
+  commentaryHookScript: z.string().nullable().optional(),
+  sourceType: z.enum(['original', 'commentary']).optional(),
+  monetizationStatus: z.enum(['ready', 'needs_voiceover', 'transformative_applied']).optional(),
   status: ClipStatusSchema.default('GENERATED'),
   renderedS3Key: z.string().nullable().optional(),
   renderedUrl: z.string().nullable().optional(),
@@ -54,15 +57,43 @@ export const GenerateClipsInputSchema = z.object({
   prompt: z.string().optional(),
   targetLength: z.enum(['<30s', '30-60s', '60-90s']).optional().default('30-60s'),
   targetAspect: AspectRatioSchema.optional().default('9:16'),
-  captionPreset: z.enum(['hormozi_pop', 'keyword_highlight', 'karaoke_box', 'clean_minimal']).optional().default('hormozi_pop'),
+  captionPreset: z.enum(['hormozi_pop', 'keyword_highlight', 'karaoke_box', 'clean_minimal', 'vice_neon']).optional().default('hormozi_pop'),
 });
 export type GenerateClipsInput = z.infer<typeof GenerateClipsInputSchema>;
 
 export const UpdateClipInputSchema = z.object({
   title: z.string().min(1).optional(),
   aspectRatio: AspectRatioSchema.optional(),
-  reframeMode: z.enum(['auto', 'split', 'manual']).optional(),
+  reframeMode: z.enum(['auto', 'split', 'manual', 'gameplay_cam', 'gameplay_full']).optional(),
   reframeConfig: ReframeConfigSchema.optional(),
   captionStyle: CaptionConfigSchema.optional(),
 });
 export type UpdateClipInput = z.infer<typeof UpdateClipInputSchema>;
+
+export const GeneratedClipDTOSchema = z.object({
+  id: z.string(),
+  projectId: z.string(),
+  title: z.string(),
+  viralityScore: z.number(),
+  scoreBreakdown: z.object({
+    hook: z.number(),
+    flow: z.number(),
+    engagement: z.number(),
+    clarity: z.number(),
+  }),
+  aiInsight: z.string(),
+  startTime: z.number(),
+  endTime: z.number(),
+  layoutMode: z.enum(['solo', 'split', 'screen_cam', 'gameplay_cam', 'gameplay_full']),
+  socialCopy: z.object({
+    tiktok: z.string(),
+    reels: z.string(),
+    shorts: z.string(),
+  }),
+  commentaryHookScript: z.string().nullable().optional(),
+  sourceType: z.enum(['original', 'commentary']).optional(),
+  monetizationStatus: z.enum(['ready', 'needs_voiceover', 'transformative_applied']).optional(),
+  timelineAst: TimelineDocumentSchema,
+  outputUrl: z.string().nullable().optional(),
+});
+export type GeneratedClipDTO = z.infer<typeof GeneratedClipDTOSchema>;

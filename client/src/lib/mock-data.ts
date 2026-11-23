@@ -15,10 +15,32 @@ export interface MockProject extends ProjectResponse {
   thumbnailUrl: string;
   channelName: string;
   clipCount: number;
-  status: 'PROCESSED' | 'PROCESSING' | 'FAILED';
+  status: 'COMPLETED' | 'PROCESSING' | 'FAILED' | 'PROCESSED';
 }
 
 export const MOCK_PROJECTS: MockProject[] = [
+  {
+    id: 'gta6-demo',
+    title: 'GTA 6 - 26-Min Vice City Next-Gen Gameplay & 5-Star Wanted Walkthrough',
+    description: 'Next-gen open-world gameplay exploring Vice City neon strips, 5-star police pursuits, supercar physics, and unhinged NPC AI glitches.',
+    ownerId: 'd3b07384-d113-4602-9c91-4cf885745100',
+    sourceVideoUrl: 'https://assets.frameflow.dev/samples/gta6-vice-city-26min.mp4',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
+    channelName: 'ViceCityGaming',
+    sourceDurationSec: 1580, // ~26 mins
+    clipCount: 6,
+    status: 'COMPLETED',
+    contentMode: 'gaming',
+    sourceType: 'commentary',
+    targetAspect: '9:16',
+    targetLength: '30-60s',
+    transcript: null,
+    width: 3840,
+    height: 2160,
+    fps: 60.0,
+    createdAt: '2026-11-23T10:00:00Z',
+    updatedAt: '2026-11-23T10:30:00Z',
+  },
   {
     id: 'demo-1',
     title: 'The AI Hardware Revolution & Future of Silicon',
@@ -30,6 +52,8 @@ export const MOCK_PROJECTS: MockProject[] = [
     sourceDurationSec: 3742, // ~62 mins
     clipCount: 8,
     status: 'PROCESSED',
+    contentMode: 'talking_head',
+    sourceType: 'original',
     targetAspect: '9:16',
     targetLength: '30-60s',
     transcript: null,
@@ -50,6 +74,8 @@ export const MOCK_PROJECTS: MockProject[] = [
     sourceDurationSec: 2840, // ~47 mins
     clipCount: 6,
     status: 'PROCESSED',
+    contentMode: 'talking_head',
+    sourceType: 'original',
     targetAspect: '9:16',
     targetLength: '30-60s',
     transcript: null,
@@ -70,6 +96,8 @@ export const MOCK_PROJECTS: MockProject[] = [
     sourceDurationSec: 4120, // ~68 mins
     clipCount: 4,
     status: 'PROCESSED',
+    contentMode: 'talking_head',
+    sourceType: 'original',
     targetAspect: '9:16',
     targetLength: '30-60s',
     transcript: null,
@@ -90,6 +118,8 @@ export const MOCK_PROJECTS: MockProject[] = [
     sourceDurationSec: 3310, // ~55 mins
     clipCount: 5,
     status: 'PROCESSED',
+    contentMode: 'talking_head',
+    sourceType: 'original',
     targetAspect: '9:16',
     targetLength: '30-60s',
     transcript: null,
@@ -236,6 +266,65 @@ function createMockTimelineDoc(
 // ==========================================
 
 export const MOCK_VIRAL_CLIPS: GeneratedClipResponse[] = [
+  {
+    id: 'gta6-clip-01',
+    projectId: 'gta6-demo',
+    title: 'GTA 6 Vice City 5-Star Police Chase Escaped in Under 45s!',
+    hookSummary: 'Extreme audio-energy peak (+14dB gunfire & sirens) followed by a stunt jump over Vice City canal.',
+    viralityScore: 99,
+    scoreBreakdown: {
+      hook: 99,
+      flow: 98,
+      topicRelevance: 99,
+      reasoning: 'Massive audio spikes in the first 2 seconds, high-speed visual motion flow, and viral #GTA6 social tags.',
+    },
+    startTime: 12.0,
+    endTime: 48.5,
+    duration: 36.5,
+    aspectRatio: '9:16',
+    captionStyle: {
+      preset: 'vice_neon',
+      position: 'bottom',
+      primaryColor: '#00F0FF',
+      highlightColor: '#FF007F',
+      uppercase: true,
+      fontSize: 48,
+    },
+    reframeMode: 'gameplay_cam',
+    reframeConfig: {
+      mode: 'gameplay_cam',
+      cropX: 0.5,
+      cropY: 0.5,
+      scale: 1.0,
+      speakerTracking: false,
+    },
+    status: 'READY',
+    renderedS3Key: 'renders/gta6/clip-01-final.mp4',
+    renderedUrl: 'https://assets.frameflow.dev/renders/gta6-clip-01-final.mp4',
+    socialPack: {
+      title: 'GTA 6 Vice City 5-Star Police Escape Escaped in 45s! 🚔🔥',
+      caption: "You won't believe what happens at the 20-second mark of this 5-star chase—watch the minimap right here.",
+      hashtags: ['#GTA6', '#GTAVI', '#ViceCity', '#GamingShorts', '#RockstarGames'],
+    },
+    commentaryHookScript: "You won't believe what happens at the 20-second mark of this 5-star chase—watch the minimap right here.",
+    sourceType: 'commentary',
+    monetizationStatus: 'needs_voiceover',
+    createdAt: '2026-11-23T10:10:00Z',
+    updatedAt: '2026-11-23T10:15:00Z',
+    timelineDocument: createMockTimelineDoc(
+      'gta6-clip-01',
+      'gta6-demo',
+      'GTA 6 Vice City 5-Star Police Chase Escaped in Under 45s!',
+      36.5,
+      [
+        { word: '5-STAR', start: 0.0, end: 0.45, highlighted: true, confidence: 0.99 },
+        { word: 'POLICE', start: 0.5, end: 0.85, confidence: 0.98 },
+        { word: 'CHASE', start: 0.9, end: 1.25, confidence: 0.99 },
+        { word: 'VICE', start: 1.3, end: 1.65, highlighted: true, confidence: 0.99 },
+        { word: 'CITY', start: 1.7, end: 2.15, highlighted: true, confidence: 0.99 },
+      ]
+    ),
+  },
   {
     id: 'e1011111-1111-4111-8111-111111111111',
     projectId: 'demo-1',

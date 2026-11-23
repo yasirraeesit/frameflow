@@ -8,9 +8,12 @@ import redisPlugin from './plugins/redis.js';
 import s3Plugin from './plugins/s3.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { projectsRoutes } from './modules/projects/projects.routes.js';
+import { clipsRoutes } from './modules/projects/clips.routes.js';
 import { assetsRoutes } from './modules/assets/assets.routes.js';
 import { timelineRoutes } from './modules/timeline/timeline.routes.js';
 import { rendersRoutes } from './modules/renders/renders.routes.js';
+import { billingRoutes } from './modules/billing/billing.routes.js';
+import { paddleWebhookRoutes } from './modules/billing/paddle-webhook.routes.js';
 import { wsGatewayPlugin } from './ws/ws.gateway.js';
 
 // Global BigInt JSON serialization
@@ -59,9 +62,12 @@ export function buildServer(): FastifyInstance {
   // Modules
   server.register(authRoutes, { prefix: '/api/auth' });
   server.register(projectsRoutes, { prefix: '/api/projects' });
+  server.register(clipsRoutes, { prefix: '/api/clips' });
   server.register(assetsRoutes, { prefix: '/api/projects' });
   server.register(timelineRoutes, { prefix: '/api/projects' });
   server.register(rendersRoutes, { prefix: '/api/projects' });
+  server.register(billingRoutes, { prefix: '/api/billing' });
+  server.register(paddleWebhookRoutes, { prefix: '/api/webhooks' });
 
   // WebSocket Gateway
   server.register(wsGatewayPlugin);

@@ -1,11 +1,11 @@
 import React from 'react';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { HeroOverlappingStage } from '@/components/landing/HeroOverlappingStage';
+import { ViralityScoreExplorer } from '@/components/landing/ViralityScoreExplorer';
 import { AsymmetricWorkflowShowcase } from '@/components/landing/AsymmetricWorkflowShowcase';
 import { StaggeredBento } from '@/components/landing/StaggeredBento';
-import { PricingComparison } from '@/components/landing/PricingComparison';
 import { FaqAndCtaBanner } from '@/components/landing/FaqAndCtaBanner';
-import { LandingFooter } from '@/components/landing/LandingFooter';
+import { SiteFooter } from '@/components/layout/SiteFooter';
 
 export default function LandingPage(): JSX.Element {
   return (
@@ -13,12 +13,12 @@ export default function LandingPage(): JSX.Element {
       <LandingNavbar />
       <main className="flex-1">
         <HeroOverlappingStage />
+        <ViralityScoreExplorer />
         <AsymmetricWorkflowShowcase />
         <StaggeredBento />
-        <PricingComparison />
         <FaqAndCtaBanner />
       </main>
-      <LandingFooter />
+      <SiteFooter />
     </div>
   );
 }

@@ -39,7 +39,6 @@ export default function ExportsPage(): JSX.Element {
       setCopiedId(item.id);
       setTimeout(() => setCopiedId(null), 2500);
     } catch {
-      // Fallback
       setCopiedId(item.id);
       setTimeout(() => setCopiedId(null), 2500);
     }
@@ -56,15 +55,17 @@ export default function ExportsPage(): JSX.Element {
   const processingCount = exportsList.filter((e) => e.status === 'PROCESSING' || e.status === 'QUEUED').length;
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-16">
+    <div className="space-y-8 max-w-7xl mx-auto pb-16 text-[#14151A]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#27272A] pb-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#E6E4DD] pb-5">
         <div>
           <div className="flex items-center gap-2">
-            <DownloadCloud className="h-5 w-5 text-[#10B981]" aria-hidden="true" />
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">Exports History</h1>
+            <DownloadCloud className="h-5 w-5 text-[#E84C2B]" aria-hidden="true" />
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#14151A]">
+              Exports History
+            </h1>
           </div>
-          <p className="text-xs text-[#94A3B8] mt-1">
+          <p className="text-xs text-[#52545E] mt-1">
             Production-rendered 1080p MP4 shorts with ready-to-publish AI viral titles, hooks, and optimized hashtag bundles.
           </p>
         </div>
@@ -73,15 +74,15 @@ export default function ExportsPage(): JSX.Element {
           <button
             type="button"
             onClick={handleRefresh}
-            className="flex items-center gap-1.5 rounded-xl border border-[#27272A] bg-[#111114] px-3.5 py-2 text-xs font-medium text-[#94A3B8] hover:text-white hover:bg-[#18181C] transition-colors"
+            className="flex items-center gap-1.5 rounded-xl border border-[#DCDAD2] bg-white px-3.5 py-2 text-xs font-semibold text-[#14151A] hover:bg-[#FAF9F5] transition-colors shadow-2xs cursor-pointer"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-white' : ''}`} aria-hidden="true" />
+            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-[#E84C2B]' : 'text-[#52545E]'}`} aria-hidden="true" />
             <span>Refresh Queue</span>
           </button>
           <a
             href={MOCK_EXPORTS[0]?.downloadUrl ?? '#'}
             download
-            className="flex items-center gap-1.5 rounded-xl bg-[#6366F1] hover:bg-[#4F46E5] px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all active:scale-[0.98]"
+            className="flex items-center gap-1.5 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] px-4 py-2 text-xs font-bold text-white shadow-sm transition-all active:scale-[0.98]"
           >
             <Download className="h-3.5 w-3.5" aria-hidden="true" />
             <span>Download All Completed (.zip)</span>
@@ -91,46 +92,43 @@ export default function ExportsPage(): JSX.Element {
 
       {/* Filter Tabs & Stats Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-1.5 rounded-xl border border-[#27272A] bg-[#111114] p-1">
+        <div className="flex items-center gap-1.5 rounded-xl border border-[#E6E4DD] bg-white p-1 shadow-2xs">
           <button
             type="button"
             onClick={() => setActiveTab('ALL')}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-              activeTab === 'ALL'
-                ? 'bg-[#18181C] text-white shadow-sm border border-[#27272A]'
-                : 'text-[#94A3B8] hover:text-white'
-            }`}
+            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${activeTab === 'ALL'
+              ? 'bg-[#14151A] text-white shadow-sm'
+              : 'text-[#52545E] hover:text-[#14151A]'
+              }`}
           >
             All Exports ({exportsList.length})
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('COMPLETED')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-              activeTab === 'COMPLETED'
-                ? 'bg-[#18181C] text-emerald-400 shadow-sm border border-[#27272A]'
-                : 'text-[#94A3B8] hover:text-white'
-            }`}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${activeTab === 'COMPLETED'
+              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+              : 'text-[#52545E] hover:text-[#14151A]'
+              }`}
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
             Completed ({completedCount})
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('PROCESSING')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-              activeTab === 'PROCESSING'
-                ? 'bg-[#18181C] text-indigo-400 shadow-sm border border-[#27272A]'
-                : 'text-[#94A3B8] hover:text-white'
-            }`}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${activeTab === 'PROCESSING'
+              ? 'bg-[#FAF3EE] text-[#E84C2B] border border-[#E84C2B]/30'
+              : 'text-[#52545E] hover:text-[#14151A]'
+              }`}
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[#E84C2B] animate-pulse" />
             In Queue ({processingCount})
           </button>
         </div>
 
-        <div className="text-xs font-mono text-[#71717A] tabular-nums">
-          Storage: <span className="text-[#94A3B8] font-semibold">90.5 MB</span> · FFmpeg v7.0 NVENC accelerated
+        <div className="text-xs font-mono text-[#8C8E9A] tabular-nums">
+          Storage: <span className="text-[#14151A] font-semibold">90.5 MB</span> · FFmpeg v7.0 NVENC accelerated
         </div>
       </div>
 
@@ -142,181 +140,116 @@ export default function ExportsPage(): JSX.Element {
           return (
             <div
               key={item.id}
-              className="rounded-2xl border border-[#27272A] bg-[#111114] p-5 transition-all hover:border-[#3F3F46] shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6"
+              className="rounded-2xl border border-[#E6E4DD] bg-white p-5 shadow-2xs hover:shadow-md transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-5"
             >
-              {/* Left Column: Video Icon / Aspect Badge & Details */}
-              <div className="flex items-start gap-4 flex-1 min-w-0 w-full">
-                {/* 9:16 Aspect Thumbnail Mockup */}
-                <div className="relative h-24 w-16 shrink-0 rounded-xl bg-black border border-[#27272A] overflow-hidden flex flex-col justify-between p-1.5 shadow-md">
-                  <div className="flex justify-between items-center text-[9px] font-mono text-zinc-400">
-                    <span className="bg-black/60 px-1 py-0.2 rounded font-semibold text-emerald-400">9:16</span>
+              <div className="flex items-start gap-4 flex-1 min-w-0">
+                {/* Mini Preview Thumbnail */}
+                <div className="relative h-20 w-12 sm:h-24 sm:w-14 rounded-xl bg-[#121318] border border-[#2A2B36] flex flex-col justify-between p-1 overflow-hidden shrink-0 shadow-inner">
+                  <div className="h-0.5 w-4 rounded-full bg-white/20 mx-auto mt-0.5" />
+                  <div className="my-auto flex justify-center">
+                    <FileVideo className="h-4 w-4 text-[#E84C2B]" />
                   </div>
-                  <div className="flex items-center justify-center my-auto">
-                    <FileVideo className="h-6 w-6 text-indigo-400/80" aria-hidden="true" />
-                  </div>
-                  <div className="text-[9px] font-mono tabular-nums text-zinc-400 text-right bg-black/60 px-1 rounded">
-                    {item.durationSec ? `${item.durationSec}s` : '0:35'}
-                  </div>
+                  <span className="text-[8px] font-mono text-zinc-400 text-center block pb-0.5">
+                    {item.aspectRatio}
+                  </span>
                 </div>
 
-                {/* Metadata & Title */}
-                <div className="space-y-2.5 flex-1 min-w-0">
+                <div className="space-y-1.5 min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-bold text-white tracking-tight truncate max-w-lg">
-                      {item.clipTitle}
-                    </h3>
-                    <span className="rounded-md bg-[#18181C] border border-[#27272A] px-2 py-0.5 text-[10px] font-mono text-[#94A3B8] tabular-nums">
-                      {item.resolution}
-                    </span>
-                    <span className="rounded-md bg-[#18181C] border border-[#27272A] px-2 py-0.5 text-[10px] font-mono text-[#94A3B8] uppercase">
-                      {item.format}
-                    </span>
-                    <span className="rounded-md bg-[#18181C] border border-[#27272A] px-2 py-0.5 text-[10px] font-mono text-[#94A3B8] tabular-nums">
-                      {item.fps} FPS
+                    {item.status === 'COMPLETED' ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-700">
+                        <CheckCircle2 className="h-3 w-3" />
+                        COMPLETED
+                      </span>
+                    ) : item.status === 'PROCESSING' ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#FAF3EE] border border-[#E84C2B]/30 px-2 py-0.5 text-[10px] font-mono font-bold text-[#E84C2B]">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        RENDERING {item.progress}%
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 border border-zinc-200 px-2 py-0.5 text-[10px] font-mono font-semibold text-zinc-600">
+                        <Clock className="h-3 w-3" />
+                        QUEUED
+                      </span>
+                    )}
+
+                    <span className="text-[11px] font-mono text-[#8C8E9A]">
+                      {item.resolution} • {item.format.toUpperCase()} • {item.fps}fps
                     </span>
                     {item.fileSizeMb && (
-                      <span className="rounded-md bg-[#18181C] border border-[#27272A] px-2 py-0.5 text-[10px] font-mono text-emerald-400 font-semibold tabular-nums">
-                        {item.fileSizeMb} MB
-                      </span>
+                      <>
+                        <span className="text-[#C5C3BC]">•</span>
+                        <span className="text-[11px] font-mono text-[#52545E]">
+                          {item.fileSizeMb} MB
+                        </span>
+                      </>
                     )}
                   </div>
 
-                  {/* AI Generated TikTok / Shorts Title & Copy */}
+                  <h3 className="text-sm font-bold text-[#14151A] truncate">
+                    {item.clipTitle}
+                  </h3>
+
                   {item.aiTitle && (
-                    <div className="rounded-xl border border-[#27272A] bg-[#18181C] p-3 space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-indigo-400">
-                          <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                          <span>AI Viral Hook Title:</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyCaption(item)}
-                          className="flex items-center gap-1 text-[11px] font-semibold text-[#94A3B8] hover:text-white transition-colors"
-                        >
-                          {isCopied ? (
-                            <>
-                              <Check className="h-3 w-3 text-emerald-400" aria-hidden="true" />
-                              <span className="text-emerald-400">Copied!</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="h-3 w-3" aria-hidden="true" />
-                              <span>Copy Post Caption</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-
-                      <p className="text-xs text-white font-medium select-all">
-                        {item.aiTitle}
-                      </p>
-
-                      {/* Hashtag Pills */}
-                      {item.hashtags && item.hashtags.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 pt-0.5">
-                          {item.hashtags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="rounded-md bg-[#111114] border border-[#27272A] px-2 py-0.5 text-[10px] font-mono text-[#94A3B8] hover:text-indigo-300 transition-colors cursor-default"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <p className="text-xs text-[#52545E] line-clamp-1">
+                      <span className="font-semibold text-[#14151A]">Viral Title:</span> {item.aiTitle}
+                    </p>
                   )}
 
-                  {/* Processing Progress Bar */}
-                  {item.status === 'PROCESSING' && (
-                    <div className="rounded-xl border border-[#27272A] bg-[#18181C] p-3 space-y-2 max-w-xl">
-                      <div className="flex justify-between items-center text-xs font-mono">
-                        <span className="text-[#94A3B8] flex items-center gap-2">
-                          <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-400" />
-                          Encoding 1080p MP4 (FFmpeg filter_complex burn-in)...
+                  {/* Hashtag bundle */}
+                  {item.hashtags && item.hashtags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 text-[10px] font-mono text-[#E84C2B] pt-0.5">
+                      {item.hashtags.slice(0, 4).map((tag) => (
+                        <span key={tag} className="bg-[#FAF3EE] px-1.5 py-0.5 rounded border border-[#E84C2B]/20">
+                          {tag}
                         </span>
-                        <span className="text-indigo-400 font-bold tabular-nums">{item.progress}%</span>
-                      </div>
-                      <div className="w-full bg-[#111114] rounded-full h-2 overflow-hidden border border-[#27272A]">
-                        <div
-                          className="bg-[#6366F1] h-2 rounded-full transition-all duration-300 shadow-sm shadow-indigo-500/50"
-                          style={{ width: `${item.progress}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {item.status === 'QUEUED' && (
-                    <div className="flex items-center gap-2 text-xs font-mono text-[#71717A]">
-                      <Clock className="h-3.5 w-3.5 text-zinc-400" />
-                      <span>Queued in BullMQ Redis worker pipeline (Position #1)</span>
+                      ))}
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Right Column: Actions */}
-              <div className="flex items-center gap-3 w-full lg:w-auto justify-end border-t lg:border-t-0 border-[#27272A] pt-3 lg:pt-0">
-                {item.status === 'COMPLETED' && (
-                  <div className="flex items-center gap-2.5 w-full sm:w-auto">
+              {/* Action buttons */}
+              <div className="flex items-center gap-2 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-[#F0EFEA]">
+                {item.status === 'COMPLETED' ? (
+                  <>
                     <button
                       type="button"
                       onClick={() => handleCopyCaption(item)}
-                      className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 rounded-xl border border-[#27272A] bg-[#18181C] hover:bg-[#202026] px-3.5 py-2.5 text-xs font-medium text-[#94A3B8] hover:text-white transition-colors"
-                      title="Copy viral title and tags"
+                      className="flex-1 md:flex-none flex items-center justify-center gap-1.5 rounded-xl border border-[#DCDAD2] bg-white hover:bg-[#FAF9F5] px-3.5 py-2 text-xs font-semibold text-[#14151A] transition-colors shadow-2xs cursor-pointer"
                     >
                       {isCopied ? (
                         <>
-                          <Check className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
-                          <span className="text-emerald-400 font-semibold">Copied!</span>
+                          <Check className="h-3.5 w-3.5 text-emerald-600" />
+                          <span className="text-emerald-700">Copied!</span>
                         </>
                       ) : (
                         <>
-                          <Share2 className="h-3.5 w-3.5" aria-hidden="true" />
-                          <span>Copy Social Copy</span>
+                          <Copy className="h-3.5 w-3.5 text-[#52545E]" />
+                          <span>Copy Social Pack</span>
                         </>
                       )}
                     </button>
 
                     <a
-                      href={item.downloadUrl ?? '#'}
+                      href={item.downloadUrl}
                       download
-                      className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 rounded-xl bg-[#6366F1] hover:bg-[#4F46E5] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-all active:scale-[0.98]"
+                      className="flex-1 md:flex-none flex items-center justify-center gap-1.5 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] px-4 py-2 text-xs font-bold text-white shadow-sm transition-all active:scale-[0.98]"
                     >
-                      <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>Download 1080p MP4</span>
+                      <Download className="h-3.5 w-3.5" />
+                      <span>Download MP4</span>
                     </a>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 text-xs text-[#8C8E9A] font-mono">
+                    <Loader2 className="h-4 w-4 animate-spin text-[#E84C2B]" />
+                    <span>Transcoding 1080p...</span>
                   </div>
-                )}
-
-                {item.status === 'PROCESSING' && (
-                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 px-3.5 py-2 text-xs font-semibold text-indigo-400">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                    Rendering ({item.progress}%)
-                  </span>
-                )}
-
-                {item.status === 'QUEUED' && (
-                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-zinc-500/10 border border-zinc-500/20 px-3.5 py-2 text-xs font-medium text-zinc-400">
-                    <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                    In Render Queue
-                  </span>
                 )}
               </div>
             </div>
           );
         })}
-
-        {filteredExports.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-[#27272A] bg-[#111114] p-12 text-center space-y-3">
-            <DownloadCloud className="h-8 w-8 text-[#71717A] mx-auto" />
-            <h3 className="text-sm font-semibold text-white">No exports found</h3>
-            <p className="text-xs text-[#94A3B8]">
-              You don&apos;t have any video exports matching the &ldquo;{activeTab}&rdquo; filter.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

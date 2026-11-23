@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
   FileAudio,
@@ -10,65 +11,53 @@ import {
   CheckCircle2,
   Loader2,
   ArrowRight,
-  Terminal,
-  Activity,
+  Clock,
+  Coins,
+  Check,
+  Mail,
+  Film,
+  Zap,
+  Play,
+  ShieldCheck,
 } from 'lucide-react';
 
-interface PipelineStep {
+interface PipelineStage {
   id: number;
   label: string;
   description: string;
-  icon: React.ComponentType<{ className?: string }>;
   startProgress: number;
   endProgress: number;
 }
 
-const PIPELINE_STEPS: PipelineStep[] = [
+const PIPELINE_STAGES: PipelineStage[] = [
   {
     id: 1,
-    label: 'Ingesting Audio & Demuxing',
-    description: 'Separating 16kHz audio stream, applying noise reduction & loudness normalization.',
-    icon: FileAudio,
+    label: 'Ingesting & Extracting Clean Audio',
+    description: 'Separating 48kHz audio stream, applying neural noise reduction & loudness leveling.',
     startProgress: 0,
     endProgress: 25,
   },
   {
     id: 2,
-    label: 'Whisper Word Timestamps',
-    description: 'Extracting frame-accurate word boundary timings, punctuation, and speaker turns.',
-    icon: Sparkles,
+    label: 'Word-Level Transcription & Speaker Diarization',
+    description: 'Extracting frame-accurate word boundary timestamps and 2-speaker conversational turns.',
     startProgress: 25,
-    endProgress: 50,
+    endProgress: 55,
   },
   {
     id: 3,
-    label: 'AI Viral Scoring & Hook Detection',
-    description: 'Multimodal LLM evaluating hook potency, pacing, and retention drop-off probability.',
-    icon: Bot,
-    startProgress: 50,
-    endProgress: 75,
+    label: 'Scoring Viral Hooks & Retention Peaks',
+    description: 'Evaluating hook potency, conversational pacing, and retention drop-off probability (1–99).',
+    startProgress: 55,
+    endProgress: 82,
   },
   {
     id: 4,
-    label: 'Auto 9:16 Reframe & Captions',
-    description: 'YOLOv8 face tracking dynamic crop + generating Hormozi animated subtitle overlays.',
-    icon: Crop,
-    startProgress: 75,
+    label: 'Auto-Reframing 9:16 & Rendering Captions',
+    description: 'Composing active speaker face tracking and burning animated Hormozi subtitle layers.',
+    startProgress: 82,
     endProgress: 100,
   },
-];
-
-const LOG_MESSAGES = [
-  'Initialized FFprobe demuxer on source stream...',
-  'Audio stream separated: 48kHz stereo -> 16kHz mono PCM buffer',
-  'Whisper v3 turbo loaded into GPU memory (78ms latency)',
-  'Detected 2 speakers across 1,842 transcribed tokens',
-  'Prompting Gemini 1.5 Pro Hook Detector with full conversation AST...',
-  'Extracted 8 high-scoring candidate segments (Score > 75)',
-  'Top hook found at offset 02:22.00 (Virality Score 97)',
-  'Generating 9:16 crop box with YOLOv8 face-tracking coordinates...',
-  'Composing Hormozi animated subtitle layers...',
-  'Synthesizing final viral short package...',
 ];
 
 export default function ProcessingPage(): JSX.Element {
@@ -76,192 +65,261 @@ export default function ProcessingPage(): JSX.Element {
   const router = useRouter();
   const projectId = (params?.id as string) || 'demo-1';
 
-  const [progress, setProgress] = useState(12);
-  const [logs, setLogs] = useState<string[]>([LOG_MESSAGES[0], LOG_MESSAGES[1]]);
+  const [progress, setProgress] = useState<number>(projectId === 'demo-1' ? 58 : 10);
+  const [notifyByEmail, setNotifyByEmail] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Poll real project status every 2 seconds, or run smooth progress for demo
   useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          return 100;
-        }
-        const increment = Math.floor(Math.random() * 6) + 3;
-        const next = Math.min(prev + increment, 100);
-
-        // Add log messages based on progress milestones
-        const logIndex = Math.floor((next / 100) * LOG_MESSAGES.length);
-        if (logIndex < LOG_MESSAGES.length) {
-          setLogs((l) => {
-            const nextMsg = LOG_MESSAGES[logIndex];
-            if (!l.includes(nextMsg)) {
-              return [...l, nextMsg];
-            }
-            return l;
-          });
-        }
-
-        return next;
-      });
-    }, 450);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  // When progress reaches 100, automatically redirect to results feed
-  useEffect(() => {
-    if (progress >= 100) {
-      const redirectTimer = setTimeout(() => {
-        router.push(`/projects/${projectId}`);
-      }, 700);
-      return () => clearTimeout(redirectTimer);
+    if (projectId === 'demo-1') {
+      const timer = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(timer);
+            return 100;
+          }
+          const inc = Math.floor(Math.random() * 4) + 2;
+          return Math.min(100, prev + inc);
+        });
+      }, 450);
+      return () => clearInterval(timer);
     }
-  }, [progress, projectId, router]);
 
-  const handleSkip = () => {
-    router.push(`/projects/${projectId}`);
-  };
+    let isCancelled = false;
 
-  const currentStep =
-    PIPELINE_STEPS.find(
-      (s) => progress >= s.startProgress && progress < s.endProgress
-    ) || PIPELINE_STEPS[PIPELINE_STEPS.length - 1];
+    const pollProject = async () => {
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('frameflow_token') : null;
+        if (!token) return;
+
+        const res = await fetch(`/api/projects/${projectId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const p = data.project;
+          if (p) {
+            if (p.progressPercent !== undefined) {
+              setProgress(p.progressPercent);
+            }
+            if (p.status === 'COMPLETED') {
+              setProgress(100);
+              setTimeout(() => {
+                if (!isCancelled) {
+                  router.push(`/projects/${projectId}`);
+                }
+              }, 600);
+            } else if (p.status === 'FAILED') {
+              setErrorMessage(p.errorMessage || 'AI pipeline encountered an error. Deducted credits were automatically refunded.');
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Project polling error:', err);
+      }
+    };
+
+    pollProject();
+    const pollInterval = setInterval(pollProject, 2000);
+    return () => {
+      isCancelled = true;
+      clearInterval(pollInterval);
+    };
+  }, [projectId, router]);
+
+  // Compute remaining seconds based on progress
+  const secondsRemaining = Math.max(5, Math.round(((100 - progress) / 100) * 80));
 
   return (
-    <div className="max-w-4xl mx-auto py-10 space-y-8 pb-16">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#27272A] pb-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-ping" />
-            <span className="text-xs font-mono uppercase tracking-wider text-emerald-400 font-semibold">
-              BullMQ Worker Pipeline Active
-            </span>
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white mt-1">
-            Analyzing Video & Generating Shorts
-          </h1>
-          <p className="text-xs text-[#94A3B8] mt-1">
-            Project <span className="font-mono text-white">{projectId}</span> · Extracting 8 viral hooks with Whisper v3 & Gemini 1.5 Pro
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleSkip}
-          className="flex items-center gap-1.5 rounded-xl border border-[#27272A] bg-[#111114] px-4 py-2 text-xs font-semibold text-white hover:bg-[#18181C] hover:border-[#3F3F46] transition-all"
-        >
-          <span>Skip to Results</span>
-          <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-        </button>
-      </div>
-
-      {/* Main Progress Gauge Card */}
-      <div className="rounded-2xl border border-[#27272A] bg-[#111114] p-6 shadow-xl space-y-5">
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <span className="text-xs font-semibold text-white">Pipeline Execution</span>
-            <p className="text-[11px] text-[#94A3B8] font-mono">
-              Current Step: <strong className="text-indigo-400">{currentStep.label}</strong>
+    <div className="bg-[#FAF9F5] min-h-[calc(100vh-3.5rem)] flex flex-col justify-center py-10 px-4 text-[#14151A] select-none antialiased">
+      {/* ========================================================= */}
+      {/* CENTERED PROCESSING CARD                                  */}
+      {/* ========================================================= */}
+      <div className="max-w-[680px] w-full mx-auto bg-white border border-[#E6E4DD] rounded-2xl p-6 sm:p-8 shadow-[0_14px_40px_rgba(20,21,26,0.06)] space-y-7">
+        {errorMessage && (
+          <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-xs text-red-800 space-y-2">
+            <p className="font-bold flex items-center gap-1.5">
+              <span>{errorMessage}</span>
             </p>
+            <div>
+              <Link href="/dashboard" className="font-bold underline text-red-900">
+                &larr; Return to Dashboard
+              </Link>
+            </div>
           </div>
-          <div className="text-right">
-            <span className="text-2xl font-bold font-mono text-white tabular-nums">
-              {progress}%
-            </span>
-          </div>
-        </div>
-
-        {/* Outer Progress Bar */}
-        <div className="w-full bg-[#18181C] rounded-full h-3 overflow-hidden border border-[#27272A] p-0.5">
-          <div
-            className="bg-gradient-to-r from-indigo-500 via-indigo-400 to-emerald-400 h-full rounded-full transition-all duration-300 ease-out shadow-sm"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
-        {/* 4 Steps Interactive Tracker */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
-          {PIPELINE_STEPS.map((step) => {
-            const isFinished = progress >= step.endProgress;
-            const isCurrent = progress >= step.startProgress && progress < step.endProgress;
-            const Icon = step.icon;
-
-            return (
-              <div
-                key={step.id}
-                className={`rounded-xl border p-3.5 flex flex-col justify-between transition-all ${
-                  isCurrent
-                    ? 'border-[#6366F1] bg-[#18181C] shadow-md ring-1 ring-[#6366F1]/50'
-                    : isFinished
-                    ? 'border-[#27272A] bg-[#141418]'
-                    : 'border-[#1E1E22] bg-[#111114] opacity-50'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg border ${
-                      isCurrent
-                        ? 'border-indigo-500/40 bg-indigo-500/10 text-indigo-400'
-                        : isFinished
-                        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
-                        : 'border-[#27272A] bg-[#18181C] text-[#71717A]'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" aria-hidden="true" />
-                  </div>
-
-                  {isFinished ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-                  ) : isCurrent ? (
-                    <Loader2 className="h-4 w-4 text-indigo-400 animate-spin" aria-hidden="true" />
-                  ) : (
-                    <span className="text-[10px] font-mono text-[#71717A]">Step {step.id}</span>
-                  )}
-                </div>
-
-                <div className="space-y-0.5">
-                  <h3 className="text-xs font-semibold text-white">{step.label}</h3>
-                  <p className="text-[10px] text-[#94A3B8] line-clamp-2 leading-relaxed">
-                    {step.description}
-                  </p>
-                </div>
+        )}
+        {/* Top Source Video Pill */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-[#E6E4DD] bg-[#FAF9F5]/70">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Thumbnail */}
+            <div className="relative h-12 w-16 rounded-lg bg-cover bg-center shrink-0 border border-[#E6E4DD] overflow-hidden"
+              style={{
+                backgroundImage:
+                  'url(https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=400&q=80)',
+              }}
+            >
+              <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                <Play className="h-3.5 w-3.5 text-white fill-white/80" />
               </div>
-            );
-          })}
-        </div>
-      </div>
+              <div className="absolute bottom-0.5 right-0.5 bg-black/80 text-[8px] font-mono text-white px-1 rounded">
+                58:14
+              </div>
+            </div>
 
-      {/* Real-time Streaming Terminal Log Box */}
-      <div className="rounded-2xl border border-[#27272A] bg-[#0C0C0E] overflow-hidden shadow-lg">
-        <div className="flex items-center justify-between border-b border-[#27272A] px-4 py-2.5 bg-[#141418]">
-          <div className="flex items-center gap-2">
-            <Terminal className="h-3.5 w-3.5 text-indigo-400" aria-hidden="true" />
-            <span className="text-xs font-mono font-medium text-white">Redis Pub/Sub Stream Logs</span>
+            {/* Video Meta */}
+            <div className="truncate">
+              <h3 className="text-xs font-bold text-[#14151A] truncate max-w-[320px] sm:max-w-[380px]">
+                Building a $10M SaaS Without VC Funding — Founder Podcast
+              </h3>
+              <p className="text-[11px] text-[#52545E] flex items-center gap-2 mt-0.5">
+                <span>Duration: 58:14</span>
+                <span>&bull;</span>
+                <span>Source: YouTube 4K</span>
+              </p>
+            </div>
           </div>
-          <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
-            <Activity className="h-3 w-3" aria-hidden="true" />
-            Live WebSocket
+
+          {/* Credits Used Badge */}
+          <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-[#FFF8F6] text-[#E84C2B] border border-[#E84C2B]/25 font-mono font-bold text-xs px-3 py-1 shadow-2xs">
+            <Coins className="h-3 w-3" />
+            <span>58 credits used</span>
           </span>
         </div>
 
-        <div className="p-4 font-mono text-xs text-[#94A3B8] space-y-1.5 max-h-52 overflow-y-auto">
-          {logs.map((log, index) => (
-            <div key={index} className="flex items-start gap-2">
-              <span className="text-[#71717A] shrink-0 text-[11px] tabular-nums">
-                [{new Date().toLocaleTimeString()}]
+        {/* Progress Header & Animated Bar */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between text-xs">
+            <div className="space-y-0.5">
+              <span className="text-xs font-mono uppercase tracking-wider text-[#E84C2B] font-bold flex items-center gap-1.5">
+                <Zap className="h-3.5 w-3.5 animate-pulse" />
+                <span>AI Processing In Progress</span>
               </span>
-              <span className={index === logs.length - 1 ? 'text-emerald-400 font-semibold' : 'text-[#F8FAFC]'}>
-                {log}
+              <p className="text-xs text-[#52545E]">
+                Extracting high-retention shorts with AI Virality Scoring
+              </p>
+            </div>
+
+            <div className="text-right">
+              <span className="text-2xl font-black font-mono text-[#14151A] tabular-nums">
+                {progress}%
               </span>
+              <div className="text-[10px] font-mono text-[#8C8E9A]">
+                ~{secondsRemaining}s remaining
+              </div>
             </div>
-          ))}
-          {progress < 100 && (
-            <div className="flex items-center gap-2 text-indigo-400 pt-1">
-              <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
-              <span className="text-[11px]">Processing next audio chunk...</span>
-            </div>
-          )}
+          </div>
+
+          {/* Cinema Coral Progress Bar */}
+          <div className="w-full bg-[#FAF9F5] rounded-full h-3 overflow-hidden border border-[#E6E4DD] p-0.5">
+            <div
+              className="bg-[#E84C2B] h-full rounded-full transition-all duration-300 ease-out shadow-xs"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        {/* 4-Stage Real-Time Pipeline Checklist */}
+        <div className="space-y-2.5 pt-1 border-t border-[#F0EFEA]">
+          <span className="text-[11px] font-mono font-bold text-[#8C8E9A] uppercase tracking-wider block mb-1">
+            Pipeline Verification Stages
+          </span>
+
+          <div className="space-y-2">
+            {PIPELINE_STAGES.map((stage) => {
+              const isCompleted = progress >= stage.endProgress;
+              const isActive = progress >= stage.startProgress && progress < stage.endProgress;
+              const isQueued = progress < stage.startProgress;
+
+              return (
+                <div
+                  key={stage.id}
+                  className={`p-3.5 rounded-xl border transition-all flex items-start gap-3.5 ${isActive
+                      ? 'border-[#E84C2B] bg-[#FAF3EE] shadow-2xs'
+                      : isCompleted
+                        ? 'border-emerald-200/80 bg-emerald-50/50'
+                        : 'border-[#E6E4DD] bg-[#FAF9F5] opacity-60'
+                    }`}
+                >
+                  {/* Status Indicator Icon */}
+                  <div className="shrink-0 mt-0.5">
+                    {isCompleted ? (
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white shadow-2xs">
+                        <Check className="h-3 w-3 stroke-[3]" />
+                      </div>
+                    ) : isActive ? (
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E84C2B] text-white shadow-2xs">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      </div>
+                    ) : (
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full border border-[#DCDAD2] bg-white text-[#8C8E9A] text-[10px] font-mono font-bold">
+                        {stage.id}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Stage Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h4
+                        className={`text-xs font-bold ${isActive ? 'text-[#E84C2B]' : isCompleted ? 'text-[#14151A]' : 'text-[#8C8E9A]'
+                          }`}
+                      >
+                        {stage.label}
+                      </h4>
+                      <span
+                        className={`text-[10px] font-mono uppercase font-bold px-1.5 py-0.2 rounded ${isCompleted
+                            ? 'text-emerald-700 bg-emerald-100/70'
+                            : isActive
+                              ? 'text-[#E84C2B] bg-white border border-[#E84C2B]/30'
+                              : 'text-[#8C8E9A]'
+                          }`}
+                      >
+                        {isCompleted ? 'Completed' : isActive ? 'Processing' : 'Queued'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#52545E] mt-0.5 leading-snug">
+                      {stage.description}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Bottom Action Bar */}
+        <div className="pt-2 border-t border-[#F0EFEA] space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-[#52545E]">
+            {/* Notify Me Toggle */}
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={notifyByEmail}
+                onChange={(e) => setNotifyByEmail(e.target.checked)}
+                className="h-4 w-4 rounded border-[#DCDAD2] text-[#E84C2B] focus:ring-[#E84C2B]"
+              />
+              <span className="flex items-center gap-1.5 font-medium text-[#14151A]">
+                <Mail className="h-3.5 w-3.5 text-[#52545E]" />
+                <span>Notify me by email when ready</span>
+              </span>
+            </label>
+
+            <span className="text-[10px] font-mono text-[#8C8E9A]">
+              Cloud Pipeline: GPU Cluster #fra-04
+            </span>
+          </div>
+
+          {/* Jump to Results Button */}
+          <Link
+            href={`/projects/${projectId}`}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white py-3 px-4 text-xs sm:text-sm font-bold transition-all shadow-md active:scale-[0.98]"
+          >
+            <span>{progress >= 100 ? 'View Generated Shorts Now' : 'Skip & View Generated Shorts Now'}</span>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </div>
     </div>

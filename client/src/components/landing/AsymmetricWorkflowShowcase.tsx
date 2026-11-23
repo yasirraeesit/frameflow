@@ -12,6 +12,10 @@ import {
   Type,
   Layers,
   Sparkles,
+  Shield,
+  Smartphone,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export function AsymmetricWorkflowShowcase(): JSX.Element {
@@ -19,8 +23,10 @@ export function AsymmetricWorkflowShowcase(): JSX.Element {
   const [cutWord1, setCutWord1] = useState(false);
   const [cutWord2, setCutWord2] = useState(false);
 
-  // Timeline scrubber state
-  const [playheadPos, setPlayheadPos] = useState(42);
+  // Safe zone toggle state
+  const [showSafeZones, setShowSafeZones] = useState(false);
+
+  // Undo notification state
   const [undoToast, setUndoToast] = useState(false);
 
   const handleUndo = () => {
@@ -35,15 +41,15 @@ export function AsymmetricWorkflowShowcase(): JSX.Element {
   const currentDuration = (44.0 - cutSeconds).toFixed(1);
 
   return (
-    <section id="how-it-works" className="border-t border-[#E6E4DD] bg-[#FAF9F5] py-20 lg:py-28">
-      <div id="editor-showcase" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section id="editor" className="border-t border-[#E6E4DD] bg-[#FAF9F5] py-20 lg:py-28 text-[#14151A] scroll-mt-16">
+      <div id="how-it-works" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-start">
           {/* ========================================================= */}
           {/* LEFT STICKY COLUMN (40% / 5 cols)                         */}
           {/* ========================================================= */}
           <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-8">
             <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#E6E4DD] bg-white px-3 py-1 text-xs font-mono tracking-wider uppercase text-[#E84C2B] shadow-2xs">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#E6E4DD] bg-white px-3.5 py-1 text-xs font-mono tracking-wider uppercase text-[#E84C2B] shadow-2xs">
                 <Sliders className="h-3.5 w-3.5" />
                 <span>TEXT & TIMELINE WORKFLOW</span>
               </div>
@@ -104,7 +110,7 @@ export function AsymmetricWorkflowShowcase(): JSX.Element {
 
             <Link
               href="/editor/e1011111-1111-4111-8111-111111111111"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#14151A] hover:bg-[#252732] text-white px-5 py-3 text-xs font-bold transition-all shadow-sm"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#14151A] hover:bg-[#252732] text-white px-5 py-3 text-xs font-bold transition-all shadow-sm cursor-pointer"
             >
               <span>Test Interactive Studio Editor</span>
               <ArrowRight className="h-3.5 w-3.5 text-[#E84C2B]" />
@@ -118,7 +124,7 @@ export function AsymmetricWorkflowShowcase(): JSX.Element {
             {/* 1. INTERACTIVE TRANSCRIPT CUT EDITOR (Crisp Light Card) */}
             <div className="rounded-2xl border border-[#E6E4DD] bg-white p-5 sm:p-6 shadow-[0_8px_30px_rgba(20,21,26,0.04)] space-y-4">
               {/* Window Header */}
-              <div className="flex items-center justify-between border-b border-[#E6E4DD] pb-3 text-xs">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E6E4DD] pb-3 text-xs">
                 <div className="flex items-center gap-2.5">
                   <div className="flex gap-1.5">
                     <span className="h-2.5 w-2.5 rounded-full bg-[#E6E4DD]" />
@@ -131,12 +137,26 @@ export function AsymmetricWorkflowShowcase(): JSX.Element {
                 </div>
 
                 <div className="flex items-center gap-2 font-mono text-[11px]">
+                  {/* Safe Zone Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowSafeZones(!showSafeZones)}
+                    className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-bold transition-colors cursor-pointer ${
+                      showSafeZones
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-300'
+                        : 'bg-[#FAF9F5] text-[#52545E] border border-[#E6E4DD] hover:text-[#14151A]'
+                    }`}
+                  >
+                    <Smartphone className="h-3 w-3" />
+                    <span>{showSafeZones ? 'Safe Zones ON' : 'Show Safe Zones'}</span>
+                  </button>
+
                   {cutSeconds > 0 ? (
                     <span className="text-[#E84C2B] font-bold bg-[#E84C2B]/10 border border-[#E84C2B]/30 px-2 py-0.5 rounded-md animate-pulse">
                       -{cutSeconds.toFixed(1)}s trimmed
                     </span>
                   ) : (
-                    <span className="text-[#8C8E9A]">Click filler words to strike out</span>
+                    <span className="text-[#8C8E9A] hidden sm:inline">Click words to strike</span>
                   )}
                   <span className="rounded bg-[#FAF9F5] border border-[#E6E4DD] px-2 py-0.5 text-[#14151A] font-bold tabular-nums">
                     {currentDuration}s duration
@@ -150,7 +170,7 @@ export function AsymmetricWorkflowShowcase(): JSX.Element {
                   <span className="font-mono text-[#8C8E9A]">SPEAKER 01 • FOUNDER INTERVIEW</span>
                   <span className="text-[#E84C2B] font-medium flex items-center gap-1">
                     <Scissors className="h-3 w-3" />
-                    Try clicking the highlighted awkward filler words
+                    Click highlighted filler words to strike out & trim video
                   </span>
                 </div>
 
@@ -163,7 +183,7 @@ export function AsymmetricWorkflowShowcase(): JSX.Element {
                     onClick={() => setCutWord1(!cutWord1)}
                     className={`relative rounded px-1.5 py-0.5 font-bold transition-all cursor-pointer ${
                       cutWord1
-                        ? 'bg-red-100 text-red-600 line-through border border-red-300'
+                        ? 'bg-rose-100 text-rose-700 line-through border border-rose-300'
                         : 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200'
                     }`}
                     title="Click to strike out and trim footage"
@@ -179,7 +199,7 @@ export function AsymmetricWorkflowShowcase(): JSX.Element {
                     onClick={() => setCutWord2(!cutWord2)}
                     className={`relative rounded px-1.5 py-0.5 font-bold transition-all cursor-pointer ${
                       cutWord2
-                        ? 'bg-red-100 text-red-600 line-through border border-red-300'
+                        ? 'bg-rose-100 text-rose-700 line-through border border-rose-300'
                         : 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200'
                     }`}
                     title="Click to strike out and trim footage"
@@ -200,23 +220,35 @@ export function AsymmetricWorkflowShowcase(): JSX.Element {
                     className="inline-flex items-center gap-1.5 rounded-lg border border-[#E6E4DD] bg-white hover:bg-[#FAF9F5] px-3 py-1.5 text-xs font-semibold text-[#14151A] transition-colors shadow-2xs cursor-pointer"
                   >
                     <RotateCcw className="h-3.5 w-3.5 text-[#52545E]" />
-                    <span>Oops, Undo (Ctrl+Z)</span>
+                    <span>Undo (Ctrl+Z)</span>
                   </button>
                   {undoToast && (
                     <span className="text-[11px] font-mono text-emerald-600 font-semibold animate-pulse">
-                      ✓ Words restored
+                      ✓ Words restored to timeline
                     </span>
                   )}
                 </div>
 
                 <span className="text-[11px] font-mono text-[#8C8E9A]">
-                  Zero re-encode delay • Timeline trims in real time
+                  Zero re-encode delay • Synchronized in real time
                 </span>
               </div>
             </div>
 
             {/* 2. SYNCHRONIZED MULTI-TRACK TIMELINE (Dark Frame so Tracks Pop) */}
-            <div className="rounded-2xl border border-[#2A2B35] bg-[#121318] p-5 shadow-xl text-white space-y-4">
+            <div className="rounded-2xl border border-[#2A2B35] bg-[#121318] p-5 shadow-xl text-white space-y-4 relative overflow-hidden">
+              {/* Safe Zone Visual Overlays when toggled */}
+              {showSafeZones && (
+                <div className="absolute inset-x-5 top-12 bottom-12 border-2 border-dashed border-emerald-400/40 rounded-xl pointer-events-none flex flex-col justify-between p-2 z-20">
+                  <span className="text-[9px] font-mono text-emerald-400 font-bold bg-black/70 px-1.5 py-0.5 rounded self-start">
+                    TikTok/Reels Safe Zone Active
+                  </span>
+                  <span className="text-[9px] font-mono text-emerald-400 font-bold bg-black/70 px-1.5 py-0.5 rounded self-end">
+                    Unobstructed from Engagement Icons
+                  </span>
+                </div>
+              )}
+
               {/* Timeline Header */}
               <div className="flex items-center justify-between border-b border-[#242530] pb-2.5 text-xs font-mono">
                 <div className="flex items-center gap-2">

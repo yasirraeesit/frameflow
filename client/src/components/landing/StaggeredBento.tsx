@@ -10,9 +10,10 @@ import {
   ArrowRight,
   Cpu,
   Sliders,
+  Check,
 } from 'lucide-react';
 
-type PresetType = 'bold_pop' | 'karaoke_box' | 'clean_cinema';
+type PresetType = 'bold_pop' | 'karaoke_box' | 'clean_cinema' | 'minimal_top';
 type PositionType = 'bottom' | 'center' | 'top';
 
 export function StaggeredBento(): JSX.Element {
@@ -24,19 +25,20 @@ export function StaggeredBento(): JSX.Element {
 
   const colorDots = [
     { name: 'Cinema Coral', hex: '#E84C2B' },
-    { name: 'Electric Yellow', hex: '#FACC15' },
-    { name: 'Vivid Cyan', hex: '#06B6D4' },
+    { name: 'Cinema Amber', hex: '#F59E0B' },
     { name: 'Crisp Emerald', hex: '#10B981' },
+    { name: 'Vivid Cyan', hex: '#06B6D4' },
+    { name: 'Deep Violet', hex: '#8B5CF6' },
   ];
 
   return (
-    <section id="engine" className="border-t border-[#E6E4DD] bg-[#FAF9F5] py-20 lg:py-28">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
+    <section id="engine" className="border-t border-[#E6E4DD] bg-[#FAF9F5] py-20 lg:py-28 text-[#14151A] scroll-mt-16">
+      <div id="captions" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
         {/* Section Header with Editorial Serif */}
         <div className="max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#E6E4DD] bg-white px-3 py-1 text-xs font-mono tracking-wider uppercase text-[#E84C2B] shadow-2xs">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#E6E4DD] bg-white px-3.5 py-1 text-xs font-mono tracking-wider uppercase text-[#E84C2B] shadow-2xs">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>CUSTOM CAPTION & BYOK ENGINE</span>
+            <span>CUSTOM CAPTIONS & MANAGED CLOUD ENGINE</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl font-bold tracking-[-0.035em] text-[#14151A] leading-tight">
@@ -76,52 +78,75 @@ export function StaggeredBento(): JSX.Element {
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
               {/* Controls (7 cols) */}
               <div className="sm:col-span-7 space-y-4">
-                {/* Presets: Bold Pop, Karaoke Box, Clean Cinema */}
+                {/* 4 Presets: Hormozi Pop, Karaoke Glow, Clean Cinema, Minimal Top */}
                 <div className="space-y-1.5">
-                  <span className="text-[11px] font-mono uppercase tracking-wider text-[#8C8E9A] block">
-                    Caption Style
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-[#8C8E9A] block font-semibold">
+                    Caption Preset Style
                   </span>
-                  <div className="grid grid-cols-3 gap-1.5 bg-[#FAF9F5] p-1 rounded-xl border border-[#E6E4DD]">
+                  <div className="grid grid-cols-2 gap-2 bg-[#FAF9F5] p-1.5 rounded-xl border border-[#E6E4DD]">
                     <button
                       type="button"
-                      onClick={() => setActivePreset('bold_pop')}
-                      className={`py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+                      onClick={() => {
+                        setActivePreset('bold_pop');
+                        setCaptionPos('bottom');
+                      }}
+                      className={`py-2 px-2 text-xs font-bold rounded-lg transition-colors cursor-pointer text-center ${
                         activePreset === 'bold_pop'
                           ? 'bg-[#14151A] text-white shadow-2xs'
-                          : 'text-[#52545E] hover:text-[#14151A]'
+                          : 'text-[#52545E] hover:text-[#14151A] bg-white'
                       }`}
                     >
-                      Bold Pop
+                      Hormozi Pop
                     </button>
                     <button
                       type="button"
-                      onClick={() => setActivePreset('karaoke_box')}
-                      className={`py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+                      onClick={() => {
+                        setActivePreset('karaoke_box');
+                        setCaptionPos('bottom');
+                      }}
+                      className={`py-2 px-2 text-xs font-bold rounded-lg transition-colors cursor-pointer text-center ${
                         activePreset === 'karaoke_box'
                           ? 'bg-[#14151A] text-white shadow-2xs'
-                          : 'text-[#52545E] hover:text-[#14151A]'
+                          : 'text-[#52545E] hover:text-[#14151A] bg-white'
                       }`}
                     >
-                      Karaoke Box
+                      Karaoke Glow
                     </button>
                     <button
                       type="button"
-                      onClick={() => setActivePreset('clean_cinema')}
-                      className={`py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+                      onClick={() => {
+                        setActivePreset('clean_cinema');
+                        setCaptionPos('bottom');
+                      }}
+                      className={`py-2 px-2 text-xs font-bold rounded-lg transition-colors cursor-pointer text-center ${
                         activePreset === 'clean_cinema'
                           ? 'bg-[#14151A] text-white shadow-2xs'
-                          : 'text-[#52545E] hover:text-[#14151A]'
+                          : 'text-[#52545E] hover:text-[#14151A] bg-white'
                       }`}
                     >
                       Clean Cinema
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActivePreset('minimal_top');
+                        setCaptionPos('top');
+                      }}
+                      className={`py-2 px-2 text-xs font-bold rounded-lg transition-colors cursor-pointer text-center ${
+                        activePreset === 'minimal_top'
+                          ? 'bg-[#14151A] text-white shadow-2xs'
+                          : 'text-[#52545E] hover:text-[#14151A] bg-white'
+                      }`}
+                    >
+                      Minimal Top
                     </button>
                   </div>
                 </div>
 
                 {/* Highlight Color Dots */}
                 <div className="space-y-1.5">
-                  <span className="text-[11px] font-mono uppercase tracking-wider text-[#8C8E9A] block">
-                    Highlight Accent
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-[#8C8E9A] block font-semibold">
+                    Highlight Accent Palette
                   </span>
                   <div className="flex items-center gap-2.5">
                     {colorDots.map((dot) => (
@@ -151,8 +176,8 @@ export function StaggeredBento(): JSX.Element {
                     onClick={() => setIsUppercase(!isUppercase)}
                     className="p-2.5 rounded-xl border border-[#E6E4DD] bg-[#FAF9F5] text-left hover:border-[#14151A] transition-colors cursor-pointer"
                   >
-                    <span className="text-[10px] font-mono uppercase text-[#8C8E9A] block">
-                      Case Format
+                    <span className="text-[10px] font-mono uppercase text-[#8C8E9A] block font-semibold">
+                      Letter Case
                     </span>
                     <span className="text-xs font-bold text-[#14151A]">
                       {isUppercase ? 'ALL UPPERCASE' : 'Sentence case'}
@@ -160,8 +185,8 @@ export function StaggeredBento(): JSX.Element {
                   </button>
 
                   <div className="p-2 rounded-xl border border-[#E6E4DD] bg-[#FAF9F5] space-y-1">
-                    <span className="text-[10px] font-mono uppercase text-[#8C8E9A] block">
-                      Position
+                    <span className="text-[10px] font-mono uppercase text-[#8C8E9A] block font-semibold">
+                      Canvas Position
                     </span>
                     <div className="grid grid-cols-3 gap-1">
                       {(['top', 'center', 'bottom'] as PositionType[]).map((pos) => (
@@ -194,6 +219,7 @@ export function StaggeredBento(): JSX.Element {
               <div className="sm:col-span-5 flex justify-center">
                 <div className="w-[185px] h-[330px] rounded-2xl border-2 border-[#2A2B35] bg-[#121318] p-1.5 shadow-xl relative flex flex-col justify-between overflow-hidden">
                   {/* Background Video Mockup */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
                     alt="Speaker Subtitle Preview"
@@ -254,97 +280,129 @@ export function StaggeredBento(): JSX.Element {
                     )}
 
                     {activePreset === 'clean_cinema' && (
-                      <div className="inline-block px-1 py-0.5">
-                        <div
-                          className={`text-[11px] font-sans font-bold tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] ${
+                      <div className="inline-block rounded-sm bg-black/60 backdrop-blur-xs px-2 py-0.5">
+                        <p
+                          className={`text-[10px] font-medium tracking-normal text-white ${
                             isUppercase ? 'uppercase' : ''
                           }`}
                         >
-                          <span className="text-white">This is </span>
-                          <span style={{ color: highlightColor }} className="font-extrabold underline decoration-2">
+                          This is{' '}
+                          <span
+                            className="font-semibold underline decoration-2 underline-offset-2"
+                            style={{ textDecorationColor: highlightColor }}
+                          >
                             how we scaled
                           </span>
-                        </div>
+                        </p>
+                      </div>
+                    )}
+
+                    {activePreset === 'minimal_top' && (
+                      <div className="inline-block rounded-full bg-black/80 backdrop-blur-md border border-white/15 px-2.5 py-0.5 shadow-md">
+                        <p
+                          className={`text-[9px] font-mono tracking-wider text-zinc-200 ${
+                            isUppercase ? 'uppercase' : ''
+                          }`}
+                        >
+                          LESSON 01 &bull;{' '}
+                          <span className="font-bold" style={{ color: highlightColor }}>
+                            PRICING POWER
+                          </span>
+                        </p>
                       </div>
                     )}
                   </div>
+
+                  {/* Bottom indicator */}
+                  <div className="relative z-10 mx-auto h-0.5 w-12 rounded-full bg-white/40 mb-1" />
                 </div>
               </div>
             </div>
           </div>
 
           {/* ========================================================= */}
-          {/* RIGHT: 5 COLS — Bring Your Own Key (BYOK) Engine Card     */}
+          {/* RIGHT: 5 COLS — 30 Free Trial Credits & Managed Pipeline   */}
           {/* ========================================================= */}
-          <div className="lg:col-span-5 rounded-2xl border border-[#E6E4DD] bg-white p-6 sm:p-8 shadow-[0_8px_30px_rgba(20,21,26,0.04)] space-y-6">
+          <div className="lg:col-span-5 rounded-2xl border border-[#E6E4DD] bg-white p-6 sm:p-8 space-y-6 shadow-[0_8px_30px_rgba(20,21,26,0.04)]">
             <div className="space-y-1.5 border-b border-[#E6E4DD] pb-4">
               <div className="flex items-center gap-2 text-[#E84C2B]">
-                <Key className="h-4 w-4" />
+                <Zap className="h-4 w-4" />
                 <span className="text-xs font-mono uppercase tracking-wider font-bold">
-                  Zero Artificial Limits
+                  Zero Upfront Commitment
                 </span>
               </div>
               <h3 className="text-xl font-bold text-[#14151A]">
-                Bring Your Own Key (BYOK)
+                30 Free Trial Credits Included
               </h3>
               <p className="text-xs text-[#52545E]">
-                Why pay a 300% markup on video minutes? Connect your free developer keys.
+                Experience instant 1-click AI clipping, face tracking, and animated captions with zero card required.
               </p>
             </div>
 
-            <div className="space-y-4">
-              {/* Item 1: Groq */}
-              <div className="rounded-xl border border-[#E6E4DD] bg-[#FAF9F5] p-3.5 space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <Zap className="h-3.5 w-3.5 text-[#E84C2B]" />
-                    <span className="font-bold text-[#14151A]">Groq Whisper Turbo</span>
+            {/* Trial Feature Highlights */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-xl border border-[#E6E4DD] bg-[#FAF9F5]">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-[#E6E4DD] text-[#E84C2B] font-mono font-bold text-xs shadow-2xs">
+                    30
                   </div>
-                  <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded font-semibold">
-                    Free Tier
-                  </span>
+                  <div>
+                    <span className="text-xs font-bold text-[#14151A] block">30 Processing Minutes</span>
+                    <span className="text-[10px] text-[#52545E]">Auto hook discovery & silence trimming</span>
+                  </div>
                 </div>
-                <p className="text-[11px] text-[#52545E] leading-relaxed">
-                  500+ free transcription minutes per month. Transcribes a 1-hour video in 42 seconds with word-level timestamps.
-                </p>
+                <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                  FREE ON SIGNUP
+                </span>
               </div>
 
-              {/* Item 2: Google Gemini */}
-              <div className="rounded-xl border border-[#E6E4DD] bg-[#FAF9F5] p-3.5 space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <Cpu className="h-3.5 w-3.5 text-blue-600" />
-                    <span className="font-bold text-[#14151A]">Google Gemini 2.0 Flash</span>
+              <div className="flex items-center justify-between p-3 rounded-xl border border-[#E6E4DD] bg-[#FAF9F5]">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-[#E6E4DD] text-blue-600 font-mono font-bold text-xs shadow-2xs">
+                    GPU
                   </div>
-                  <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded font-semibold">
-                    15 req/min Free
-                  </span>
+                  <div>
+                    <span className="text-xs font-bold text-[#14151A] block">Instant Cloud GPU Rendering</span>
+                    <span className="text-[10px] text-[#52545E]">High-speed serverless pipeline, zero hardware load</span>
+                  </div>
                 </div>
-                <p className="text-[11px] text-[#52545E] leading-relaxed">
-                  Multimodal hook detection reads video visuals, pacing, and retention drop-offs to pick the 15 strongest cuts.
-                </p>
+                <span className="text-[10px] font-mono font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+                  CLOUD READY
+                </span>
               </div>
 
-              {/* Item 3: Direct Privacy */}
-              <div className="rounded-xl border border-[#E6E4DD] bg-[#FAF9F5] p-3.5 space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-3.5 w-3.5 text-emerald-600" />
-                    <span className="font-bold text-[#14151A]">100% Client-Side Privacy</span>
+              <div className="flex items-center justify-between p-3 rounded-xl border border-[#E6E4DD] bg-[#FAF9F5]">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-[#E6E4DD] text-purple-600 font-mono font-bold text-xs shadow-2xs">
+                    MP4
                   </div>
-                  <span className="text-[10px] font-mono text-[#52545E]">Browser-Direct</span>
+                  <div>
+                    <span className="text-xs font-bold text-[#14151A] block">Watermark-Free 1080p Export</span>
+                    <span className="text-[10px] text-[#52545E]">Ready for TikTok, Reels & YouTube Shorts</span>
+                  </div>
                 </div>
-                <p className="text-[11px] text-[#52545E] leading-relaxed">
-                  Your API keys never touch our servers. Your raw video footage is never used to train anyone&apos;s models.
-                </p>
+                <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                  NO WATERMARK
+                </span>
               </div>
             </div>
 
+            {/* Paddle Security Promise Box */}
+            <div className="rounded-xl border border-[#E6E4DD] bg-[#FAF9F5] p-3.5 space-y-1 text-xs">
+              <div className="flex items-center gap-1.5 font-bold text-[#14151A]">
+                <Shield className="h-3.5 w-3.5 text-emerald-600" />
+                <span>Secure Checkout & Billing Powered by Paddle</span>
+              </div>
+              <p className="text-[11px] text-[#52545E] leading-relaxed">
+                Upgrade anytime for more credits or rollover unused minutes. Global tax compliance and instant VAT invoicing across 200+ countries.
+              </p>
+            </div>
+
             <Link
-              href="/settings"
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-[#E6E4DD] bg-[#FAF9F5] hover:bg-white hover:border-[#14151A] text-[#14151A] py-2.5 text-xs font-bold transition-all shadow-2xs"
+              href="/pricing"
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#14151A] hover:bg-[#2C2E38] py-2.5 text-xs font-bold text-white transition-colors shadow-2xs"
             >
-              <span>Configure AI Keys in Settings</span>
+              <span>View Plans & Upgrade Credits</span>
               <ArrowRight className="h-3.5 w-3.5 text-[#E84C2B]" />
             </Link>
           </div>

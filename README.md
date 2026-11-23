@@ -2,245 +2,315 @@
 
 # 🎬 FrameFlow
 
-### **The AI-Native Video Repurposing Studio & Multi-Track Timeline Editor**
+### **The Commercial AI Video Repurposing Platform & Multi-Track Studio**
 
-*Turn 1-hour podcasts, interviews, and long videos into 15 viral 9:16 shorts in minutes — with a real, editable multi-track timeline underneath.*
+*Turn 1-hour podcasts, gaming streams, and long videos into 15 viral 9:16 shorts in minutes — backed by managed AI transcription, transformative fair-use protection, and a real, editable multi-track timeline.*
 
-[![Version](https://img.shields.io/badge/version-0.4.0-E84C2B?style=flat-square)](https://github.com/yasirraeesit/frameflow/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-E84C2B?style=flat-square)](https://github.com/yasirraeesit/frameflow/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict_Zero_Any-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js 14](https://img.shields.io/badge/Next.js-14_App_Router-000000?style=flat-square&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![Fastify](https://img.shields.io/badge/Fastify-v4_REST_and_WS-000000?style=flat-square&logo=fastify&logoColor=white)](https://www.fastify.io/)
 [![BullMQ](https://img.shields.io/badge/BullMQ-Redis_Worker_Mesh-DC382D?style=flat-square&logo=redis&logoColor=white)](https://bullmq.io/)
-[![FFmpeg](https://img.shields.io/badge/FFmpeg-Hardware_Accelerated-007808?style=flat-square&logo=ffmpeg&logoColor=white)](https://ffmpeg.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Prisma_ORM-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Paddle Billing](https://img.shields.io/badge/Paddle-Merchant_of_Record-2B2D42?style=flat-square&logo=paddle&logoColor=white)](https://paddle.com/)
+[![Groq & Gemini](https://img.shields.io/badge/AI_Engine-Groq_Whisper_+_Gemini_2.5-FF7700?style=flat-square)](https://groq.com/)
+[![FFmpeg](https://img.shields.io/badge/FFmpeg-Hardware_Accelerated-007808?style=flat-square&logo=ffmpeg&logoColor=white)](https://ffmpeg.org/)
 [![MinIO](https://img.shields.io/badge/MinIO-S3_Compatible-C72C48?style=flat-square&logo=minio&logoColor=white)](https://min.io/)
 
 <br />
 
-[**Key Capabilities**](#-key-capabilities) • [**The FrameFlow Difference**](#-the-frameflow-difference) • [**System Architecture**](#-system-architecture) • [**Timeline AST Spec**](#-serializable-timeline-ast) • [**Quickstart**](#-quickstart-in-2-minutes) • [**Screens & Studio Flow**](#-screens--studio-flow)
+[**Key Capabilities**](#-key-capabilities) • [**System Architecture**](#-system-architecture) • [**Core Engines**](#-core-engines) • [**Timeline AST Spec**](#-serializable-timeline-ast) • [**Screens & Studio Flow**](#-screens--studio-flow) • [**Quickstart**](#-quickstart-in-5-minutes) • [**Environment Reference**](#-environment-configuration)
 
 </div>
 
 ---
 
-## 💡 The FrameFlow Difference
+## 💡 The FrameFlow Commercial Vision
 
-Most video clipping tools force creators into an artificial dilemma:
+Most video repurposing platforms trap creators in an inflexible dilemma:
 
-1. **Legacy Desktop NLEs (Premiere, Final Cut, DaVinci)**: Powerful timelines, but scrubbing through a 2-hour podcast to find hooks and keyframing 400 subtitle layers takes 4+ hours of mind-numbing manual work.
-2. **Black-Box AI Clippers ($29–$99/month)**: You paste a link and get a locked, uneditable video out. If the AI cuts off a punchline or picks an awkward frame, you can't fix it — re-generating burns your monthly paid minutes.
+1. **Legacy Desktop NLEs (Premiere Pro, DaVinci Resolve, Final Cut)**: Phenomenal timelines, but hunting through a 2-hour interview or gaming stream for hooks, keyframing auto-crops, and styling 400 subtitle layers requires hours of tedious manual scrubbing.
+2. **Black-Box AI Clippers ($29–$99/month)**: You paste a link and receive an uneditable, pre-rendered video. If the AI cuts off a punchline, misidentifies the speaker, or chooses a boring crop, you have no recourse — re-generating wastes your monthly paid minutes. Furthermore, raw re-uploads frequently trigger YouTube and Meta copyright strikes and unoriginal content demonetization flags.
 
-### **The FrameFlow Philosophy**
-> **"Edit video like a document. Fine-tune on an actual multi-track timeline."**
+### **The FrameFlow Standard**
+> **"Instant AI hook discovery and auto-reframing up front. Non-destructive multi-track control and transformative monetization safety underneath."**
 
-FrameFlow detects high-retention hooks, reframes speakers into 9:16 vertical video, generates word-by-word animated captions, and hands you **both a text-based transcript editor (delete words to trim video) and a non-destructive 4-track timeline** to adjust every cut, transition, and B-roll layer with instant `Ctrl+Z` undo.
+FrameFlow detects high-retention hooks, reframes speakers or gameplay HUDs into vertical 9:16, burns animated kinetic subtitles, and hands you **both a text-based transcript editor (delete words to ripple-cut video) and a non-destructive 5-track timeline dock** with instant `Ctrl+Z` atomic history. For gaming streams and reaction content, our **Monetization-Safe Transformation Engine** automates visual pacing cuts, generates custom commentary hooks, and records creator voiceovers directly in the browser to ensure full compliance with YouTube and Meta monetization policies.
 
 ---
 
 ## ⚡ Key Capabilities
 
-### 1. ✂️ Dual Text & Timeline Editing
-- **Transcript Cut Engine**: Click awkward filler words (`"um, sort of like"`, `"you know"`) directly in the text transcript to strike them out, automatically trimming the underlying footage and shrinking the timeline clip with zero re-encode delay.
-- **Full 4-Track Non-Destructive Timeline**: Video (V1), B-Roll (V2), Subtitles (T1), and Master Audio (A1) tracks with frame-accurate playhead trimming and splitting (`S` key).
-- **Atomic Undo/Redo Engine**: Every action (move, trim, split, delete, or AI batch cuts) is an undoable Command Pattern object (`Ctrl+Z` / `Ctrl+Y`).
+### 1. ✂️ Dual-Mode Studio Editor
+- **Interactive Transcript Ripple-Cut Engine**: Click awkward pauses or filler words (`"um"`, `"sort of like"`, `"you know"`) directly in the word-by-word transcript to strike them out, instantly trimming the underlying video track with zero re-encode latency.
+- **5-Track Non-Destructive Timeline**: Video (V1), B-Roll (V2), Subtitles (T1), Master Audio (A1), and Creator Voiceover (A2) with frame-accurate scrubbing, split cutting (`S`), and atomic undo/redo (`Ctrl+Z` / `Ctrl+Shift+Z`).
+- **Dark Cinema Monitor (`#121318`)**: Aspect ratio switching (`9:16`, `1:1`, `16:9`), platform safe zone guides for TikTok, Reels, and Shorts, and live subtitle rendering.
+- **Pro Multi-Format Export Drawer**: Render 1080p / 4K MP4, export DaVinci Resolve & Premiere Pro XML project sequences (`PRO`), or download raw SRT/VTT/TXT subtitle packages.
 
-### 2. 📱 Intelligent 9:16 Auto-Crop & Dynamic Layouts
-- **Speaker Diarization & Face Tracking**: Keeps the active speaker centered in vertical 9:16 without awkward manual pan-and-scan.
-- **Dynamic Layout Modes**:
-  - **Solo Speaker**: Dynamic face crop with smart padding.
-  - **2-Speaker Split**: Automatic top/bottom split for host-guest banter.
-  - **Screen + Cam**: Picture-in-picture overlay for slide decks, software demos, and game streams.
-- **Social Safe Zone Overlays**: Verified boundaries for TikTok, Instagram Reels, and YouTube Shorts.
+### 2. 🎮 Gaming & GTA 6 Long-to-Short Engine
+- **Hybrid Audio Energy & Action Spike Detection**: Slices gaming walkthroughs, speedruns, and esports VODs using a +14dB burst volume energy analyzer that detects gunshots, sirens, vehicle redlines, explosions, and streamer screaming reactions — extracting viral clips even from zero-commentary gameplay.
+- **Gameplay + Cam Reframe Layout**: Maintains the 16:9 gameplay canvas with visible minimap radar, ammo counters, and HUD, while seamlessly overlaying a cropped streamer facecam and 5-star wanted badge (`★ ★ ★ ★ ★ POLICE`).
+- **Vice Neon Subtitles**: High-energy cyan (`#00F0FF`) and hot magenta (`#FF007F`) glowing kinetic typography engineered for high-octane gaming content.
 
-### 3. ✨ Viral Caption & Brand Styler
-- **Animated Subtitle Presets**:
-  - **Hormozi Bold Pop**: High-energy uppercase typography with animated kinetic scaling and keyword glows.
-  - **Karaoke Box**: Solid high-contrast badge with synchronized word highlight fills.
-  - **Clean Cinema**: Crisp modern sans-serif with subtle drop shadows.
-- **Brand Kits**: Custom fonts, primary colors, keyword highlight colors, uppercase transforms, and logo watermark placement.
+### 3. 🛡️ Monetization-Safe Transformation Engine
+- **Source Ownership Classification**:
+  - **`My Original Footage`**: Marks clips as original source material for clean master rendering.
+  - **`Commentary / Reaction Clip`** (Transformative Mode): Activates fair-use compliance rules to prevent unoriginal content demonetization.
+- **Dynamic Visual Pacing**: Automatically injects subtle `1.0x -> 1.12x` punch-in zoom keyframes and reframing cuts every 3.5–5 seconds into the `TimelineDocument` AST (`V1`), defeating automated static-frame detection algorithms.
+- **AI Commentary Hook Generator**: Google Gemini 2.5 Flash drafts a 5-second opening hook script tailored to the clip's dramatic climax.
+- **In-Browser Voiceover Hook Recorder**: Built-in HTML5 `MediaRecorder` audio capture with a live teleprompter, automatically attaching creator commentary onto `Track A2 • Creator Voiceover`.
+- **Platform-Agnostic Clean Master Export**: Strips foreign social container metadata (`-map_metadata -1`) and writes clean master headers (`title="Master Short"`, `artist="FrameFlow Studio"`).
 
-### 4. 🔑 Unlimited Bring Your Own Key (BYOK) Engine
-- **Zero "AI Minute" Subscriptions**: Plug in your own free developer API keys to process hours of video at zero markup:
-  - **Groq Whisper Turbo**: 500+ free transcription minutes per month at 216x real-time speed with word-level timestamps.
-  - **Google Gemini 2.0 Flash**: Free tier (15 requests/minute) for multimodal hook discovery and virality scoring.
-  - **OpenRouter & GitHub Models**: Connect any custom LLM or free model endpoint.
-  - **Local Ollama**: 100% offline, private inference for air-gapped workstations.
-- **Client-Side Privacy**: Your API keys stay in your browser and your video footage never trains third-party models.
-
-### 5. 🚀 Distributed Media Ingestion & FFmpeg Render Mesh
-- **Resumable Chunked Multipart Uploads**: Upload giant 4K/1080p source files in parallel chunks directly to S3-compatible MinIO storage.
-- **Asynchronous Worker Mesh**: BullMQ Redis workers probe metadata via `ffprobe`, generate 720p faststart proxies, and compile timelines into optimized FFmpeg `filter_complex` graphs for clean 1080p MP4 exports with zero watermarks.
-- **Live WebSocket Progress**: Real-time 0% $\to$ 100% event streaming over WebSocket gateway (`/ws`).
+### 4. 💳 Managed AI Credits & Commercial Paddle Billing
+- **Zero API Setup Required**: Full managed server-side inference powered by Groq Whisper Turbo and Google Gemini 2.5 Flash — creators never touch API keys or configuration files.
+- **Transparent Credit Model**:
+  - **30 Free Trial Credits** granted automatically upon registration (no credit card required).
+  - **Starter**: 300 credits/month ($29/mo or $23/mo billed annually) with 1080p exports and 1 brand template.
+  - **Pro**: 1,000 credits/month ($59/mo or $47/mo billed annually) with 4K exports, DaVinci/Premiere XML timeline export, and unlimited brand templates.
+  - **Business**: 3,500 credits/month ($149/mo or $119/mo billed annually) with dedicated worker lanes and priority rendering.
+- **Atomic Credit Ledger**: Database-backed transactional accounting (`CreditTransaction` model) with automatic refund guarantees if worker tasks encounter unexpected failures.
+- **Paddle Webhook Engine**: Seamless global tax compliance, merchant-of-record subscription lifecycle events (`subscription_created`, `subscription_updated`, `transaction_completed`), and HMAC-SHA256 signature verification.
 
 ---
 
 ## 🏗 System Architecture
 
 ```
-                           +-------------------------------------+
-                           |   Next.js 14 Frontend Studio UI     |
-                           |   (Zustand + React 18 + Tailwind)   |
-                           +------------------+------------------+
-                                              |
-                           HTTP REST API /    | WebSocket (/ws)
-                           Multipart Upload   | Live Progress
-                                              v
-                           +-------------------------------------+
-                           |      Fastify API Gateway (Node)     |
-                           |    Auth | Projects | Renders API    |
-                           +---------+-----------------+---------+
-                                     |                 |
-                 Enqueue Job via     |                 | Database Queries
-                 BullMQ Queue        |                 | (Prisma ORM)
-                                     v                 v
-                        +------------+----+       +----+------------+
-                        |   Redis Engine  |       |   PostgreSQL    |
-                        |  Queue & PubSub |       |  Relational DB  |
-                        +------------+----+       +-----------------+
-                                     |
-                     Worker consumes | Redis PubSub
-                     job execution   | progress broadcast
-                                     v
-                        +------------+--------------------------+
-                        |     BullMQ Background Worker Mesh     |
-                        | - Chunked Video Ingestion & ffprobe   |
-                        | - 720p Proxy & Thumbnail Generator    |
-                        | - Timeline-to-FFmpeg Filter Compiler  |
-                        | - 1080p Multi-Track Final Renderer    |
-                        +---------------------+-----------------+
-                                              |
-                                              | Streams chunks &
-                                              | exports rendered MP4
-                                              v
-                                 +------------+------------+
-                                 |   MinIO Object Storage  |
-                                 | (S3-compatible storage) |
-                                 +-------------------------+
+                                  +--------------------------------------------------+
+                                  |     Next.js 14 Commercial App Router Frontend    |
+                                  |   (Warm Vellum #FAF9F5 & Cinema Coral #E84C2B)   |
+                                  +------------------------+-------------------------+
+                                                           |
+                                        REST API / Ingest  |  WebSocket (/ws)
+                                        Multipart Uploads  |  Real-Time Progress
+                                                           v
+                                  +--------------------------------------------------+
+                                  |             Fastify API Gateway (Node.js)        |
+                                  |  - Auth & JWT Session Verification               |
+                                  |  - Project Ingestion & Credit Deduction Ledger   |
+                                  |  - Paddle Webhook Ingestion (HMAC Verification)  |
+                                  |  - Real-Time Redis Pub/Sub WebSocket Bridge      |
+                                  +------------+-----------------------+-------------+
+                                               |                       |
+                             Enqueue Jobs via  |                       | Prisma ORM
+                             BullMQ Queue      |                       | Database Queries
+                                               v                       v
+                                  +------------+----+     +------------+------------+
+                                  |   Redis Cluster |     |    PostgreSQL Database  |
+                                  |  - Job Queues   |     |  - Users & Subscriptions|
+                                  |  - PubSub Bus   |     |  - Credit Ledger Engine |
+                                  +------------+----+     |  - Projects & Timelines |
+                                               |          +-------------------------+
+                               Worker Consumes | Redis PubSub
+                               Job Execution   | Progress Broadcast
+                                               v
+                                  +------------+------------------------------------+
+                                  |     BullMQ Distributed AI & Render Worker Mesh  |
+                                  |                                                 |
+                                  |  [Stage 1: Ingest & Proxy Generation]          |
+                                  |    - Resumable Chunk Assembly & ffprobe         |
+                                  |    - 720p Faststart Video Proxy Generation      |
+                                  |                                                 |
+                                  |  [Stage 2: Hybrid Audio & AI Transcription]     |
+                                  |    - FFmpeg 16kHz WAV Audio Extraction          |
+                                  |    - +14dB Gaming Audio Peak Detection          |
+                                  |    - Groq Whisper Turbo Word-Level Timestamps   |
+                                  |                                                 |
+                                  |  [Stage 3: Gemini Multimodal Hook Discovery]    |
+                                  |    - Gemini 2.5 Flash Virality Sub-Scoring      |
+                                  |    - Commentary Hook Script Generation          |
+                                  |    - Dynamic Pacing Keyframes (1.0x -> 1.12x)   |
+                                  |                                                 |
+                                  |  [Stage 4: FFmpeg Multi-Track Export Engine]    |
+                                  |    - TimelineDocument AST Filtergraph Compiler  |
+                                  |    - 1080p/4K MP4 Render with Clean Metadata    |
+                                  +--------------------+----------------------------+
+                                                       |
+                                                       | Streams proxy & final renders
+                                                       v
+                                          +------------+------------+
+                                          |   MinIO / AWS S3 Storage|
+                                          |  - raw-assets           |
+                                          |  - proxies              |
+                                          |  - renders              |
+                                          +-------------------------+
 ```
+
+---
+
+## ⚙️ Core Engines
+
+### 1. Ingest & Managed AI Processing Pipeline (`@frameflow/worker`)
+When a creator pastes a video URL or uploads a master file:
+1. **Credit Gate**: The Fastify API validates available credit balance (`Math.ceil(durationMinutes)`). If insufficient, it returns `402 Payment Required` with plan upgrade pathways; otherwise, credits are atomically deducted and logged to `CreditTransaction` (`reason: 'CLIP_GENERATION'`).
+2. **Audio Extraction & Energy Peak Analysis**: The worker extracts a mono 16kHz WAV file. For gaming projects, an FFmpeg `astats` and RMS burst volume filter flags audio peaks $\ge$ 14dB above average baseline (gunfire, sirens, streamer screams).
+3. **Groq Whisper Turbo Transcription**: Fast, accurate transcription with word-level timestamps (`start`, `end`, `confidence`).
+4. **Gemini 2.5 Flash Hook Ranking**: Analyzes transcript flow and audio peaks to identify viral shorts, generating sub-scores for Hook, Flow, Engagement, and Clarity (0–99), social copy for TikTok/Reels/Shorts, and a 5-second `commentaryHookScript`.
+5. **TimelineDocument Synthesis**: Slices footage into 3.5–5.0 second visual pacing intervals, keyframes reframing crops, applies subtitle presets, and constructs a serializable multi-track AST.
+
+### 2. Monetization-Safe Transformation Engine
+- **Algorithmic Flag Protection**: Video clips under commentary/reaction mode are injected with dynamic `1.0x -> 1.12x` scale punch-ins every 4 seconds.
+- **Fair-Use Voiceover Slot**: Automatically provisions track `A2 • Creator Voiceover` and adds a `5s Creator Hook Window` marker at the beginning of the clip.
+- **Clean Master Metadata**: Removes residual encoder markers (`-map_metadata -1`) and injects clean publishing headers.
+
+### 3. Commercial Paddle Billing & Ledger System (`@frameflow/api`)
+- **Subscription Management**: Full sync with Paddle customer IDs, subscription IDs, and price plans.
+- **Webhook Processing**: Validates Paddle webhook payloads with HMAC-SHA256 signature verification over `/api/webhooks/paddle`.
+- **Automatic Refunds**: If a clipping worker job or export render fails, the API atomically rolls back the deducted credits to the user's balance (`reason: 'REFUND'`).
 
 ---
 
 ## 🖥 Screens & Studio Flow
 
-| Screen | Route | Description |
+| Screen | Route | Visual System & Core Functionality |
 |---|---|---|
-| **Editorial Landing Page** | `/` | High-craft commercial homepage with live interactive transcript cut demo, interactive caption styler, dual-phone 9:16 showcase, and transparent BYOK pricing. |
-| **Split Auth & Demo Access** | `/login`, `/register` | Split editorial auth screen (Warm Vellum + Dark Cinema Showcase) with 1-click instant demo account access, live 9:16 iPhone preview with kinetic Hormozi captions, and BYOK privacy. |
-| **Studio Dashboard** | `/dashboard` | Quick URL launcher (YouTube / Vimeo / MP4), recent projects list, viral score preview cards, and storage stats. |
-| **Project & Hook Pipeline** | `/projects/[id]` | Processing monitor with live Whisper transcription progress, Diarization, and 8 ranked viral shorts with hook strength & virality sub-scores. |
-| **Short-Form Studio Editor** | `/editor/[clipId]` | Full-viewport (`100dvh`) 4-zone workstation: interactive transcript cuts, 9:16 canvas with safe zones, timeline tracks, and brand kit toggles. |
-| **Brand Kit & Templates** | `/brand-kit` | Split view for font selection, primary & highlight colors, uppercase toggle, and live 9:16 preview card. |
-| **Exports History** | `/exports` | Grid of rendered 1080p shorts with file sizes, download CTA, and 1-click copy for AI-generated TikTok/Shorts titles and hashtags. |
-| **BYOK AI Settings** | `/settings` | Bring Your Own Key configuration for Groq, Google Gemini, OpenRouter, and Ollama with live "Test Connection" status checks. |
+| **Commercial Homepage** | `/` | Flagship Warm Vellum (`#FAF9F5`) showcase with interactive transcript cut demo, kinetic subtitle styler, dual-phone 9:16 player, feature bento, and direct links to pricing. |
+| **Commercial Pricing Page** | `/pricing` | Dedicated commercial SaaS pricing with interactive Monthly vs. Annual toggle (Save 20%), 3-column tier comparison, simulated Paddle checkout trigger, and FAQ. |
+| **Split Auth Screens** | `/login`, `/register` | Warm Vellum split auth layout featuring 30 free credit trial signup (no card required) and a Dark Cinema 9:16 animated preview showcase. |
+| **Studio Dashboard** | `/dashboard` | Quick URL ingestion, **Content Mode** toggle (`Talking Head` vs `Gaming & GTA 6`), **Source Type** selector (`Original Footage` vs `Commentary / Reaction`), 1-click GTA 6 chips, and 1-click demo presets. |
+| **Processing Monitor** | `/projects/[id]/processing` | Real-time 4-stage pipeline checklist with animated progress, time estimate, and credit usage badge. |
+| **Viral Shorts Feed** | `/projects/[id]` | Grid of ranked viral clips with virality scores (0–99), **Monetization Readiness Badges** (`✓ Original Ready` vs `⚡ Add 5s Voiceover Hook`), aspect ratio switcher, and 1-click social copy. |
+| **Dual-Mode Studio Editor** | `/editor/[clipId]` | Flagship studio: 4-zone workstation with word-level strikeout transcript cuts, **In-Browser Voiceover Hook Recorder**, 5-track non-destructive timeline, Dark Cinema monitor, and 1080p/4K/XML export drawer. |
+| **Brand Kit & Presets** | `/brand-kit` | Visual brand styling for fonts, colors, and 5 subtitle presets: *Hormozi Bold Pop*, *Keyword Highlight*, *Karaoke Glow*, *Clean Cinema*, and *Vice Neon*. |
+| **Exports Library** | `/exports` | Rendered 1080p / 4K MP4 library with direct download links, XML project file exports, and copyable social copy packs. |
+| **Workspace Settings** | `/settings` | Managed credit ledger history, subscription tier details, Paddle billing portal management, and storage stats. |
 
 ---
 
-## 📁 Repository Map
+## 📁 Repository Structure
 
 ```
 frameflow/
-├── client/                     # Next.js 14 Frontend Studio (App Router)
+├── client/                     # Next.js 14 App Router Frontend Studio
 │   ├── src/app/
-│   │   ├── page.tsx            # High-craft Warm Vellum landing page
-│   │   ├── (auth)/             # /login & /register (Split editorial auth screens)
+│   │   ├── page.tsx            # Commercial landing page
+│   │   ├── pricing/            # Dedicated commercial pricing page
+│   │   ├── (auth)/             # /login & /register split auth screens
 │   │   ├── (dashboard)/        # /dashboard, /projects, /brand-kit, /exports, /settings
-│   │   └── editor/[clipId]/    # Full 4-zone short-form studio editor
+│   │   └── editor/[clipId]/    # Flagship Dual-Mode Studio Editor
 │   ├── src/components/
-│   │   ├── auth/               # AuthShowcasePanel (9:16 iPhone preview, Hormozi captions)
-│   │   ├── landing/            # HeroOverlappingStage, AsymmetricWorkflowShowcase,
-│   │   │                       # StaggeredBento, PricingComparison, FaqAndCtaBanner, LandingFooter
-│   │   └── layout/             # Sidebar rail, header, navigation shell
-│   └── src/lib/                # Mock data, types, utilities
+│   │   ├── editor/             # VideoMonitor, TimelineDock, TranscriptPanel, ExportModal
+│   │   ├── landing/            # Commercial landing components & bento grid
+│   │   └── layout/             # SiteHeader, SiteFooter, WorkspaceSidebar
+│   └── src/lib/                # Mock data, API client, types
 ├── server/
 │   ├── api/                    # Fastify REST API & WebSocket Gateway
-│   │   ├── src/modules/        # Auth, Projects, Assets, Timeline, Renders
+│   │   ├── src/modules/        # Auth, Projects, Billing (Paddle & Credits), Renders
 │   │   └── src/gateway/        # WebSocket (/ws) Redis Pub/Sub gateway
-│   ├── worker/                 # Asynchronous Media & Render Engine
-│   │   ├── src/processors/     # media.processor.ts & render.processor.ts
-│   │   └── src/index.ts        # Worker pool entrypoint
-│   └── database/               # PostgreSQL Database & Persistence
-│       └── prisma/schema.prisma# Prisma Schema (Users, Projects, Renders, etc.)
+│   ├── worker/                 # BullMQ AI & Render Worker Mesh
+│   │   ├── src/processors/     # clip-generation.processor.ts, clip-export.processor.ts
+│   │   └── src/index.ts        # Worker queue entrypoint
+│   └── database/               # PostgreSQL & Prisma ORM
+│       └── prisma/schema.prisma# Schema: Users, Subscriptions, Credits, Projects, Clips
 ├── shared/                     # Isomorphic Shared Library (Strict Zero Any)
-│   ├── src/timeline/           # TimelineDocument AST & validation
-│   ├── src/commands/           # Command pattern implementations (undo/redo)
-│   ├── src/compiler/           # Timeline-to-FFmpeg filtergraph compiler
-│   └── src/events/             # Distributed job event definitions
-├── docker-compose.yml          # Local infra: PostgreSQL, Redis, MinIO
-└── scripts/                    # End-to-end verification and test suites
+│   ├── src/schemas/            # Zod schemas: billing, projects, clips, brand-kit
+│   ├── src/timeline/           # TimelineDocument AST definitions & validation
+│   ├── src/commands/           # Command Pattern implementations (undo/redo)
+│   └── src/compiler/           # Timeline-to-FFmpeg filtergraph compiler
+├── docker-compose.yml          # Infrastructure: PostgreSQL, Redis, MinIO
+└── scripts/                    # End-to-end verification and pipeline test suites
 ```
 
 ---
 
 ## 📜 Serializable Timeline AST
 
-The timeline is stored as a deterministic, version-controlled JSON schema:
+Every short clip in FrameFlow is backed by a deterministic, version-controlled JSON AST conforming to `TimelineDocument`:
 
 ```json
 {
-  "id": "tl-short-9a4f21",
-  "projectId": "proj-podcast-01",
-  "version": 4,
-  "fps": 30,
-  "duration": 40.8,
+  "id": "tl-clip-01",
+  "projectId": "gta6-demo",
+  "clipId": "gta6-clip-01",
+  "version": 1,
+  "fps": 30.0,
+  "duration": 36.5,
+  "aspectRatio": "9:16",
+  "reframeConfig": {
+    "mode": "gameplay_cam",
+    "cropX": 0.5,
+    "cropY": 0.5,
+    "scale": 1.0,
+    "speakerTracking": false
+  },
   "tracks": [
     {
       "id": "track-v1",
       "type": "VIDEO",
-      "name": "9:16 Speaker Crop",
+      "name": "V1 • Gameplay Master",
       "locked": false,
       "muted": false,
       "clips": [
         {
-          "id": "clip-101",
-          "assetId": "asset-raw-interview",
-          "name": "Speaker 1 Crop",
+          "id": "vclip-1",
+          "assetId": "asset-raw-gameplay",
           "start": 0.0,
-          "duration": 40.8,
-          "inPoint": 14.22,
-          "outPoint": 55.02,
+          "duration": 4.0,
+          "inPoint": 12.0,
+          "outPoint": 16.0,
           "speed": 1.0,
-          "proxyUrl": "/media/proxies/asset-raw-interview.mp4"
+          "reframe": { "mode": "gameplay_cam", "scale": 1.0, "cropX": 0.5, "cropY": 0.5 }
+        },
+        {
+          "id": "vclip-2",
+          "assetId": "asset-raw-gameplay",
+          "start": 4.0,
+          "duration": 4.0,
+          "inPoint": 16.0,
+          "outPoint": 20.0,
+          "speed": 1.0,
+          "reframe": { "mode": "gameplay_cam", "scale": 1.12, "cropX": 0.5, "cropY": 0.5 }
         }
       ]
     },
     {
       "id": "track-t1",
       "type": "TEXT",
-      "name": "Animated Subtitles",
+      "name": "T1 • Vice Neon Captions",
       "locked": false,
       "muted": false,
       "clips": [
         {
-          "id": "clip-sub-01",
-          "assetId": null,
-          "name": "Hormozi Pop Captions",
+          "id": "tclip-1",
           "start": 0.0,
-          "duration": 40.8,
+          "duration": 36.5,
           "inPoint": 0.0,
-          "outPoint": 40.8,
-          "speed": 1.0,
+          "outPoint": 36.5,
           "textConfig": {
-            "preset": "bold_pop",
-            "highlightColor": "#E84C2B",
+            "preset": "vice_neon",
+            "primaryColor": "#00F0FF",
+            "highlightColor": "#FF007F",
             "position": "bottom"
           }
         }
       ]
+    },
+    {
+      "id": "track-a2",
+      "type": "AUDIO",
+      "name": "A2 • Creator Voiceover",
+      "locked": false,
+      "muted": false,
+      "clips": []
     }
   ],
-  "markers": []
+  "markers": [
+    { "id": "m1", "time": 0.0, "label": "Hook Impact", "color": "#10B981" },
+    { "id": "m2", "time": 5.0, "label": "Creator Hook Window", "color": "#F59E0B" }
+  ]
 }
 ```
 
 ---
 
-## ⚡ Quickstart in 2 Minutes
+## ⚡ Quickstart in 5 Minutes
 
 ### System Prerequisites
 - **Node.js**: v20.x or higher
 - **Docker & Docker Compose**: For PostgreSQL, Redis, and MinIO
 - **FFmpeg & ffprobe**: Installed in your system environment (`ffmpeg -version`)
+- **API Keys**: Server-side `GROQ_API_KEY` (transcription) and `GEMINI_API_KEY` (hook discovery)
 
 ### 1. Clone the Repository
 ```bash
@@ -252,78 +322,83 @@ cd frameflow
 ```bash
 cp .env.example .env
 ```
+*(Populate your `GROQ_API_KEY`, `GEMINI_API_KEY`, and optional `PADDLE_WEBHOOK_SECRET` in `.env`)*
 
 ### 3. Spin Up Infrastructure
 ```bash
 docker compose up -d
 ```
-Service health check:
+Service endpoints:
 - **PostgreSQL**: `localhost:5432`
 - **Redis Engine**: `localhost:6379`
-- **MinIO Console**: [http://localhost:9001](http://localhost:9001) (`minioadmin` / `minioadmin`)
+- **MinIO Console**: [http://localhost:9001](http://localhost:9001) (`minioadmin` / `minioadminpassword`)
 
-### 4. Install Dependencies & Run Database Schema Push
+### 4. Install Dependencies & Generate Prisma Client
 ```bash
 npm install
 npm --workspace=@frameflow/database run prisma:generate
 npm --workspace=@frameflow/database run prisma:push
 ```
 
-### 5. Launch the Development Stack
-Start the API, Worker, and Web Studio concurrently:
+### 5. Launch the Full Development Stack
+Start the API, BullMQ AI Worker, and Web Studio concurrently:
 
 ```bash
-# Terminal 1: Fastify REST API
-npm --workspace=@frameflow/api run dev
+# Run all services concurrently
+npm run dev
 
-# Terminal 2: BullMQ Media & Render Worker
-npm --workspace=@frameflow/worker run dev
-
-# Terminal 3: Next.js Studio Frontend
-npm --workspace=@frameflow/web run dev
+# Or launch independently:
+npm --workspace=@frameflow/api run dev     # Fastify API (Port 4000)
+npm --workspace=@frameflow/worker run dev  # BullMQ Worker Mesh
+npm --workspace=@frameflow/web run dev     # Next.js Studio (Port 3000)
 ```
 
-Navigate to [**http://localhost:3000**](http://localhost:3000) to open the FrameFlow Studio.
+Navigate to [**http://localhost:3000**](http://localhost:3000) to open FrameFlow.
+
+---
+
+## 🔐 Environment Configuration
+
+| Variable | Description | Default / Example |
+|---|---|---|
+| `DATABASE_URL` | PostgreSQL connection string with schema | `postgresql://postgres:postgrespassword@localhost:5432/frameflow?schema=public` |
+| `REDIS_URL` | Redis instance for BullMQ and WebSocket Pub/Sub | `redis://localhost:6379` |
+| `S3_ENDPOINT` | MinIO or AWS S3 endpoint URL | `http://localhost:9000` |
+| `S3_REGION` | S3 region identifier | `us-east-1` |
+| `S3_ACCESS_KEY` | MinIO / S3 access key | `minioadmin` |
+| `S3_SECRET_KEY` | MinIO / S3 secret access key | `minioadminpassword` |
+| `S3_BUCKET_RAW` | S3 bucket name for uploaded source videos | `raw-assets` |
+| `S3_BUCKET_PROXIES` | S3 bucket name for 720p faststart proxies | `proxies` |
+| `S3_BUCKET_RENDERS` | S3 bucket name for final exported 1080p/4K MP4s | `renders` |
+| `JWT_SECRET` | Secure key for signing Fastify user authentication tokens | `frameflow-super-secret-jwt-key-2026-production-grade` |
+| `GROQ_API_KEY` | Server-side Groq key for Whisper Turbo transcription | `gsk_...` |
+| `GEMINI_API_KEY` | Server-side Gemini key for hook analysis and scripts | `AIzaSy...` |
+| `PADDLE_WEBHOOK_SECRET` | Paddle webhook signature secret for HMAC-SHA256 validation | `pdl_ntfset_...` |
+| `PORT` | Fastify API HTTP listening port | `4000` |
+| `WEB_URL` | Next.js frontend base URL for CORS and redirects | `http://localhost:3000` |
 
 ---
 
 ## 🧪 Comprehensive Verification & Testing
 
-FrameFlow enforces strict type safety (zero `any`) and comprehensive test coverage across every workspace:
+FrameFlow enforces strict type safety (zero `any`) across all 5 monorepo packages:
 
 ```bash
-# Run unit & schema tests across all packages
+# Build and verify typecheck across all 5 workspaces
+npm --workspace=@frameflow/shared run build
+npm --workspace=@frameflow/database run build
+npm --workspace=@frameflow/api run build
+npm --workspace=@frameflow/worker run build
+npm --workspace=@frameflow/web run build
+
+# Run unit tests
 npm --workspace=@frameflow/shared test
 npm --workspace=@frameflow/api test
 npm --workspace=@frameflow/worker test
 
-# Build client production bundles
-npm --workspace=@frameflow/web run build
-
-# Run the complete Phase 3 End-to-End Rendering Pipeline verification suite
+# Execute the End-to-End Rendering Pipeline verification suite
 npx tsx --env-file=.env scripts/test-phase3-e2e.ts
 ```
-
-The E2E and unit test suites validate:
-1. User registration, login, and project creation
-2. Real-time WebSocket gateway connection and channel subscription
-3. Parallel multipart chunked video ingestion to MinIO
-4. Background `ffprobe` inspection and 720p proxy generation
-5. Multi-track timeline assembly (Video + Audio + Text overlays)
-6. Asynchronous 1080p render job dispatch and BullMQ worker execution
-7. Direct inspection of the rendered MP4 via `ffprobe` (dimensions, codecs, bitrates)
-8. Mid-flight render cancellation and cleanup
-
----
-
-## 🤝 Contributing
-
-We welcome contributions from developers, video creators, and AI researchers!
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'feat: Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
 
 ---
 
@@ -332,5 +407,5 @@ We welcome contributions from developers, video creators, and AI researchers!
 Distributed under the **MIT License**. See `LICENSE` for more information.
 
 <div align="center">
-  <sub>Built with ❤️ by creators, for creators.</sub>
+  <sub>FrameFlow — Built with precision for the next generation of video creators.</sub>
 </div>

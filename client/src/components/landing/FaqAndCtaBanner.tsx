@@ -18,8 +18,8 @@ interface FaqItem {
 
 const FAQS: FaqItem[] = [
   {
-    q: 'Wait—how can I use this for free?',
-    a: 'We let you plug in your own free developer keys from Groq (for Whisper transcription) and Google AI Studio (for Gemini hook discovery). They give generous free quotas that cover hours of raw footage without paying us a cent for AI compute.',
+    q: 'How does the free trial work?',
+    a: 'Every new creator receives 30 free trial credits automatically—no credit card required. You can paste a YouTube link or upload an MP4, generate up to 10 viral shorts with animated captions, and export watermark-free 1080p clips immediately.',
   },
   {
     q: 'What if the AI cuts off the punchline?',
@@ -58,7 +58,7 @@ export function FaqAndCtaBanner(): JSX.Element {
               Real questions creators ask us.
             </h2>
             <p className="text-[15px] text-[#52545E]">
-              Zero corporate fluff. Clear, honest answers about BYOK keys, editing control, and video privacy.
+              Zero corporate fluff. Clear, honest answers about credits, editing control, and video privacy.
             </p>
           </div>
 
@@ -91,65 +91,6 @@ export function FaqAndCtaBanner(): JSX.Element {
                 </div>
               );
             })}
-          </div>
-        </div>
-
-        {/* ========================================================= */}
-        {/* 2. HIGH-CONTRAST CLOSING BANNER (Dark Charcoal Frame)     */}
-        {/* ========================================================= */}
-        <div className="relative rounded-3xl border border-[#2A2B35] bg-[#14151A] p-8 sm:p-12 lg:p-16 text-center text-white overflow-hidden shadow-2xl">
-          {/* Subtle Cinema Coral radial glow */}
-          <div
-            className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[320px] bg-[#E84C2B]/12 blur-[110px] rounded-full"
-            aria-hidden="true"
-          />
-
-          <div className="relative z-10 max-w-2xl mx-auto space-y-6">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-[-0.035em] text-white leading-tight">
-              Your long videos are{' '}
-              <span className="font-editorial text-[#E84C2B] font-normal italic text-4xl sm:text-5xl lg:text-6xl px-1">
-                sitting on a goldmine.
-              </span>
-            </h2>
-
-            <p className="text-[15px] sm:text-base text-zinc-300 leading-relaxed">
-              Stop letting hours of great podcast conversations gather dust on YouTube. Turn them into 15 high-retention shorts in 2 minutes.
-            </p>
-
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3.5">
-              <Link
-                href="/dashboard"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white px-7 py-3.5 text-sm font-bold shadow-lg transition-all active:scale-[0.98]"
-              >
-                <span>Start Clipping Free</span>
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-
-              <Link
-                href="/projects/demo-1"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-[#343644] bg-[#23242E] hover:bg-[#2C2E3B] text-white px-6 py-3.5 text-sm font-semibold transition-colors"
-              >
-                <span>Explore Demo Project</span>
-                <ArrowRight className="h-4 w-4 text-[#E84C2B]" />
-              </Link>
-            </div>
-
-            <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs font-mono text-zinc-400">
-              <span className="flex items-center gap-1.5">
-                <Shield className="h-3.5 w-3.5 text-[#10B981]" />
-                100% Private Video Data
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1.5">
-                <Zap className="h-3.5 w-3.5 text-[#E84C2B]" />
-                Zero Credit Lock-In
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-                Commercial 1080p MP4
-              </span>
-            </div>
           </div>
         </div>
       </div>

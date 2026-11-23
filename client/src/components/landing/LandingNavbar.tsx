@@ -36,28 +36,34 @@ export function LandingNavbar(): JSX.Element {
         {/* Center: Clean Anchor Links */}
         <nav className="hidden md:flex items-center gap-7 text-xs font-semibold text-[#52545E]" aria-label="Main Navigation">
           <a
+            href="#virality-engine"
+            className="hover:text-[#14151A] transition-colors"
+          >
+            Virality Audit
+          </a>
+          <a
             href="#how-it-works"
             className="hover:text-[#14151A] transition-colors"
           >
-            See It Work
+            Dual Editor
           </a>
           <a
-            href="#editor-showcase"
+            href="#engine"
             className="hover:text-[#14151A] transition-colors"
           >
-            Text & Timeline
+            Caption Styles
           </a>
-          <a
-            href="#pricing"
+          <Link
+            href="/pricing"
             className="hover:text-[#14151A] transition-colors"
           >
-            BYOK Pricing
-          </a>
+            Pricing
+          </Link>
           <a
             href="#faq"
             className="hover:text-[#14151A] transition-colors"
           >
-            Real Questions
+            FAQ
           </a>
         </nav>
 

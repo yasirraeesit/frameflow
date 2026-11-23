@@ -264,7 +264,7 @@ export default function LoginPage(): JSX.Element {
           {/* Privacy & Zero Lock-in Reassurance */}
           <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-[#8C8E9A]">
             <CheckCircle2 className="h-3.5 w-3.5 text-[#10B981]" />
-            <span>Client-side BYOK privacy • Your keys never train models</span>
+            <span>30 Free Trial Credits • No credit card required • Powered by Paddle</span>
           </div>
         </main>
 

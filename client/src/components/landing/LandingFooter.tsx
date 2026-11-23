@@ -167,31 +167,31 @@ export function LandingFooter(): JSX.Element {
               </ul>
             </div>
 
-            {/* Col 3: BYOK & Models */}
+            {/* Col 3: Cloud & Models */}
             <div className="space-y-3">
               <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[#14151A]">
-                BYOK & Models
+                Cloud & Models
               </h4>
               <ul className="space-y-2 text-xs text-[#52545E]">
                 <li>
-                  <Link href="/settings" className="hover:text-[#14151A] transition-colors">
-                    Groq Whisper Setup
+                  <Link href="/pricing" className="hover:text-[#14151A] transition-colors">
+                    Managed Cloud GPU
                   </Link>
                 </li>
                 <li>
-                  <Link href="/settings" className="hover:text-[#14151A] transition-colors">
-                    Google Gemini Flash
+                  <Link href="/pricing" className="hover:text-[#14151A] transition-colors">
+                    Virality Scoring Engine
                   </Link>
                 </li>
                 <li>
-                  <Link href="/settings" className="hover:text-[#14151A] transition-colors">
-                    OpenRouter Guide
+                  <Link href="/dashboard" className="hover:text-[#14151A] transition-colors">
+                    1080p 60fps Pipeline
                   </Link>
                 </li>
                 <li>
-                  <a href="#pricing" className="hover:text-[#14151A] transition-colors">
+                  <Link href="/pricing" className="hover:text-[#14151A] transition-colors">
                     Pricing & Free Plan
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>

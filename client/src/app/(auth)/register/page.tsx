@@ -263,7 +263,7 @@ export default function RegisterPage(): JSX.Element {
 
             {/* 1-Line Reassurance */}
             <p className="text-[11px] text-center text-[#52545E] bg-[#FAF9F5] py-2 px-3 rounded-lg border border-[#E6E4DD]">
-              Free plan included • Plug in your own Groq or Gemini key anytime
+              30 Free Trial Credits included • No credit card required • Powered by Paddle
             </p>
 
             {/* Bottom Switcher */}

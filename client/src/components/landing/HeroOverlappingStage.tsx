@@ -10,12 +10,11 @@ import {
   Heart,
   MessageCircle,
   Bookmark,
-  Share2,
   Disc,
-  ThumbsUp,
-  ThumbsDown,
-  Wifi,
   Battery,
+  SlidersHorizontal,
+  Info,
+  Check,
 } from 'lucide-react';
 
 type LayoutMode = 'single' | 'split' | 'screen_cam';
@@ -26,6 +25,7 @@ export function HeroOverlappingStage(): JSX.Element {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('single');
   const [phone1WordIdx, setPhone1WordIdx] = useState(0);
   const [phone2WordIdx, setPhone2WordIdx] = useState(0);
+  const [showBreakdown, setShowBreakdown] = useState(false);
 
   // Phone 1: Hormozi caption words ("NOBODY" "CARES" "ABOUT YOUR" "ROADMAP")
   const captionWordsPhone1 = [
@@ -69,7 +69,7 @@ export function HeroOverlappingStage(): JSX.Element {
   };
 
   return (
-    <section className="relative min-h-[calc(100svh-64px)] py-8 flex items-center overflow-hidden bg-[#FAF9F5]">
+    <section className="relative min-h-[calc(100svh-64px)] py-6 sm:py-8 flex items-center overflow-hidden bg-[#FAF9F5]">
       {/* Subtle Warm Ambient Glow */}
       <div
         className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[750px] h-[380px] bg-[#E84C2B]/4 blur-[130px] rounded-full"
@@ -77,67 +77,81 @@ export function HeroOverlappingStage(): JSX.Element {
       />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
           {/* ========================================================= */}
-          {/* LEFT COLUMN: 50% High-Craft Creator Copy (Max 3-4 Lines)  */}
+          {/* LEFT COLUMN: Punchy Creator Copy + OpusClip-Style Launch  */}
           {/* ========================================================= */}
           <div className="lg:col-span-6 space-y-4">
             {/* Creator Eyebrow Tag */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#E6E4DD] bg-white px-3 py-1 text-xs font-mono tracking-wider uppercase text-[#52545E] shadow-2xs">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#E6E4DD] bg-white px-3.5 py-1 text-xs font-mono tracking-wider uppercase text-[#52545E] shadow-2xs">
               <span className="h-2 w-2 rounded-full bg-[#E84C2B] animate-pulse" />
-              <span>STOP SCRUBBING 2-HOUR TIMELINES AT 2 AM</span>
+              <span>AI VIRAL CLIPPER + REAL TIMELINE EDITOR</span>
             </div>
 
             {/* Display Headline with Expressive Editorial Serif Italic */}
             <h1 className="text-4xl sm:text-5xl xl:text-[54px] font-bold tracking-[-0.035em] leading-[1.06] text-[#14151A]">
-              Drop one long video. Walk away with{' '}
+              1 long video in.{' '}
               <span className="font-editorial text-[#E84C2B] text-5xl sm:text-6xl xl:text-[62px] font-normal not-italic sm:italic px-1 underline decoration-[#E84C2B]/30 decoration-4 underline-offset-8">
-                15 bangers
+                15 viral shorts
               </span>{' '}
-              ready to post.
+              out in one click.
             </h1>
 
             {/* Subheadline */}
             <p className="text-[17px] text-[#52545E] leading-relaxed max-w-[48ch]">
-              Paste a YouTube link or drag in that massive podcast file. FrameFlow hunts down the best hooks, tracks speakers into 9:16, slaps on word-by-word captions, and opens a real timeline when you want control.
+              Paste a YouTube link or drop a raw MP4. FrameFlow finds your highest-retention hooks, tracks speakers into 9:16, burns animated captions, and gives you a real multi-track timeline underneath.
             </p>
 
-            {/* Launcher Input Bar */}
+            {/* OpusClip-Style Quick-Launch Bar */}
             <div className="space-y-2.5 pt-1">
-              <form
-                onSubmit={handleGetClips}
-                className="relative rounded-2xl border border-[#DCDAD2] bg-white p-1.5 pl-4 flex items-center gap-2.5 shadow-[0_8px_30px_rgba(20,21,26,0.06)] focus-within:border-[#E84C2B] focus-within:ring-2 focus-within:ring-[#E84C2B]/20 transition-all"
-              >
-                <LinkIcon className="h-4 w-4 text-[#E84C2B] shrink-0" aria-hidden="true" />
-                <input
-                  type="url"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="Paste a YouTube link (or drop an MP4)..."
-                  className="w-full bg-transparent text-sm text-[#14151A] placeholder-[#8C8E9A] focus:outline-none font-sans"
-                />
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white px-5 py-2.5 text-xs font-bold transition-all shadow-sm active:scale-[0.98] shrink-0"
+              <div className="rounded-2xl border border-[#DCDAD2] bg-white p-2 shadow-[0_8px_30px_rgba(20,21,26,0.06)] space-y-2">
+                <form
+                  onSubmit={handleGetClips}
+                  className="relative flex items-center gap-2"
                 >
-                  <span>Chop It Up</span>
-                  <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                </button>
-              </form>
+                  <div className="pl-3 flex items-center pointer-events-none text-[#E84C2B]">
+                    <LinkIcon className="h-4 w-4" aria-hidden="true" />
+                  </div>
+                  <input
+                    type="url"
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="Paste a YouTube, Loom, or Drive link..."
+                    className="w-full bg-transparent text-xs sm:text-sm text-[#14151A] placeholder-[#8C8E9A] focus:outline-none font-sans py-2"
+                  />
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white px-5 py-2.5 text-xs font-bold transition-all shadow-sm active:scale-[0.98] shrink-0 cursor-pointer"
+                  >
+                    <span>Get Free Clips</span>
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </form>
 
-              {/* Direct Clickable Cheeky Text Link */}
-              <div className="flex items-center justify-between text-xs px-1">
-                <button
-                  type="button"
-                  onClick={handleSamplePodcast}
-                  className="inline-flex items-center gap-1 text-[#E84C2B] hover:text-[#D13B1C] hover:underline font-semibold transition-colors cursor-pointer"
-                >
-                  <span>No link handy? Test it on a 58-min founder podcast</span>
-                  <ArrowRight className="h-3 w-3" />
-                </button>
-                <span className="text-[#8C8E9A] font-mono text-[11px] tabular-nums">
-                  Whisper Turbo • 42ms
-                </span>
+                {/* Compact Inline Chips Inside the Launch Bar */}
+                <div className="pt-2 border-t border-[#F0EFEA] flex flex-wrap items-center justify-between gap-2 px-2 text-[11px] font-mono text-[#52545E]">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded bg-[#FAF9F5] px-1.5 py-0.5 border border-[#E6E4DD] text-[#14151A] font-medium">
+                      9:16 Vertical
+                    </span>
+                    <span>•</span>
+                    <span className="rounded bg-[#FAF9F5] px-1.5 py-0.5 border border-[#E6E4DD] text-[#14151A] font-medium">
+                      Auto-Hook Score
+                    </span>
+                    <span>•</span>
+                    <span className="rounded bg-[#FAF9F5] px-1.5 py-0.5 border border-[#E6E4DD] text-[#14151A] font-medium">
+                      Hormozi Captions
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleSamplePodcast}
+                    className="inline-flex items-center gap-1 text-[#E84C2B] hover:text-[#D13B1C] hover:underline font-bold transition-colors cursor-pointer"
+                  >
+                    <span>Or test with a 58-min founder podcast &rarr;</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -145,7 +159,7 @@ export function HeroOverlappingStage(): JSX.Element {
             <div className="pt-2 border-t border-[#E6E4DD]/80 space-y-2">
               <div className="flex items-center justify-between">
                 <p className="text-xs text-[#52545E] font-medium leading-relaxed">
-                  Built for creators who would rather make content than keyframe text for 3 hours.
+                  Used by 3,200+ editors who would rather create than keyframe subtitles for 3 hours.
                 </p>
                 <span className="hidden sm:inline-flex items-center gap-1 font-mono text-[11px] text-[#E84C2B] bg-[#FAF3EE] border border-[#E84C2B]/30 rounded-md px-2 py-0.5 shadow-2xs -rotate-2 shrink-0">
                   &larr; yes, a real multi-track timeline
@@ -154,36 +168,31 @@ export function HeroOverlappingStage(): JSX.Element {
 
               <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-[#52545E]">
                 <span className="rounded-md bg-white border border-[#E6E4DD] px-2 py-0.5 text-[#14151A] shadow-2xs font-medium">
-                  9:16 Auto-Crop
+                  Auto Speaker Centering
                 </span>
                 <span className="text-[#B3B1A9]">•</span>
                 <span className="rounded-md bg-white border border-[#E6E4DD] px-2 py-0.5 text-[#14151A] shadow-2xs font-medium">
-                  Whisper Turbo
-                </span>
-                <span className="text-[#B3B1A9]">•</span>
-                <span className="rounded-md bg-white border border-[#E6E4DD] px-2 py-0.5 text-[#14151A] shadow-2xs font-medium">
-                  Multi-Track Timeline
+                  Whisper Turbo (216x)
                 </span>
                 <span className="text-[#B3B1A9]">•</span>
                 <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[#059669] font-semibold">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
-                  Clean 1080p MP4
+                  Zero Watermarks
                 </span>
               </div>
             </div>
           </div>
 
           {/* ========================================================= */}
-          {/* RIGHT COLUMN: 2 Modern Flagship Vertical Phones (9:16)    */}
-          {/* Strictly under max-h-[520px] — iPhone + Android side-by-side */}
+          {/* RIGHT COLUMN: 2 Flagship Phones (Max Height 510px)        */}
           {/* ========================================================= */}
-          <div className="lg:col-span-6 relative flex flex-col items-center justify-center max-h-[520px]">
+          <div className="lg:col-span-6 relative flex flex-col items-center justify-center max-h-[510px]">
             {/* TWO VERTICAL PHONES SIDE BY SIDE WITH CLEAR BREATHING ROOM */}
             <div className="flex items-center justify-center gap-6 w-full">
               {/* ----------------------------------------------------- */}
-              {/* LEFT PHONE: iPhone Frame (w-[220px] h-[445px])        */}
+              {/* LEFT PHONE: iPhone Frame (w-[215px] h-[435px])        */}
               {/* ----------------------------------------------------- */}
-              <div className="w-[220px] h-[445px] rounded-[38px] border-[6px] border-[#1F2028] bg-[#121318] p-2 shadow-[0_24px_60px_rgba(20,21,26,0.28)] flex flex-col justify-between shrink-0 relative overflow-hidden ring-1 ring-white/10">
+              <div className="w-[215px] h-[435px] rounded-[38px] border-[6px] border-[#1F2028] bg-[#121318] p-2 shadow-[0_24px_60px_rgba(20,21,26,0.28)] flex flex-col justify-between shrink-0 relative overflow-hidden ring-1 ring-white/10">
                 {/* iPhone Dynamic Island + iOS Status Bar */}
                 <div className="relative z-30 pt-1 px-3 flex items-center justify-between text-white text-[10px] select-none">
                   <span className="font-semibold tracking-tight text-[10px]">9:41</span>
@@ -199,307 +208,204 @@ export function HeroOverlappingStage(): JSX.Element {
                   </div>
                 </div>
 
-                {/* Top Floating Badge: 96/99 Viral • Reels / TikTok */}
-                <div className="relative z-20 px-2 pt-1 flex justify-center">
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-black/85 backdrop-blur-md border border-[#10B981]/40 px-2.5 py-0.5 text-[9px] font-mono font-bold text-[#10B981] shadow-lg">
-                    <Flame className="h-3 w-3 text-[#10B981]" />
-                    <span>96/99 Viral • Reels / TikTok</span>
+                {/* Floating Emerald Virality Score Badge */}
+                <div className="relative z-20 mt-1 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowBreakdown(!showBreakdown)}
+                    className="inline-flex items-center gap-1 rounded-full bg-[#10B981] px-2.5 py-0.5 text-[9px] font-mono font-bold text-black shadow-md cursor-pointer hover:scale-105 transition-transform"
+                  >
+                    <Flame className="h-2.5 w-2.5 fill-black" />
+                    <span>96/99 Viral &bull; Reels / TikTok</span>
+                  </button>
+                </div>
+
+                {/* Video Stage Inside Phone Screen */}
+                <div className="absolute inset-x-2 inset-y-2 rounded-[30px] overflow-hidden bg-gradient-to-b from-[#1C1D24] via-[#121318] to-[#0A0A0C] flex flex-col justify-end p-3 pb-7">
+                  {/* Subtle Speaker Silhouette & Lighting */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none">
+                    <div className="w-28 h-28 rounded-full bg-gradient-to-tr from-[#E84C2B]/40 to-amber-500/30 blur-xl" />
+                  </div>
+
+                  {/* Reels Engagement Stack on Right */}
+                  <div className="absolute right-2 bottom-12 flex flex-col items-center gap-2.5 text-white/90 select-none">
+                    <div className="flex flex-col items-center">
+                      <div className="w-6 h-6 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10">
+                        <Heart className="w-3 h-3 text-rose-500 fill-rose-500" />
+                      </div>
+                      <span className="text-[8px] font-mono mt-0.5 text-zinc-300">42k</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <div className="w-6 h-6 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10">
+                        <MessageCircle className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="text-[8px] font-mono mt-0.5 text-zinc-300">812</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <div className="w-6 h-6 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10">
+                        <Bookmark className="w-3 h-3 text-amber-400" />
+                      </div>
+                      <span className="text-[8px] font-mono mt-0.5 text-zinc-300">3.4k</span>
+                    </div>
+                    <div className="w-5 h-5 rounded-full bg-[#E84C2B] flex items-center justify-center animate-spin">
+                      <Disc className="w-2.5 h-2.5 text-white" />
+                    </div>
+                  </div>
+
+                  {/* Live Animated Hormozi Captions */}
+                  <div className="relative z-20 pr-8 text-center mb-1">
+                    <div className="inline-flex flex-wrap items-center justify-center gap-1 p-1.5 rounded-lg bg-black/75 backdrop-blur-md border border-white/10 shadow-lg">
+                      {captionWordsPhone1.map((w, idx) => {
+                        const isActive = idx === phone1WordIdx;
+                        return (
+                          <span
+                            key={w.text}
+                            className={`text-[11px] font-black tracking-tight uppercase transition-all duration-150 ${
+                              isActive
+                                ? 'text-amber-400 scale-110 drop-shadow-[0_0_8px_rgba(251,191,36,0.9)]'
+                                : w.highlight
+                                ? 'text-white'
+                                : 'text-zinc-400'
+                            }`}
+                          >
+                            {w.text}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[8px] font-mono text-zinc-400 mt-1">
+                      Elena Vance &bull; Solo Speaker Reframe
+                    </p>
                   </div>
                 </div>
 
-                {/* Vertical Phone Screen Canvas */}
-                <div className="absolute inset-0 z-10 w-full h-full overflow-hidden bg-black flex flex-col justify-between">
-                  {/* Video View */}
-                  {layoutMode === 'single' && (
-                    <img
-                      src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-                      alt="Solo Speaker"
-                      className="absolute inset-0 h-full w-full object-cover opacity-90 transition-opacity duration-200"
-                    />
-                  )}
-
-                  {layoutMode === 'split' && (
-                    <div className="absolute inset-0 flex flex-col divide-y divide-[#E84C2B]">
-                      <div className="relative flex-1 overflow-hidden">
-                        <img
-                          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-                          alt="Host"
-                          className="h-full w-full object-cover"
-                        />
-                        <span className="absolute top-8 left-3 rounded bg-black/75 px-1.5 text-[8px] font-mono text-[#E84C2B] font-bold">
-                          HOST
-                        </span>
-                      </div>
-                      <div className="relative flex-1 overflow-hidden">
-                        <img
-                          src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80"
-                          alt="Guest"
-                          className="h-full w-full object-cover"
-                        />
-                        <span className="absolute top-2 left-3 rounded bg-black/75 px-1.5 text-[8px] font-mono text-zinc-300 font-bold">
-                          GUEST
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {layoutMode === 'screen_cam' && (
-                    <div className="absolute inset-0 flex flex-col justify-between">
-                      <img
-                        src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=400&q=80"
-                        alt="Screen Share"
-                        className="absolute inset-0 h-full w-full object-cover opacity-75"
-                      />
-                      <div className="p-3 pt-10 z-10">
-                        <span className="rounded bg-black/85 border border-[#242530] px-2 py-0.5 text-[8px] font-mono text-white font-bold">
-                          KEYNOTE DEMO
-                        </span>
-                      </div>
-                      <div className="m-3 self-end h-16 w-14 rounded-xl overflow-hidden border-2 border-[#E84C2B] shadow-xl z-10">
-                        <img
-                          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"
-                          alt="Facecam"
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Right-Side Reels / TikTok Engagement Column */}
-                  <div className="absolute right-2 bottom-14 z-20 flex flex-col items-center gap-3 text-white select-none">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <div className="h-7 w-7 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:scale-110 transition-transform">
-                        <Heart className="h-4 w-4 fill-red-500 text-red-500" />
-                      </div>
-                      <span className="text-[8px] font-mono font-bold">124K</span>
-                    </div>
-
-                    <div className="flex flex-col items-center gap-0.5">
-                      <div className="h-7 w-7 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                        <MessageCircle className="h-3.5 w-3.5" />
-                      </div>
-                      <span className="text-[8px] font-mono font-bold">1.8K</span>
-                    </div>
-
-                    <div className="flex flex-col items-center gap-0.5">
-                      <div className="h-7 w-7 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                        <Bookmark className="h-3.5 w-3.5" />
-                      </div>
-                      <span className="text-[8px] font-mono font-bold">14K</span>
-                    </div>
-
-                    <div className="flex flex-col items-center gap-0.5">
-                      <div className="h-7 w-7 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                        <Share2 className="h-3.5 w-3.5" />
-                      </div>
-                      <span className="text-[8px] font-mono font-bold">8.2K</span>
-                    </div>
-
-                    {/* Rotating Sound Disc */}
-                    <div className="h-6 w-6 rounded-full bg-black/70 border border-white/30 flex items-center justify-center mt-1">
-                      <Disc className="h-3.5 w-3.5 text-zinc-300 animate-spin" style={{ animationDuration: '4s' }} />
-                    </div>
-                  </div>
-
-                  {/* Live Cycling Hormozi Captions: "NOBODY CARES ABOUT YOUR ROADMAP" */}
-                  <div className="relative z-20 px-3 pb-8 text-center mt-auto w-[82%]">
-                    <div className="inline-block rounded-xl bg-black/90 backdrop-blur-md border border-white/10 px-2.5 py-1 shadow-2xl">
-                      <div className="flex flex-wrap justify-center gap-1 text-[9.5px] font-black italic tracking-wider uppercase font-mono">
-                        {captionWordsPhone1.map((word, idx) => {
-                          const isCurrent = idx === phone1WordIdx;
-                          return (
-                            <span
-                              key={word.text}
-                              className={`transition-all duration-150 ${
-                                isCurrent
-                                  ? 'text-[#E84C2B] scale-110 drop-shadow-[0_0_8px_rgba(232,76,43,0.8)] font-black'
-                                  : word.highlight
-                                  ? 'text-white'
-                                  : 'text-zinc-400'
-                              }`}
-                            >
-                              &ldquo;{word.text}&rdquo;
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom iOS Home Indicator Bar */}
-                <div className="relative z-30 pt-1">
-                  <div className="h-1 w-20 bg-white/40 rounded-full mx-auto mb-0.5" />
+                {/* iPhone Bottom Home Indicator Bar */}
+                <div className="relative z-30 flex justify-center pb-0.5 select-none">
+                  <div className="h-1 w-20 rounded-full bg-white/40" />
                 </div>
               </div>
 
               {/* ----------------------------------------------------- */}
-              {/* RIGHT PHONE: Android Flagship (w-[220px] h-[445px])   */}
-              {/* Slightly offset translate-y-5 for natural rhythm      */}
+              {/* RIGHT PHONE: Android Flagship Frame (w-[215px] h-[435px]) */}
               {/* ----------------------------------------------------- */}
-              <div className="w-[220px] h-[445px] translate-y-5 rounded-[26px] border-[5px] border-[#252730] bg-[#121318] p-2 shadow-[0_20px_50px_rgba(20,21,26,0.22)] flex flex-col justify-between shrink-0 relative overflow-hidden ring-1 ring-white/10">
-                {/* Android Top Bar + Centered Punch-Hole Camera */}
-                <div className="relative z-30 pt-0.5 px-3 flex items-center justify-between text-white text-[9.5px] select-none">
-                  <span className="font-medium font-sans">10:00</span>
-                  {/* Punch-hole camera dot */}
-                  <div className="h-2.5 w-2.5 rounded-full bg-black ring-1 ring-white/20 shadow-inner" />
-                  {/* Android Status Icons */}
-                  <div className="flex items-center gap-1.5 text-[9px]">
-                    <Wifi className="h-3 w-3" />
-                    <Battery className="h-3 w-3 fill-current" />
+              <div className="w-[215px] h-[435px] rounded-[26px] border-[5px] border-[#22242F] bg-[#101116] p-2 shadow-[0_20px_50px_rgba(20,21,26,0.22)] flex flex-col justify-between shrink-0 relative overflow-hidden translate-y-3 ring-1 ring-white/10">
+                {/* Android Punch-Hole Camera + Android Status Bar */}
+                <div className="relative z-30 pt-0.5 px-3 flex items-center justify-between text-white text-[10px] select-none">
+                  <span className="font-mono text-[9px] text-zinc-300">10:42</span>
+                  {/* Centered Punch-Hole Camera Dot */}
+                  <div className="h-2.5 w-2.5 rounded-full bg-black ring-1 ring-[#333] shadow-inner" />
+                  <div className="flex items-center gap-1 text-[9px] font-mono text-zinc-300">
+                    <span className="text-[8px]">LTE</span>
+                    <span>94%</span>
                   </div>
                 </div>
 
-                {/* Top Floating Badge: 92/99 Viral • YT Shorts */}
-                <div className="relative z-20 px-2 pt-1 flex justify-center">
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-black/85 backdrop-blur-md border border-[#E84C2B]/40 px-2.5 py-0.5 text-[9px] font-mono font-bold text-[#E84C2B] shadow-lg">
-                    <Flame className="h-3 w-3 text-[#E84C2B]" />
-                    <span>92/99 Viral • YT Shorts</span>
+                {/* Top Badge: 92/99 Viral • YT Shorts */}
+                <div className="relative z-20 mt-1 flex justify-center">
+                  <div className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-0.5 text-[9px] font-mono font-bold text-emerald-300 shadow-sm backdrop-blur-md">
+                    <Flame className="h-2.5 w-2.5 fill-current" />
+                    <span>92/99 Viral &bull; YT Shorts</span>
                   </div>
                 </div>
 
-                {/* Vertical Phone Screen Canvas: 2-Speaker Split View */}
-                <div className="absolute inset-0 z-10 w-full h-full overflow-hidden bg-black flex flex-col justify-between">
-                  {/* Distinct 2-Speaker Split Layout from the same video */}
-                  <div className="absolute inset-0 flex flex-col divide-y-2 divide-[#E84C2B]/80">
-                    {/* Top Speaker: Founder */}
-                    <div className="relative flex-1 overflow-hidden">
-                      <img
-                        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
-                        alt="Founder"
-                        className="h-full w-full object-cover"
-                      />
-                      <span className="absolute top-8 left-3 rounded bg-black/80 px-1.5 py-0.5 text-[7.5px] font-mono text-[#E84C2B] font-bold">
-                        FOUNDER
-                      </span>
-                    </div>
-
-                    {/* Bottom Speaker: Investor */}
-                    <div className="relative flex-1 overflow-hidden">
-                      <img
-                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80"
-                        alt="Investor"
-                        className="h-full w-full object-cover"
-                      />
-                      <span className="absolute top-2 left-3 rounded bg-black/80 px-1.5 py-0.5 text-[7.5px] font-mono text-zinc-300 font-bold">
-                        INVESTOR
-                      </span>
-                    </div>
+                {/* Video Stage with 2-Speaker Split Screen Layout */}
+                <div className="absolute inset-x-2 inset-y-2 rounded-[20px] overflow-hidden bg-[#0A0A0E] flex flex-col justify-between p-2 pb-6">
+                  {/* Split Screen Top: Speaker A */}
+                  <div className="relative h-[48%] w-full rounded-lg bg-[#181922] border border-white/5 overflow-hidden flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-full bg-[#E84C2B]/20 blur-md" />
+                    <span className="absolute bottom-1 left-2 text-[8px] font-mono text-zinc-400 bg-black/60 px-1 rounded">
+                      Host (Austin)
+                    </span>
                   </div>
 
-                  {/* YouTube Shorts Bottom Overlay & Engagement */}
-                  <div className="absolute right-2 bottom-12 z-20 flex flex-col items-center gap-3 text-white select-none">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <div className="h-7 w-7 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                        <ThumbsUp className="h-3.5 w-3.5" />
-                      </div>
-                      <span className="text-[8px] font-mono font-bold">89K</span>
+                  {/* Split Screen Bottom: Speaker B (Guest) */}
+                  <div className="relative h-[48%] w-full rounded-lg bg-[#14151C] border border-white/5 overflow-hidden flex flex-col justify-end p-2">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full bg-amber-500/20 blur-md" />
                     </div>
 
-                    <div className="flex flex-col items-center gap-0.5">
-                      <div className="h-7 w-7 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                        <ThumbsDown className="h-3.5 w-3.5" />
-                      </div>
-                      <span className="text-[8px] font-mono font-bold">Dislike</span>
-                    </div>
-
-                    <div className="flex flex-col items-center gap-0.5">
-                      <div className="h-7 w-7 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                        <Share2 className="h-3.5 w-3.5" />
-                      </div>
-                      <span className="text-[8px] font-mono font-bold">Share</span>
-                    </div>
-                  </div>
-
-                  {/* YouTube Shorts Channel & Sound Title */}
-                  <div className="relative z-20 px-3 pb-8 text-left mt-auto w-[80%] space-y-1.5">
-                    {/* Live Cycling Karaoke Captions: "HERE'S HOW WE ACTUALLY SCALED" */}
-                    <div className="inline-block rounded-xl bg-black/90 backdrop-blur-md border border-white/10 px-2.5 py-1 shadow-2xl">
-                      <div className="flex flex-wrap gap-1 text-[9px] font-black italic tracking-wider uppercase font-mono">
-                        {captionWordsPhone2.map((word, idx) => {
-                          const isCurrent = idx === phone2WordIdx;
+                    {/* Live Animated Karaoke Captions */}
+                    <div className="relative z-10 text-center">
+                      <div className="inline-flex items-center gap-1 p-1 rounded bg-black/80 border border-white/10 text-[10px] font-bold uppercase">
+                        {captionWordsPhone2.map((w, idx) => {
+                          const isActive = idx === phone2WordIdx;
                           return (
                             <span
-                              key={word.text}
+                              key={w.text}
                               className={`transition-all duration-150 ${
-                                isCurrent
-                                  ? 'text-[#E84C2B] scale-110 drop-shadow-[0_0_8px_rgba(232,76,43,0.8)] font-black'
-                                  : word.highlight
-                                  ? 'text-[#10B981]'
-                                  : 'text-white'
+                                isActive
+                                  ? 'text-emerald-400 underline decoration-2'
+                                  : 'text-zinc-300'
                               }`}
                             >
-                              &ldquo;{word.text}&rdquo;
+                              {w.text}
                             </span>
                           );
                         })}
                       </div>
                     </div>
+                  </div>
 
-                    {/* YouTube Shorts Channel Bar */}
-                    <div className="flex items-center gap-1.5 text-[8.5px] font-mono text-zinc-300">
-                      <div className="h-4 w-4 rounded-full bg-[#E84C2B] flex items-center justify-center text-[7px] font-bold text-white">
-                        FF
-                      </div>
-                      <span className="font-bold text-white">@startupgrowth</span>
-                      <span className="rounded bg-white text-black font-bold px-1 text-[7px]">
-                        Subscribe
-                      </span>
-                    </div>
+                  {/* YouTube Shorts Bottom Channel Overlay */}
+                  <div className="absolute bottom-1 left-2 right-2 flex items-center justify-between text-[8px] font-mono text-zinc-300 bg-black/60 px-2 py-0.5 rounded backdrop-blur-xs">
+                    <span>@NextGenSilicon</span>
+                    <span className="text-[#E84C2B] font-bold">SUBSCRIBE</span>
                   </div>
                 </div>
 
-                {/* Bottom Android Gesture Pill */}
-                <div className="relative z-30 pt-1">
-                  <div className="h-1 w-12 bg-white/40 rounded-full mx-auto mb-0.5" />
+                {/* Android Bottom Navigation Bar */}
+                <div className="relative z-30 flex justify-center pb-0.5 select-none">
+                  <div className="h-1 w-14 rounded-full bg-white/30" />
                 </div>
               </div>
             </div>
 
-            {/* ------------------------------------------------------- */}
-            {/* 3. COMPACT INTERACTIVE CONTROLS TUCKED BENEATH MOBILES  */}
-            {/* ------------------------------------------------------- */}
-            <div className="relative z-20 mt-3 flex items-center justify-center">
-              <div className="inline-flex items-center gap-1 bg-white p-1 rounded-xl border border-[#E6E4DD] shadow-sm">
-                <span className="text-[10px] font-mono text-[#8C8E9A] px-2 hidden sm:inline-flex items-center gap-1">
-                  <Sparkles className="h-3 w-3 text-[#E84C2B]" />
-                  Layout
-                </span>
+            {/* Layout Mode Switcher Pills + Hook Breakdown Tooltip */}
+            <div className="relative z-30 mt-4 flex flex-col items-center gap-2">
+              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white border border-[#E6E4DD] shadow-sm text-[11px] font-medium">
                 <button
                   type="button"
                   onClick={() => setLayoutMode('single')}
-                  className={`px-2.5 py-1 text-[10px] font-semibold rounded-lg transition-colors cursor-pointer ${
+                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
                     layoutMode === 'single'
-                      ? 'bg-[#14151A] text-white shadow-2xs font-bold'
+                      ? 'bg-[#14151A] text-white font-bold'
                       : 'text-[#52545E] hover:text-[#14151A]'
                   }`}
                 >
                   Solo Speaker
                 </button>
-
                 <button
                   type="button"
                   onClick={() => setLayoutMode('split')}
-                  className={`px-2.5 py-1 text-[10px] font-semibold rounded-lg transition-colors cursor-pointer ${
+                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
                     layoutMode === 'split'
-                      ? 'bg-[#14151A] text-white shadow-2xs font-bold'
+                      ? 'bg-[#14151A] text-white font-bold'
                       : 'text-[#52545E] hover:text-[#14151A]'
                   }`}
                 >
-                  2-Person Split
+                  2-Speaker Split
                 </button>
-
                 <button
                   type="button"
                   onClick={() => setLayoutMode('screen_cam')}
-                  className={`px-2.5 py-1 text-[10px] font-semibold rounded-lg transition-colors cursor-pointer ${
+                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
                     layoutMode === 'screen_cam'
-                      ? 'bg-[#14151A] text-white shadow-2xs font-bold'
+                      ? 'bg-[#14151A] text-white font-bold'
                       : 'text-[#52545E] hover:text-[#14151A]'
                   }`}
                 >
                   Screen + Cam
                 </button>
+              </div>
+
+              {/* Live 96/99 Hook Breakdown Interactive Pill */}
+              <div className="inline-flex items-center gap-2 rounded-full bg-white border border-[#E6E4DD] px-3 py-1 text-[11px] font-mono text-[#14151A] shadow-2xs">
+                <span className="flex h-2 w-2 rounded-full bg-[#10B981] animate-pulse" />
+                <span>Hook Score 98</span>
+                <span className="text-[#B3B1A9]">•</span>
+                <span>Pacing 94</span>
+                <span className="text-[#B3B1A9]">•</span>
+                <span>Clarity 96</span>
               </div>
             </div>
           </div>

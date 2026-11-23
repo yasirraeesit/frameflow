@@ -4,6 +4,7 @@ export * from './schemas/asset.schema.js';
 export * from './schemas/clip.schema.js';
 export * from './schemas/brand-kit.schema.js';
 export * from './schemas/render.schema.js';
+export * from './schemas/billing.schema.js';
 export * from './events/job.events.js';
 export * from './timeline/types.js';
 export * from './timeline/schema.js';

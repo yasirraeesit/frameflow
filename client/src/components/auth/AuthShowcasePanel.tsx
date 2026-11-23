@@ -39,7 +39,7 @@ export function AuthShowcasePanel(): JSX.Element {
           <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse" />
           <span>STUDIO ENGINE • 1080P PRO RENDER</span>
         </div>
-        <span className="text-xs font-mono text-[#71717A]">BYOK UNLIMITED</span>
+        <span className="text-xs font-mono text-[#71717A]">30 FREE CREDITS</span>
       </div>
 
       {/* Centerpiece: Sleek Floating 9:16 iPhone Frame */}

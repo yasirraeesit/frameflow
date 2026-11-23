@@ -21,7 +21,16 @@ export interface ReframeConfig {
   cropX: number; // 0.0 - 1.0 normalized horizontal center
   cropY: number; // 0.0 - 1.0 normalized vertical center
   scale: number; // 1.0 - 3.0 zoom multiplier
-  mode: 'auto' | 'split' | 'manual' | 'AUTO_SPEAKER' | 'MANUAL';
+  mode:
+    | 'auto'
+    | 'split'
+    | 'manual'
+    | 'gameplay_cam'
+    | 'gameplay_full'
+    | 'AUTO_SPEAKER'
+    | 'MANUAL'
+    | 'GAMEPLAY_CAM'
+    | 'GAMEPLAY_FULL';
   speakerTracking?: boolean;
 }
 
@@ -30,10 +39,12 @@ export type CaptionPresetType =
   | 'keyword_highlight'
   | 'karaoke_box'
   | 'clean_minimal'
+  | 'vice_neon'
   | 'HORMOZI'
   | 'KARAOKE'
   | 'MINIMAL'
-  | 'NONE';
+  | 'NONE'
+  | 'VICE_NEON';
 
 export interface CaptionStyle {
   preset: CaptionPresetType;
@@ -69,7 +80,7 @@ export interface Clip {
   thumbnailUrl: string | null;
   textConfig: TextConfig | null;
   words?: WordTiming[];
-  reframe?: { cropX: number; cropY: number; scale: number };
+  reframe?: { cropX: number; cropY: number; scale: number; mode?: string };
 }
 
 export interface Track {

@@ -22,14 +22,14 @@ export function PricingComparison(): JSX.Element {
           </div>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-[-0.035em] text-[#14151A] leading-tight">
-            Zero &apos;AI Minutes&apos; Math.{' '}
+            Honest Pricing & Clear Credits.{' '}
             <span className="font-editorial text-[#E84C2B] font-normal italic text-4xl sm:text-5xl lg:text-6xl block sm:inline">
-              Bring Your Own Free Key.
+              30 Free Trial Credits.
             </span>
           </h2>
 
           <p className="text-[15px] sm:text-base text-[#52545E] leading-relaxed max-w-[54ch] mx-auto">
-            Other clipping tools charge $49 to $99 a month for credits that expire every 30 days and lock you into a baby editor. FrameFlow gives you a real editing studio with a generous free plan and unlimited BYOK.
+            Other clipping tools charge $49 to $99 a month for credits that expire every 30 days and lock you into a baby editor. FrameFlow gives you a real editing studio with 30 free trial credits and fair managed plans powered by Paddle.
           </p>
         </div>
 
@@ -96,7 +96,7 @@ export function PricingComparison(): JSX.Element {
                 <div className="flex items-baseline gap-2">
                   <span className="text-3xl font-extrabold text-[#14151A]">$0</span>
                   <span className="text-xs text-emerald-600 font-mono font-bold">
-                    Free to Start • Unlimited with BYOK
+                    30 Free Trial Credits Included
                   </span>
                 </div>
                 <p className="text-xs text-[#52545E]">
@@ -107,7 +107,7 @@ export function PricingComparison(): JSX.Element {
               <div className="space-y-3 pt-3 border-t border-[#E6E4DD] text-xs text-[#14151A]">
                 <div className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Generous Free Tier + Unlimited BYOK (Groq & Gemini developer keys)</span>
+                  <span>30 Free Trial Credits (No credit card required to start)</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -149,7 +149,7 @@ export function PricingComparison(): JSX.Element {
           <div className="rounded-2xl border border-[#E6E4DD] bg-white p-6 space-y-4 shadow-xs">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-[#14151A]">Free Starter & BYOK</h3>
+                <h3 className="text-base font-bold text-[#14151A]">Free Trial Starter</h3>
                 <p className="text-xs text-[#52545E]">Ideal for solo creators and podcasters</p>
               </div>
               <span className="text-2xl font-extrabold text-[#14151A]">$0</span>
@@ -157,11 +157,11 @@ export function PricingComparison(): JSX.Element {
             <ul className="space-y-2 text-xs text-[#52545E] pt-2 border-t border-[#E6E4DD]">
               <li className="flex items-center gap-2">
                 <Check className="h-3.5 w-3.5 text-emerald-600" />
-                <span>5 free cloud renders/month</span>
+                <span>30 free trial credits on signup</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-3.5 w-3.5 text-emerald-600" />
-                <span>Unlimited transcription & detection with free BYOK keys</span>
+                <span>Instant cloud GPU rendering with zero watermark</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-3.5 w-3.5 text-emerald-600" />

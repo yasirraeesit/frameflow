@@ -22,6 +22,20 @@ export class AuthService {
         email: input.email,
         passwordHash,
         name: input.name ?? null,
+        subscription: {
+          create: {
+            planTier: 'FREE',
+            status: 'active',
+            billingInterval: 'monthly',
+            creditBalance: 30,
+          },
+        },
+        creditTransactions: {
+          create: {
+            amount: 30,
+            reason: 'TRIAL_GRANT',
+          },
+        },
       },
     });
 

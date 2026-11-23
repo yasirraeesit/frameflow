@@ -7,36 +7,143 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum PlanTier {
+  FREE
+  STARTER
+  PRO
+  BUSINESS
+}
+
+enum SubscriptionStatus {
+  active
+  past_due
+  canceled
+  trialing
+}
+
+enum BillingInterval {
+  monthly
+  annual
+}
+
+enum CreditTransactionReason {
+  TRIAL_GRANT
+  SUBSCRIPTION_RENEWAL
+  CLIP_GENERATION
+  REFUND
+}
+
 model User {
-  id                String    @id @default(uuid())
-  email             String    @unique
-  passwordHash      String
-  name              String?
-  storageQuotaBytes BigInt    @default(10737418240) // 10 GB
-  usedStorageBytes  BigInt    @default(0)
-  projects          Project[]
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id                 String              @id @default(uuid())
+  email              String              @unique
+  passwordHash       String
+  name               String?
+  storageQuotaBytes  BigInt              @default(10737418240) // 10 GB
+  usedStorageBytes   BigInt              @default(0)
+  projects           Project[]
+  subscription       Subscription?
+  creditTransactions CreditTransaction[]
+  brandTemplates     BrandTemplate[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
   @@map("users")
 }
 
+model Subscription {
+  id                   String             @id @default(uuid())
+  userId               String             @unique
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planTier             PlanTier           @default(FREE)
+  paddleCustomerId     String?
+  paddleSubscriptionId String?
+  paddlePriceId        String?
+  status               SubscriptionStatus @default(active)
+  billingInterval      BillingInterval    @default(monthly)
+  creditBalance        Int                @default(30)
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@map("subscriptions")
+}
+
+model CreditTransaction {
+  id        String                  @id @default(uuid())
+  userId    String
+  user      User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int // Positive for grants/renewals/refunds, negative for usage
+  reason    CreditTransactionReason
+  projectId String?
+  createdAt DateTime                @default(now())
+
+  @@map("credit_transactions")
+}
+
+enum ProjectStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 model Project {
-  id          String            @id @default(uuid())
-  title       String
-  description String?
-  ownerId     String
-  owner       User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  width       Int               @default(1920)
-  height      Int               @default(1080)
-  fps         Float             @default(30.0)
-  assets      Asset[]
-  timeline    Timeline?
-  renderJobs  RenderJob[]
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id              String          @id @default(uuid())
+  title           String
+  description     String?
+  ownerId         String
+  owner           User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  status          ProjectStatus   @default(QUEUED)
+  stage           String?         @default("QUEUED")
+  progressPercent Int             @default(0)
+  errorMessage    String?
+  sourceUrl       String?
+  sourceKey       String?
+  durationSeconds Float?
+  width           Int             @default(1920)
+  height          Int             @default(1080)
+  fps             Float           @default(30.0)
+  assets          Asset[]
+  timeline        Timeline?
+  renderJobs      RenderJob[]
+  generatedClips  GeneratedClip[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   @@map("projects")
+}
+
+model GeneratedClip {
+  id                 String   @id @default(uuid())
+  projectId          String
+  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title              String
+  viralityScore      Int
+  scoreBreakdownJson Json
+  aiInsight          String
+  startSeconds       Float
+  endSeconds         Float
+  layoutMode         String   @default("solo") // 'solo' | 'split' | 'screen_cam'
+  socialCopyJson     Json
+  timelineAstJson    Json
+  outputUrl          String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("generated_clips")
+}
+
+model BrandTemplate {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  configJson Json
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("brand_templates")
 }
 
 enum AssetStatus {
@@ -75,7 +182,7 @@ model Timeline {
   id        String            @id @default(uuid())
   projectId String            @unique
   project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  data      Json              // Serializable JSON timeline document: tracks, clips, transitions, markers
+  data      Json // Serializable JSON timeline document: tracks, clips, transitions, markers
   version   Int               @default(1)
   versions  TimelineVersion[]
   createdAt DateTime          @default(now())
@@ -89,9 +196,9 @@ model TimelineVersion {
   timelineId  String
   timeline    Timeline @relation(fields: [timelineId], references: [id], onDelete: Cascade)
   version     Int
-  description String   // e.g. "Autosave", "AI assembly: 60s reel"
+  description String // e.g. "Autosave", "AI assembly: 60s reel"
   snapshot    Json
-  createdBy   String   // User ID or "AI_AGENT"
+  createdBy   String // User ID or "AI_AGENT"
   createdAt   DateTime @default(now())
 
   @@unique([timelineId, version])
@@ -127,7 +234,7 @@ model RenderJob {
   id           String       @id @default(uuid())
   projectId    String
   project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  preset       String       // "1080p_h264", "720p_h264"
+  preset       String // "1080p_h264", "720p_h264"
   status       RenderStatus @default(QUEUED)
   progress     Int          @default(0) // 0 - 100
   outputS3Key  String?
@@ -137,4 +244,3 @@ model RenderJob {
 
   @@map("render_jobs")
 }
-
