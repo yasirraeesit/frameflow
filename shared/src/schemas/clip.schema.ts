@@ -48,10 +48,21 @@ export const GeneratedClipSchema = z.object({
   status: ClipStatusSchema.default('GENERATED'),
   renderedS3Key: z.string().nullable().optional(),
   renderedUrl: z.string().nullable().optional(),
+  wasExported: z.boolean().optional(),
+  userRating: z.number().int().nullable().optional(),
+  trimmedStartDeltaSec: z.number().optional(),
+  trimmedEndDeltaSec: z.number().optional(),
+  finalLayoutMode: z.string().nullable().optional(),
+  finalCaptionPreset: z.string().nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 export type GeneratedClipResponse = z.infer<typeof GeneratedClipSchema>;
+
+export const ClipFeedbackInputSchema = z.object({
+  rating: z.union([z.literal(1), z.literal(-1), z.literal(0), z.null()]),
+});
+export type ClipFeedbackInput = z.infer<typeof ClipFeedbackInputSchema>;
 
 export const GenerateClipsInputSchema = z.object({
   prompt: z.string().optional(),

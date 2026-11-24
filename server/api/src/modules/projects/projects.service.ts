@@ -428,6 +428,26 @@ export class ProjectsService {
     });
   }
 
+  async setClipFeedback(userId: string, clipId: string, rating: number | null) {
+    const clip = await this.prisma.generatedClip.findFirst({
+      where: {
+        id: clipId,
+        project: { ownerId: userId },
+      },
+    });
+
+    if (!clip) {
+      throw new Error('CLIP_NOT_FOUND');
+    }
+
+    return this.prisma.generatedClip.update({
+      where: { id: clipId },
+      data: {
+        userRating: rating === 0 ? null : rating,
+      },
+    });
+  }
+
   async updateClip(
     userId: string,
     clipId: string,
@@ -448,12 +468,39 @@ export class ProjectsService {
       throw new Error('CLIP_NOT_FOUND');
     }
 
+    let startDelta = clip.trimmedStartDeltaSec;
+    let endDelta = clip.trimmedEndDeltaSec;
+    let finalCaption = clip.finalCaptionPreset;
+    const finalLayout = input.layoutMode || clip.finalLayoutMode || clip.layoutMode;
+
+    if (input.timelineAstJson) {
+      const ast = input.timelineAstJson as Record<string, unknown>;
+      if (ast.captionPreset && typeof ast.captionPreset === 'string') {
+        finalCaption = ast.captionPreset;
+      }
+      const words = Array.isArray(ast.words) ? (ast.words as Array<{ start: number; end: number }>) : [];
+      const cutWords = new Set(Array.isArray(ast.cutWords) ? (ast.cutWords as number[]) : []);
+      const activeWords = words.filter((_, idx) => !cutWords.has(idx));
+      const firstActive = activeWords[0];
+      const firstOrig = words[0];
+      const lastActive = activeWords[activeWords.length - 1];
+      const lastOrig = words[words.length - 1];
+      if (firstActive && firstOrig && lastActive && lastOrig) {
+        startDelta = Math.max(0, +(firstActive.start - firstOrig.start).toFixed(2));
+        endDelta = Math.max(0, +(lastOrig.end - lastActive.end).toFixed(2));
+      }
+    }
+
     return this.prisma.generatedClip.update({
       where: { id: clipId },
       data: {
         ...(input.title && { title: input.title }),
         ...(input.layoutMode && { layoutMode: input.layoutMode }),
         ...(input.timelineAstJson && { timelineAstJson: input.timelineAstJson }),
+        trimmedStartDeltaSec: startDelta,
+        trimmedEndDeltaSec: endDelta,
+        finalLayoutMode: finalLayout,
+        finalCaptionPreset: finalCaption,
       },
     });
   }
@@ -496,6 +543,43 @@ export class ProjectsService {
       : input.includeWatermark !== undefined
       ? input.includeWatermark
       : false;
+
+    // Record creator learning signals
+    let calculatedStartDelta = input.trimmedStartDeltaSec ?? clip.trimmedStartDeltaSec;
+    let calculatedEndDelta = input.trimmedEndDeltaSec ?? clip.trimmedEndDeltaSec;
+    const finalLayoutMode = input.finalLayoutMode || clip.finalLayoutMode || clip.layoutMode || 'solo';
+    const ast = clip.timelineAstJson as Record<string, unknown> | null;
+    const finalCaptionPreset =
+      input.finalCaptionPreset ||
+      clip.finalCaptionPreset ||
+      (typeof ast?.captionPreset === 'string' ? ast.captionPreset : null) ||
+      ((ast?.captionStyle as Record<string, unknown> | undefined)?.preset as string | undefined) ||
+      'hormozi_pop';
+
+    if (input.trimmedStartDeltaSec === undefined && ast) {
+      const words = Array.isArray(ast.words) ? (ast.words as Array<{ start: number; end: number }>) : [];
+      const cutWords = new Set(Array.isArray(ast.cutWords) ? (ast.cutWords as number[]) : []);
+      const activeWords = words.filter((_, idx) => !cutWords.has(idx));
+      const firstActive = activeWords[0];
+      const firstOrig = words[0];
+      const lastActive = activeWords[activeWords.length - 1];
+      const lastOrig = words[words.length - 1];
+      if (firstActive && firstOrig && lastActive && lastOrig) {
+        calculatedStartDelta = Math.max(0, +(firstActive.start - firstOrig.start).toFixed(2));
+        calculatedEndDelta = Math.max(0, +(lastOrig.end - lastActive.end).toFixed(2));
+      }
+    }
+
+    await this.prisma.generatedClip.update({
+      where: { id: clip.id },
+      data: {
+        wasExported: true,
+        trimmedStartDeltaSec: calculatedStartDelta,
+        trimmedEndDeltaSec: calculatedEndDelta,
+        finalLayoutMode,
+        finalCaptionPreset,
+      },
+    });
 
     const queue = getClipExportQueue();
     const job = await queue.add(

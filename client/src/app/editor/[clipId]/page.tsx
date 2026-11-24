@@ -87,6 +87,17 @@ export default function StudioEditorPage(): JSX.Element {
   const cutDuration = (silencesRemoved ? 1.4 : 0) + (fillersRemoved ? 2.0 : 0);
   const currentDuration = Math.max(10, baseDuration - cutDuration);
 
+  // Calculate trimmed boundary deltas from word cuts for creator learning
+  const activeWords = wordsList.filter((_, idx) => !cutWordIndices.has(idx));
+  const firstActive = activeWords[0];
+  const firstOrig = wordsList[0];
+  const lastActive = activeWords[activeWords.length - 1];
+  const lastOrig = wordsList[wordsList.length - 1];
+  const trimmedStartDeltaSec =
+    firstActive && firstOrig ? Math.max(0, +(firstActive.start - firstOrig.start).toFixed(2)) : 0;
+  const trimmedEndDeltaSec =
+    lastActive && lastOrig ? Math.max(0, +(lastOrig.end - lastActive.end).toFixed(2)) : 0;
+
   // 4. Captions & Brand State
   const isGamingClip = (clip.title && clip.title.includes('GTA')) || clip.reframeMode === 'gameplay_cam';
   const [captionPreset, setCaptionPreset] = useState<CaptionPreset>(
@@ -542,6 +553,10 @@ export default function StudioEditorPage(): JSX.Element {
         clipTitle={shortTitle}
         durationSec={currentDuration}
         clipId={clipId}
+        layoutMode={layoutMode.toLowerCase().replace(/ /g, '_').replace(/\+/g, 'and')}
+        captionPreset={captionPreset.toLowerCase().replace(/ /g, '_')}
+        trimmedStartDeltaSec={trimmedStartDeltaSec}
+        trimmedEndDeltaSec={trimmedEndDeltaSec}
       />
     </div>
   );

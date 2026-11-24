@@ -126,12 +126,18 @@ model GeneratedClip {
   aiInsight          String
   startSeconds       Float
   endSeconds         Float
-  layoutMode         String   @default("solo") // 'solo' | 'split' | 'screen_cam'
-  socialCopyJson     Json
-  timelineAstJson    Json
-  outputUrl          String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  layoutMode           String   @default("solo") // 'solo' | 'split' | 'screen_cam'
+  socialCopyJson       Json
+  timelineAstJson      Json
+  outputUrl            String?
+  wasExported          Boolean  @default(false)
+  userRating           Int?     // 1 for thumbs up, -1 for thumbs down, null for none
+  trimmedStartDeltaSec Float    @default(0)
+  trimmedEndDeltaSec   Float    @default(0)
+  finalLayoutMode      String?
+  finalCaptionPreset   String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   @@map("generated_clips")
 }

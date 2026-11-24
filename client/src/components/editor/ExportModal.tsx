@@ -26,6 +26,10 @@ interface ExportModalProps {
   clipTitle: string;
   durationSec: number;
   clipId?: string;
+  layoutMode?: string;
+  captionPreset?: string;
+  trimmedStartDeltaSec?: number;
+  trimmedEndDeltaSec?: number;
 }
 
 export function ExportModal({
@@ -34,6 +38,10 @@ export function ExportModal({
   clipTitle,
   durationSec,
   clipId,
+  layoutMode,
+  captionPreset,
+  trimmedStartDeltaSec,
+  trimmedEndDeltaSec,
 }: ExportModalProps): JSX.Element | null {
   const [format, setFormat] = useState<ExportFormat>('mp4');
   const [resolution, setResolution] = useState<ExportResolution>('1080p');
@@ -75,6 +83,10 @@ export function ExportModal({
           body: JSON.stringify({
             format: exportFormat,
             includeWatermark: !removeWatermark,
+            finalLayoutMode: layoutMode,
+            finalCaptionPreset: captionPreset,
+            trimmedStartDeltaSec,
+            trimmedEndDeltaSec,
           }),
         });
       }

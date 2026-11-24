@@ -1,5 +1,5 @@
 import { FastifyPluginAsync } from 'fastify';
-import { ClipExportInputSchema } from '@frameflow/shared';
+import { ClipExportInputSchema, ClipFeedbackInputSchema } from '@frameflow/shared';
 import { ProjectsService } from './projects.service.js';
 
 export const clipsRoutes: FastifyPluginAsync = async (server) => {
@@ -49,6 +49,28 @@ export const clipsRoutes: FastifyPluginAsync = async (server) => {
         return reply.status(403).send({ error: 'UPGRADE_REQUIRED', message });
       }
       return reply.status(404).send({ error: 'Clip not found', message });
+    }
+  });
+
+  /**
+   * PATCH /api/clips/:clipId/feedback
+   * Records user rating (thumbs up = 1, thumbs down = -1, neutral = null)
+   */
+  server.patch('/:clipId/feedback', async (request, reply) => {
+    const { clipId } = request.params as { clipId: string };
+    const parse = ClipFeedbackInputSchema.safeParse(request.body);
+    if (!parse.success) {
+      return reply.status(400).send({
+        error: 'Validation failed',
+        issues: parse.error.format(),
+      });
+    }
+
+    try {
+      const updated = await projectsService.setClipFeedback(request.user.id, clipId, parse.data.rating);
+      return reply.send({ success: true, clipId: updated.id, userRating: updated.userRating });
+    } catch {
+      return reply.status(404).send({ error: 'Clip not found' });
     }
   });
 };

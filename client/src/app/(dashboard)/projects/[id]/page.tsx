@@ -35,6 +35,8 @@ import {
   Film,
   RotateCcw,
   AlertCircle,
+  ThumbsUp,
+  ThumbsDown,
 } from 'lucide-react';
 
 type FilterCategory = 'all' | 'top90' | 'under30' | 'gaming';
@@ -70,6 +72,7 @@ export default function ProjectShortsFeedPage(): JSX.Element {
     });
 
   const [clips, setClips] = useState<GeneratedClipResponse[]>(isDemo ? MOCK_VIRAL_CLIPS : []);
+  const [clipRatings, setClipRatings] = useState<Record<string, number | null>>({});
   const [isLoading, setIsLoading] = useState<boolean>(!isDemo);
   const [filter, setFilter] = useState<FilterCategory>('all');
   const [aiPrompt, setAiPrompt] = useState('');
@@ -139,6 +142,14 @@ export default function ProjectShortsFeedPage(): JSX.Element {
       .then((data: { clips?: Array<{ id: string; projectId: string; title: string; aiInsight?: string; viralityScore: number; scoreBreakdownJson?: { hook: number; flow: number; topicRelevance: number }; startSeconds: number; endSeconds: number; layoutMode?: string; commentaryHookScript?: string | null; sourceType?: 'original' | 'commentary'; monetizationStatus?: 'ready' | 'needs_voiceover' | 'transformative_applied'; timelineAstJson?: object; socialCopyJson?: { tiktok?: string; reels?: string; shorts?: string }; createdAt: string; updatedAt: string }> } | null) => {
         if (data?.clips && Array.isArray(data.clips)) {
           if (data.clips.length > 0) {
+            const initialRatings: Record<string, number | null> = {};
+            data.clips.forEach((c) => {
+              if (typeof (c as { userRating?: number | null }).userRating === 'number') {
+                initialRatings[c.id] = (c as { userRating?: number | null }).userRating ?? null;
+              }
+            });
+            setClipRatings(initialRatings);
+
             const mappedClips: GeneratedClipResponse[] = data.clips.map((c) => ({
               id: c.id,
               projectId: c.projectId,
@@ -161,6 +172,12 @@ export default function ProjectShortsFeedPage(): JSX.Element {
               sourceType: c.sourceType || 'original',
               monetizationStatus: c.monetizationStatus || 'ready',
               status: 'READY',
+              wasExported: (c as { wasExported?: boolean }).wasExported ?? false,
+              userRating: (c as { userRating?: number | null }).userRating ?? null,
+              trimmedStartDeltaSec: (c as { trimmedStartDeltaSec?: number }).trimmedStartDeltaSec ?? 0,
+              trimmedEndDeltaSec: (c as { trimmedEndDeltaSec?: number }).trimmedEndDeltaSec ?? 0,
+              finalLayoutMode: (c as { finalLayoutMode?: string | null }).finalLayoutMode ?? null,
+              finalCaptionPreset: (c as { finalCaptionPreset?: string | null }).finalCaptionPreset ?? null,
               createdAt: c.createdAt,
               updatedAt: c.updatedAt,
             }));
@@ -226,6 +243,21 @@ export default function ProjectShortsFeedPage(): JSX.Element {
     navigator.clipboard.writeText(text);
     setCopiedClipId(`${clip.id}-${platform}`);
     setTimeout(() => setCopiedClipId(null), 2000);
+  };
+
+  const handleFeedback = async (clipId: string, rating: number | null) => {
+    setClipRatings((prev) => ({ ...prev, [clipId]: rating }));
+    try {
+      await apiFetch(`/api/clips/${clipId}/feedback`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rating }),
+      });
+    } catch (err) {
+      console.warn('Feedback update warning:', err);
+    }
   };
 
   const handleDownload = async (clipId: string) => {
@@ -639,9 +671,39 @@ export default function ProjectShortsFeedPage(): JSX.Element {
                       <Info className="h-3 w-3 text-emerald-600 ml-0.5" />
                     </button>
 
-                    <span className="text-[11px] font-mono text-[#8C8E9A]">
-                      #{index + 1} Ranked
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {/* Creator Learning Feedback Loop */}
+                      <div className="flex items-center gap-0.5 bg-[#FAF9F5] border border-[#E6E4DD] rounded-lg p-0.5">
+                        <button
+                          type="button"
+                          onClick={() => handleFeedback(clip.id, clipRatings[clip.id] === 1 ? null : 1)}
+                          className={`p-1 rounded transition-colors cursor-pointer ${
+                            clipRatings[clip.id] === 1
+                              ? 'bg-emerald-100 text-emerald-800 font-bold'
+                              : 'text-[#8C8E9A] hover:text-emerald-700 hover:bg-white'
+                          }`}
+                          title="Thumbs up: Trains AI to produce more clips like this"
+                        >
+                          <ThumbsUp className={`h-3 w-3 ${clipRatings[clip.id] === 1 ? 'fill-current' : ''}`} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleFeedback(clip.id, clipRatings[clip.id] === -1 ? null : -1)}
+                          className={`p-1 rounded transition-colors cursor-pointer ${
+                            clipRatings[clip.id] === -1
+                              ? 'bg-rose-100 text-rose-800 font-bold'
+                              : 'text-[#8C8E9A] hover:text-rose-700 hover:bg-white'
+                          }`}
+                          title="Thumbs down: Avoid this pacing in future clips"
+                        >
+                          <ThumbsDown className={`h-3 w-3 ${clipRatings[clip.id] === -1 ? 'fill-current' : ''}`} />
+                        </button>
+                      </div>
+
+                      <span className="text-[11px] font-mono text-[#8C8E9A]">
+                        #{index + 1} Ranked
+                      </span>
+                    </div>
                   </div>
 
                   {/* Interactive Virality Breakdown Popover */}

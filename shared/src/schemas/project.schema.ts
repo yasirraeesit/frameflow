@@ -80,5 +80,9 @@ export type IngestProjectInput = z.infer<typeof IngestProjectInputSchema>;
 export const ClipExportInputSchema = z.object({
   format: z.enum(['mp4_1080p', 'mp4_4k', 'fcpxml_premiere', 'fcpxml_davinci', 'subtitles_srt', 'subtitles_vtt', 'transcript_txt']).default('mp4_1080p'),
   includeWatermark: z.boolean().optional(),
+  trimmedStartDeltaSec: z.number().optional(),
+  trimmedEndDeltaSec: z.number().optional(),
+  finalLayoutMode: z.string().optional(),
+  finalCaptionPreset: z.string().optional(),
 });
 export type ClipExportInput = z.infer<typeof ClipExportInputSchema>;

@@ -342,6 +342,132 @@ export async function detectAudioEnergyPeaks(
   return peaks.filter((p) => p.start < durationSeconds);
 }
 
+export interface CreatorLearningProfile {
+  hasHistory: boolean;
+  sampleCount: number;
+  avgDurationSec: number;
+  avgStartTrimSec: number;
+  avgEndTrimSec: number;
+  preferredLayoutMode?: string;
+  preferredCaptionPreset?: string;
+  exemplarHooks: Array<{ title: string; hookScript?: string; insight?: string }>;
+}
+
+/**
+ * Queries the creator's past exported or positively rated clips to compute personalized pacing/style preferences
+ */
+export async function computeCreatorLearningProfile(userId: string): Promise<CreatorLearningProfile> {
+  try {
+    const pastClips = await prisma.generatedClip.findMany({
+      where: {
+        project: { ownerId: userId },
+        OR: [
+          { wasExported: true },
+          { userRating: { gt: 0 } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 15,
+      select: {
+        id: true,
+        title: true,
+        startSeconds: true,
+        endSeconds: true,
+        viralityScore: true,
+        aiInsight: true,
+        socialCopyJson: true,
+        wasExported: true,
+        userRating: true,
+        trimmedStartDeltaSec: true,
+        trimmedEndDeltaSec: true,
+        finalLayoutMode: true,
+        finalCaptionPreset: true,
+        layoutMode: true,
+      },
+    });
+
+    if (pastClips.length === 0) {
+      return {
+        hasHistory: false,
+        sampleCount: 0,
+        avgDurationSec: 35,
+        avgStartTrimSec: 0,
+        avgEndTrimSec: 0,
+        exemplarHooks: [],
+      };
+    }
+
+    let totalDuration = 0;
+    let totalStartTrim = 0;
+    let totalEndTrim = 0;
+    const layoutCounts: Record<string, number> = {};
+    const captionCounts: Record<string, number> = {};
+
+    for (const c of pastClips) {
+      const origDur = Math.max(1, c.endSeconds - c.startSeconds);
+      const trimmedDur = Math.max(10, origDur - (c.trimmedStartDeltaSec || 0) - (c.trimmedEndDeltaSec || 0));
+      totalDuration += trimmedDur;
+      totalStartTrim += c.trimmedStartDeltaSec || 0;
+      totalEndTrim += c.trimmedEndDeltaSec || 0;
+
+      const layout = c.finalLayoutMode || c.layoutMode;
+      if (layout) {
+        layoutCounts[layout] = (layoutCounts[layout] || 0) + 1;
+      }
+      if (c.finalCaptionPreset) {
+        captionCounts[c.finalCaptionPreset] = (captionCounts[c.finalCaptionPreset] || 0) + 1;
+      }
+    }
+
+    const avgDurationSec = Math.round(totalDuration / pastClips.length);
+    const avgStartTrimSec = +(totalStartTrim / pastClips.length).toFixed(1);
+    const avgEndTrimSec = +(totalEndTrim / pastClips.length).toFixed(1);
+
+    const sortedLayouts = Object.entries(layoutCounts).sort((a, b) => b[1] - a[1]);
+    const preferredLayoutMode = sortedLayouts[0]?.[0];
+    const sortedCaptions = Object.entries(captionCounts).sort((a, b) => b[1] - a[1]);
+    const preferredCaptionPreset = sortedCaptions[0]?.[0];
+
+    // Pick up to 2 high-scoring exemplar clips for few-shot learning
+    const sortedClips = [...pastClips].sort((a, b) => {
+      const scoreA = (a.userRating && a.userRating > 0 ? 100 : 0) + a.viralityScore;
+      const scoreB = (b.userRating && b.userRating > 0 ? 100 : 0) + b.viralityScore;
+      return scoreB - scoreA;
+    });
+
+    const exemplarHooks = sortedClips.slice(0, 2).map((c) => {
+      const social = c.socialCopyJson as Record<string, unknown> | null;
+      const hookScript = typeof social?.commentaryHookScript === 'string' ? social.commentaryHookScript : undefined;
+      return {
+        title: c.title,
+        hookScript,
+        insight: c.aiInsight,
+      };
+    });
+
+    return {
+      hasHistory: true,
+      sampleCount: pastClips.length,
+      avgDurationSec,
+      avgStartTrimSec,
+      avgEndTrimSec,
+      preferredLayoutMode,
+      preferredCaptionPreset,
+      exemplarHooks,
+    };
+  } catch (err) {
+    console.warn('[Worker:CreatorLearning] Failed to compute creator profile:', err);
+    return {
+      hasHistory: false,
+      sampleCount: 0,
+      avgDurationSec: 35,
+      avgStartTrimSec: 0,
+      avgEndTrimSec: 0,
+      exemplarHooks: [],
+    };
+  }
+}
+
 /**
  * Stage 3: Evaluates viral retention hooks via Google Gemini
  */
@@ -353,13 +479,25 @@ async function scoreViralMoments(
   _preferredLength?: string,
   contentMode: 'talking_head' | 'gaming' = 'talking_head',
   audioPeaks: AudioEnergyPeak[] = [],
-  _requestedLayoutMode: string = 'auto'
+  _requestedLayoutMode: string = 'auto',
+  creatorProfile?: CreatorLearningProfile
 ): Promise<ViralMomentItem[]> {
   const geminiKey = process.env.GEMINI_API_KEY;
 
   if (!geminiKey || geminiKey.includes('mock') || geminiKey.includes('placeholder')) {
     throw new Error('AI virality scoring failed: GEMINI_API_KEY is not configured on the server.');
   }
+
+  const learningPromptSection = creatorProfile?.hasHistory
+    ? `\n[CREATOR PERSONALIZATION & LEARNED PREFERENCES]:
+This creator has refined ${creatorProfile.sampleCount} previously exported/favorited shorts:
+- Target Preferred Clip Duration: ~${creatorProfile.avgDurationSec} seconds (prioritize ~${creatorProfile.avgDurationSec}s clips).
+${creatorProfile.avgStartTrimSec > 0.5 ? `- Hook Tightness: Creator consistently trims ~${creatorProfile.avgStartTrimSec}s off speech intros. Start clips ~${creatorProfile.avgStartTrimSec}s deeper right on the core action/hook punchline with zero filler.` : ''}
+${creatorProfile.preferredLayoutMode ? `- Preferred Layout Mode: '${creatorProfile.preferredLayoutMode}'` : ''}
+${creatorProfile.exemplarHooks.length > 0 ? `- Creator's Top-Performing Few-Shot Hook References:
+${creatorProfile.exemplarHooks.map((h, i) => `  Ref #${i + 1}: "${h.title}"${h.hookScript ? ` (Opening line: "${h.hookScript}")` : ''}`).join('\n')}` : ''}
+Align extracted clips to mirror this creator's pacing and hook style.\n`
+    : '';
 
   const prompt =
     contentMode === 'gaming'
@@ -371,7 +509,7 @@ Transcript:
 ${transcriptText || '[No-commentary gameplay footage: relies on audio energy, volume spikes, and action]'}
 User Focus Prompt: ${userPrompt || 'Extract high-energy action moments, stunts, funny fails, and highlights'}
 Video Duration: ${targetDurationSeconds} seconds
-
+${learningPromptSection}
 Instructions:
 - Identify 3 to 6 viral moments in 9:16 format with high retention hook in the first 2 seconds.
 - Align startSeconds and endSeconds within 0 to ${targetDurationSeconds}. Clip durations must be between 15 and 60 seconds.
@@ -396,7 +534,7 @@ Schema:
 Transcript: ${transcriptText}
 User Focus Prompt: ${userPrompt || 'Find high retention contrarian insights and actionable advice'}
 Video Duration: ${targetDurationSeconds} seconds
-
+${learningPromptSection}
 Instructions:
 - Identify 3 to 6 viral moments with high retention hook in the first 2.5 seconds.
 - Align startSeconds and endSeconds within 0 to ${targetDurationSeconds}. Clip durations must be between 15 and 60 seconds.
@@ -708,6 +846,14 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
       audioPeaks = await detectAudioEnergyPeaks(durationSeconds, youtubeUrl, storageKey);
     }
 
+    console.log(`[Worker] Project ${projectId}: Computing creator learning profile for user ${userId}...`);
+    const creatorProfile = await computeCreatorLearningProfile(userId);
+    if (creatorProfile.hasHistory) {
+      console.log(
+        `[Worker] Project ${projectId}: Creator learning profile active (${creatorProfile.sampleCount} prior signals, avgDur=${creatorProfile.avgDurationSec}s, startTrim=${creatorProfile.avgStartTrimSec}s).`
+      );
+    }
+
     console.log(`[Worker] Project ${projectId}: Scoring viral moments with Gemini...`);
     const viralMoments = await scoreViralMoments(
       transcriptText,
@@ -717,7 +863,8 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
       preferredLength,
       effectiveContentMode,
       audioPeaks,
-      layoutMode
+      layoutMode,
+      creatorProfile
     );
     console.log(`[Worker] Project ${projectId}: Generated ${viralMoments.length} viral moment targets.`);
 
