@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { FileText, Type, Layers, Film } from 'lucide-react';
 import { MOCK_VIRAL_CLIPS } from '@/lib/mock-data';
+import { apiFetch } from '@/lib/api';
 import type { GeneratedClipResponse, WordTiming } from '@frameflow/shared';
 
 import { StudioHeader, AspectRatioOption } from '@/components/editor/StudioHeader';
@@ -57,8 +59,9 @@ export default function StudioEditorPage(): JSX.Element {
   const router = useRouter();
   const clipId = (params?.clipId as string) || MOCK_VIRAL_CLIPS[0].id;
 
-  const clip: GeneratedClipResponse =
-    MOCK_VIRAL_CLIPS.find((c) => c.id === clipId) || MOCK_VIRAL_CLIPS[0];
+  const foundClip = MOCK_VIRAL_CLIPS.find((c) => c.id === clipId);
+  const clip: GeneratedClipResponse = foundClip || MOCK_VIRAL_CLIPS[0];
+  const isMissingClip = !foundClip && clipId !== 'demo-1' && !clipId.startsWith('clip-') && !clipId.startsWith('mock-');
 
   // 1. Studio Header State
   const [shortTitle, setShortTitle] = useState<string>(
@@ -270,13 +273,12 @@ export default function StudioEditorPage(): JSX.Element {
     const timer = setTimeout(async () => {
       try {
         const token = typeof window !== 'undefined' ? localStorage.getItem('frameflow_token') : null;
-        if (!token || clipId === 'demo-1' || clipId.startsWith('clip-')) return;
+        if (!token || clipId === 'demo-1' || clipId.startsWith('clip-') || clipId.startsWith('mock-')) return;
 
-        await fetch(`/api/clips/${clipId}`, {
+        await apiFetch(`/api/clips/${clipId}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             title: shortTitle,
@@ -297,6 +299,26 @@ export default function StudioEditorPage(): JSX.Element {
 
     return () => clearTimeout(timer);
   }, [shortTitle, layoutMode, aspectRatio, captionPreset, highlightColor, wordsList, cutWordIndices, clipId]);
+
+  if (isMissingClip) {
+    return (
+      <div className="min-h-screen bg-[#FAF9F5] flex flex-col items-center justify-center p-6 text-center select-none font-sans antialiased">
+        <div className="h-16 w-16 rounded-2xl bg-[#FFF8F6] border border-[#FADCD5] flex items-center justify-center text-[#E84C2B] mb-4 shadow-sm">
+          <Film className="h-8 w-8" />
+        </div>
+        <h1 className="text-2xl font-black text-[#14151A] tracking-tight mb-2">Clip Not Found</h1>
+        <p className="text-sm text-[#52545E] max-w-md mb-6">
+          The requested clip could not be located or may have been deleted.
+        </p>
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white text-sm font-bold shadow-sm transition-all cursor-pointer"
+        >
+          Return to Dashboard
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#FAF9F5] text-[#14151A] select-none font-sans antialiased">

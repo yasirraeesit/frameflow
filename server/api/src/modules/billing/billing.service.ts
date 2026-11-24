@@ -178,6 +178,25 @@ export class BillingService {
    */
   async refundCredits(userId: string, input: RefundCreditsInput): Promise<RefundCreditsResponse> {
     return await this.prisma.$transaction(async (tx) => {
+      // Guard against multiple refunds on the same project
+      if (input.projectId) {
+        const project = await tx.project.findUnique({
+          where: { id: input.projectId },
+        });
+        if (project?.refundedAt) {
+          const currentSub = await tx.subscription.findUnique({ where: { userId } });
+          return {
+            success: true,
+            creditBalance: currentSub?.creditBalance ?? 0,
+            transactionId: 'already_refunded',
+          };
+        }
+        await tx.project.update({
+          where: { id: input.projectId },
+          data: { refundedAt: new Date() },
+        });
+      }
+
       const updated = await tx.subscription.update({
         where: { userId },
         data: {
@@ -250,7 +269,7 @@ export class BillingService {
     rawBody: string,
     signatureHeader: string | undefined,
     eventPayload: PaddleWebhookEventPayload
-  ): Promise<{ received: boolean; event: string }> {
+  ): Promise<{ received: boolean; event: string; duplicate?: boolean }> {
     const isValid = this.verifyPaddleSignature(rawBody, signatureHeader);
     if (!isValid) {
       throw new Error('INVALID_SIGNATURE');
@@ -259,6 +278,25 @@ export class BillingService {
     const { event_type, data } = eventPayload;
     if (!event_type || !data) {
       return { received: true, event: 'unknown' };
+    }
+
+    // Webhook Idempotency Guard: Safely ignore duplicate deliveries with 200 OK
+    const eventId = eventPayload.event_id || (data?.id ? `${event_type}:${data.id}` : null);
+    if (eventId) {
+      const existing = await this.prisma.webhookEvent.findUnique({
+        where: { eventId },
+      });
+      if (existing) {
+        console.log(`[PaddleWebhook] Duplicate webhook delivery ${eventId} safely acknowledged.`);
+        return { received: true, event: event_type, duplicate: true };
+      }
+      await this.prisma.webhookEvent.create({
+        data: {
+          eventId,
+          eventType: event_type,
+          processedAt: new Date(),
+        },
+      });
     }
 
     // Determine target userId from custom_data or customer email

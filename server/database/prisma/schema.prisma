@@ -89,6 +89,8 @@ enum ProjectStatus {
 
 model Project {
   id              String          @id @default(uuid())
+  idempotencyKey  String?         @unique
+  refundedAt      DateTime?
   title           String
   description     String?
   ownerId         String
@@ -243,4 +245,12 @@ model RenderJob {
   completedAt  DateTime?
 
   @@map("render_jobs")
+}
+
+model WebhookEvent {
+  eventId     String   @id
+  eventType   String
+  processedAt DateTime @default(now())
+
+  @@map("webhook_events")
 }

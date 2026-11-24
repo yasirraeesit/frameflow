@@ -124,6 +124,7 @@ export function TranscriptPanel({
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [recordingSeconds, setRecordingSeconds] = useState<number>(0);
   const [hasVoiceover, setHasVoiceover] = useState<boolean>(false);
+  const [micDenied, setMicDenied] = useState<boolean>(false);
   const [teleprompterScript, setTeleprompterScript] = useState<string>(
     commentaryHookScript ||
       "You won't believe what happens at the 20-second mark of this chase—watch the minimap right here."
@@ -155,6 +156,7 @@ export function TranscriptPanel({
   const startRecording = async () => {
     setIsRecording(true);
     setRecordingSeconds(0);
+    setMicDenied(false);
     try {
       if (typeof window !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -172,8 +174,11 @@ export function TranscriptPanel({
           stream.getTracks().forEach((track) => track.stop());
         };
         mediaRecorder.start();
+      } else {
+        setMicDenied(true);
       }
     } catch {
+      setMicDenied(true);
       console.warn('Microphone permission check bypassed, using synthetic voiceover track.');
     }
   };
@@ -323,6 +328,19 @@ export function TranscriptPanel({
                   rows={2}
                   className="w-full text-xs text-[#14151A] font-medium p-2 rounded-lg border border-[#E6E4DD] bg-[#FAF9F5] focus:outline-none focus:border-[#E84C2B] resize-none leading-relaxed"
                 />
+
+                {micDenied && (
+                  <div className="rounded-lg border border-amber-300 bg-[#FFFBEB] p-2.5 text-[11px] text-amber-900 flex items-start justify-between gap-2">
+                    <span>Microphone access was denied or unavailable. Synthetic audio preview will be used.</span>
+                    <button
+                      type="button"
+                      onClick={() => setMicDenied(false)}
+                      className="text-amber-700 hover:text-amber-950 font-bold shrink-0 text-xs cursor-pointer"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between pt-1">
                   <div className="flex items-center gap-1.5 text-[11px] font-mono">

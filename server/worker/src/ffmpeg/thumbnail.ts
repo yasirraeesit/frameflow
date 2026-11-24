@@ -11,6 +11,8 @@ export async function generateThumbnailStrip(
   // If video is short, sample 5 frames across the duration into a 5x1 tile strip
   const interval = Math.max(0.5, duration / 5);
   const args = [
+    '-threads', '1',
+    '-max_muxing_queue_size', '1024',
     '-i', inputPath,
     '-vf', `fps=1/${interval.toFixed(2)},scale=160:90,tile=5x1`,
     '-frames:v', '1',
@@ -24,6 +26,8 @@ export async function generateThumbnailStrip(
   } catch {
     // Fallback to single frame snapshot if tile filter fails
     const fallbackArgs = [
+      '-threads', '1',
+      '-max_muxing_queue_size', '1024',
       '-ss', '00:00:01',
       '-i', inputPath,
       '-vframes', '1',

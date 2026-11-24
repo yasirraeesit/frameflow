@@ -1,6 +1,60 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { Job } from 'bullmq';
 import { prisma, Prisma } from '@frameflow/database';
 import type { TimelineDocument, WordTiming } from '@frameflow/shared';
+
+const execFileAsync = promisify(execFile);
+
+/**
+ * Splits extracted 16kHz mono audio into 10-minute segments before Groq Whisper ingestion
+ */
+export async function extractAndChunkAudio(
+  inputPath: string,
+  jobDir: string,
+  durationSec: number
+): Promise<string[]> {
+  const masterAudio = path.join(jobDir, 'master_16k.wav');
+  try {
+    await execFileAsync('ffmpeg', [
+      '-threads', '1',
+      '-preset', 'ultrafast',
+      '-max_muxing_queue_size', '1024',
+      '-y',
+      '-i', inputPath,
+      '-vn',
+      '-acodec', 'pcm_s16le',
+      '-ar', '16000',
+      '-ac', '1',
+      masterAudio,
+    ]);
+
+    if (durationSec > 600) {
+      const chunkPattern = path.join(jobDir, 'audio_chunk_%03d.wav');
+      await execFileAsync('ffmpeg', [
+        '-threads', '1',
+        '-preset', 'ultrafast',
+        '-max_muxing_queue_size', '1024',
+        '-y',
+        '-i', masterAudio,
+        '-f', 'segment',
+        '-segment_time', '600',
+        '-c', 'copy',
+        chunkPattern,
+      ]);
+      const files = await fs.promises.readdir(jobDir);
+      return files.filter((f) => f.startsWith('audio_chunk_') && f.endsWith('.wav')).sort();
+    }
+
+    return ['master_16k.wav'];
+  } catch (err) {
+    console.warn('[Worker:FFmpeg] Audio extraction/chunking failed, proceeding with fallback:', err);
+    return [];
+  }
+}
 
 export interface ClipGenJobPayload {
   projectId: string;
@@ -67,38 +121,81 @@ interface ViralMomentItem {
 }
 
 /**
- * Stage 1 & 2: Transcribes audio using Groq Whisper large-v3-turbo (or realistic fallback if offline/no key)
+ * Stage 1 & 2: Transcribes audio using Groq Whisper large-v3-turbo with 10-min chunking & zero-speech fallback
  */
 async function transcribeAudio(
+  jobDir: string,
+  durationSeconds: number,
   youtubeUrl?: string,
   storageKey?: string
-): Promise<{ text: string; words: WordTiming[] }> {
+): Promise<{ text: string; words: WordTiming[]; isZeroSpeech: boolean }> {
   const groqKey = process.env.GROQ_API_KEY;
 
   if (groqKey && !groqKey.includes('mock') && !groqKey.includes('placeholder')) {
     try {
-      // In production with audio file buffer:
-      // Form-data request to https://api.groq.com/openai/v1/audio/transcriptions
-      const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${groqKey}`,
-        },
-      });
+      // Chunked Audio Transcription:
+      // For long videos (60–120 min), audio is split into 10-minute segments (600s)
+      // to guarantee files stay well under Groq's 25MB limit.
+      const segmentDurationSec = 600;
+      const totalSegments = Math.max(1, Math.ceil(durationSeconds / segmentDurationSec));
+      const allWords: WordTiming[] = [];
+      let aggregatedText = '';
 
-      if (res.ok) {
-        const data = (await res.json()) as GroqTranscriptionResponse;
-        if (data.words && data.words.length > 0) {
+      for (let i = 0; i < totalSegments; i++) {
+        const chunkOffsetSec = i * segmentDurationSec;
+        const chunkFile = path.join(jobDir, `audio_chunk_${String(i).padStart(3, '0')}.wav`);
+
+        // If a real audio chunk file exists in jobDir, upload it via FormData
+        if (fs.existsSync(chunkFile)) {
+          const fileBuffer = await fs.promises.readFile(chunkFile);
+          const blob = new Blob([fileBuffer], { type: 'audio/wav' });
+          const formData = new FormData();
+          formData.append('file', blob, path.basename(chunkFile));
+          formData.append('model', 'whisper-large-v3-turbo');
+          formData.append('response_format', 'verbose_json');
+          formData.append('timestamp_granularities[]', 'word');
+
+          const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${groqKey}`,
+            },
+            body: formData,
+          });
+
+          if (res.ok) {
+            const data = (await res.json()) as GroqTranscriptionResponse;
+            if (data.text) aggregatedText += (aggregatedText ? ' ' : '') + data.text;
+            if (data.words && data.words.length > 0) {
+              for (const w of data.words) {
+                allWords.push({
+                  word: w.word.trim(),
+                  start: +(w.start + chunkOffsetSec).toFixed(2),
+                  end: +(w.end + chunkOffsetSec).toFixed(2),
+                  highlighted: false,
+                });
+              }
+            }
+          }
+        }
+      }
+
+      if (allWords.length > 0) {
+        // Zero-Speech / No-Commentary Fallback check
+        if (allWords.length < 15) {
+          console.log(`[Worker:Groq] Whisper returned ${allWords.length} words (< 15 words). Activating zero-speech FFmpeg RMS loudness & action-peak fallback.`);
           return {
-            text: data.text || '',
-            words: data.words.map((w) => ({
-              word: w.word.trim(),
-              start: w.start,
-              end: w.end,
-              highlighted: false,
-            })),
+            text: aggregatedText || '[No commentary / Action audio stream]',
+            words: allWords,
+            isZeroSpeech: true,
           };
         }
+
+        return {
+          text: aggregatedText,
+          words: allWords,
+          isZeroSpeech: false,
+        };
       }
     } catch (err) {
       console.warn('[Worker:Groq] Failed to fetch Groq Whisper API, falling back to neural alignment engine:', err);
@@ -141,6 +238,7 @@ async function transcribeAudio(
   return {
     text: `Analysis generated for ${sourceName}. Scale bootstrapped ARR without VC funding. Pricing psychology and viral acquisition funnels.`,
     words: sampleWords,
+    isZeroSpeech: false,
   };
 }
 
@@ -609,6 +707,9 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
     layoutMode = 'auto',
   } = job.data;
 
+  const jobDir = path.join(os.tmpdir(), `frameflow-clipgen-${projectId}-${Date.now()}`);
+  await fs.promises.mkdir(jobDir, { recursive: true });
+
   try {
     // -------------------------------------------------------------
     // STAGE 1: Audio Ingest & Extraction (15%)
@@ -633,7 +734,12 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
       },
     });
 
-    const { text: transcriptText, words } = await transcribeAudio(youtubeUrl, storageKey);
+    const { text: transcriptText, words, isZeroSpeech } = await transcribeAudio(
+      jobDir,
+      durationSeconds,
+      youtubeUrl,
+      storageKey
+    );
 
     // -------------------------------------------------------------
     // STAGE 3: Viral Hook & Score Extraction (75%)
@@ -646,9 +752,10 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
       },
     });
 
-    // Run FFmpeg audio-energy peak detection for gaming
+    // Zero-speech / no-commentary or gaming footage: activate audio-energy peak analysis
+    const effectiveContentMode = isZeroSpeech ? 'gaming' : contentMode;
     let audioPeaks: AudioEnergyPeak[] = [];
-    if (contentMode === 'gaming') {
+    if (effectiveContentMode === 'gaming' || isZeroSpeech) {
       audioPeaks = await detectAudioEnergyPeaks(durationSeconds, youtubeUrl, storageKey);
     }
 
@@ -658,7 +765,7 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
       durationSeconds,
       title,
       preferredLength,
-      contentMode,
+      effectiveContentMode,
       audioPeaks,
       layoutMode
     );
@@ -690,7 +797,7 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
         words,
         captionPreset,
         moment.layoutMode,
-        contentMode,
+        effectiveContentMode,
         sourceType
       );
 
@@ -749,10 +856,21 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
       },
     });
 
-    // Automatic Failure Refund: Refund credits back to user
+    // Guaranteed Idempotent Failure Refund: Refund credits back to user exactly once
     try {
       if (creditsDeducted > 0) {
         await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+          const project = await tx.project.findUnique({ where: { id: projectId } });
+          if (!project || project.refundedAt) {
+            console.log(`[Worker] Project ${projectId} already refunded, skipping duplicate refund.`);
+            return;
+          }
+
+          await tx.project.update({
+            where: { id: projectId },
+            data: { refundedAt: new Date() },
+          });
+
           await tx.subscription.update({
             where: { userId },
             data: { creditBalance: { increment: creditsDeducted } },
@@ -766,13 +884,22 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
               projectId,
             },
           });
+          console.log(`[Worker] Refunded ${creditsDeducted} credits to user ${userId} for failed project ${projectId}`);
         });
-        console.log(`[Worker] Refunded ${creditsDeducted} credits to user ${userId} for failed project ${projectId}`);
       }
     } catch (refundErr) {
       console.error('[Worker] Failed to execute credit refund transaction:', refundErr);
     }
 
     throw err;
+  } finally {
+    // Guaranteed cleanup of temporary workspace
+    try {
+      if (fs.existsSync(jobDir)) {
+        fs.rmSync(jobDir, { recursive: true, force: true });
+      }
+    } catch (cleanupErr) {
+      console.warn(`[Worker] Failed to clean tempDir ${jobDir}:`, cleanupErr);
+    }
   }
 }

@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { MOCK_PROJECTS, MockProject } from '@/lib/mock-data';
+import { apiFetch } from '@/lib/api';
 import {
   Link as LinkIcon,
   UploadCloud,
@@ -26,7 +27,39 @@ import {
   ShieldCheck,
   Video,
   Mic,
+  AlertCircle,
 } from 'lucide-react';
+
+function sanitizeVideoUrl(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  try {
+    const url = new URL(trimmed);
+    const host = url.hostname.replace(/^www\./, '');
+    if (host === 'youtube.com' || host === 'm.youtube.com') {
+      if (url.pathname === '/watch') {
+        const v = url.searchParams.get('v');
+        return v ? `https://www.youtube.com/watch?v=${v}` : trimmed;
+      }
+      url.search = '';
+      return url.toString().replace(/\/$/, '');
+    }
+    if (host === 'youtu.be') {
+      url.search = '';
+      return url.toString().replace(/\/$/, '');
+    }
+    return trimmed;
+  } catch {
+    return trimmed;
+  }
+}
+
+function parseTimestampToSeconds(ts: string): number {
+  const parts = ts.trim().split(':').map((p) => parseFloat(p) || 0);
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  return parts[0] || 0;
+}
 
 type InputMode = 'url' | 'upload';
 type SourceType = 'original' | 'commentary';
@@ -48,7 +81,18 @@ export default function DashboardPage(): JSX.Element {
   const [startTime, setStartTime] = useState('00:00:00');
   const [endTime, setEndTime] = useState('00:58:14');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [insufficientCreditsModal, setInsufficientCreditsModal] = useState<{ required: number; available: number } | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const retryUrl = params.get('retryUrl') || params.get('url');
+      if (retryUrl) {
+        setVideoUrl(retryUrl);
+      }
+    }
+  }, []);
 
   const lengthOptions: ClipLengthOption[] = ['Auto', '<30s', '30–60s', '60–90s'];
 
@@ -118,41 +162,60 @@ export default function DashboardPage(): JSX.Element {
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setValidationError(null);
+
+    const cleanUrl = sanitizeVideoUrl(videoUrl);
+
+    // Validate timeframe: end must be greater than start if provided
+    if (startTime && endTime) {
+      const startSec = parseTimestampToSeconds(startTime);
+      const endSec = parseTimestampToSeconds(endTime);
+      if (endSec > 0 && endSec <= startSec) {
+        setValidationError('Timeframe end must be greater than timeframe start.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('frameflow_token') : null;
-      if (!token) {
-        const destId = contentMode === 'gaming' ? 'gta6-demo' : 'demo-1';
-        router.push(`/projects/${destId}/processing`);
-        return;
-      }
-
-      const res = await fetch('/api/projects', {
+      const res = await apiFetch('/api/projects', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          title: videoUrl ? (contentMode === 'gaming' ? `GTA 6 Gaming (${videoUrl.slice(-11)})` : `Podcast (${videoUrl.slice(-11)})`) : (contentMode === 'gaming' ? 'GTA 6 Gameplay VOD' : 'Studio Source Video'),
-          youtubeUrl: videoUrl || undefined,
+          title: cleanUrl
+            ? (contentMode === 'gaming' ? `GTA 6 Gaming (${cleanUrl.slice(-11)})` : `Podcast (${cleanUrl.slice(-11)})`)
+            : (contentMode === 'gaming' ? 'GTA 6 Gameplay VOD' : 'Studio Source Video'),
+          youtubeUrl: cleanUrl || undefined,
           sourceType,
           contentMode,
           layoutMode: contentMode === 'gaming' && layoutMode === 'auto' ? 'gameplay_cam' : layoutMode,
+          timeframeStart: startTime || undefined,
+          timeframeEnd: endTime || undefined,
           preferredLength: selectedLength,
           captionPreset: selectedCaption.toLowerCase().replace(/ /g, '_'),
           aiFocusPrompt: focusPrompt || undefined,
           estimatedDurationSec: contentMode === 'gaming' ? 1580 : 300,
+          idempotencyKey: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : undefined,
         }),
       });
 
       if (res.status === 402) {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({}));
         setInsufficientCreditsModal({
           required: errorData.required || 5,
           available: errorData.available || 0,
         });
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (res.status === 400) {
+        const errorData = await res.json().catch(() => ({}));
+        setValidationError(errorData.error || 'Video validation failed. Please check the URL.');
         setIsSubmitting(false);
         return;
       }
@@ -166,9 +229,12 @@ export default function DashboardPage(): JSX.Element {
 
       const destId = contentMode === 'gaming' ? 'gta6-demo' : 'demo-1';
       router.push(`/projects/${destId}/processing`);
-    } catch {
+    } catch (err: unknown) {
+      console.warn('[Dashboard] Ingest network error, navigating to demo processing:', err);
       const destId = contentMode === 'gaming' ? 'gta6-demo' : 'demo-1';
       router.push(`/projects/${destId}/processing`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -647,6 +713,14 @@ export default function DashboardPage(): JSX.Element {
             </div>
           </div>
 
+          {/* Validation Error Banner */}
+          {validationError && (
+            <div className="flex items-center gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700 font-semibold animate-in fade-in">
+              <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
+              <span>{validationError}</span>
+            </div>
+          )}
+
           {/* Action Row */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
             <div className="flex items-center gap-2 text-xs text-[#52545E]">
@@ -659,7 +733,7 @@ export default function DashboardPage(): JSX.Element {
               disabled={isSubmitting}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] px-7 py-3.5 text-xs sm:text-sm font-bold text-white shadow-md active:scale-[0.99] transition-all disabled:opacity-50 cursor-pointer w-full sm:w-auto"
             >
-              <span>{isSubmitting ? 'Dispatching Worker...' : 'Get Clips in 1 Click'}</span>
+              <span>{isSubmitting ? 'Analyzing & Ingesting...' : 'Get Clips in 1 Click'}</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>

@@ -38,6 +38,8 @@ export const ProjectResponseSchema = z.object({
   targetAspect: z.string().default('9:16'),
   targetLength: z.string().default('30-60s'),
   transcript: z.unknown().nullable().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+  refundedAt: z.string().nullable().optional(),
   width: z.number(),
   height: z.number(),
   fps: z.number(),
@@ -71,6 +73,7 @@ export const IngestProjectInputSchema = z.object({
     'Vice Neon',
   ]).optional().default('hormozi_pop'),
   aiFocusPrompt: z.string().optional(),
+  idempotencyKey: z.string().optional(),
 });
 export type IngestProjectInput = z.infer<typeof IngestProjectInputSchema>;
 

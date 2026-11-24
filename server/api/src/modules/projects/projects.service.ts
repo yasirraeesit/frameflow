@@ -1,3 +1,5 @@
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { PrismaClient } from '@frameflow/database';
 import {
   CreateProjectInput,
@@ -8,6 +10,119 @@ import {
 import { getClipGenerationQueue } from '../../queues/clip-generation.queue.js';
 import { getClipExportQueue } from '../../queues/clip-export.queue.js';
 
+const execFileAsync = promisify(execFile);
+
+export function isValidYouTubeUrl(urlStr: string): boolean {
+  try {
+    const parsed = new URL(urlStr);
+    const host = parsed.hostname.replace(/^www\./, '');
+    if (host === 'youtu.be') {
+      return /^\/[a-zA-Z0-9_-]{11}$/.test(parsed.pathname);
+    }
+    if (host === 'youtube.com' || host === 'm.youtube.com') {
+      if (parsed.pathname === '/watch') {
+        const v = parsed.searchParams.get('v');
+        return !!v && /^[a-zA-Z0-9_-]{11}$/.test(v);
+      }
+      if (parsed.pathname.startsWith('/shorts/') || parsed.pathname.startsWith('/live/')) {
+        const id = parsed.pathname.split('/')[2];
+        return !!id && /^[a-zA-Z0-9_-]{11}$/.test(id);
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+export interface YouTubePreflightResult {
+  durationSec: number;
+  title?: string;
+  isLive: boolean;
+}
+
+export async function inspectYouTubeVideo(url: string): Promise<YouTubePreflightResult> {
+  if (!isValidYouTubeUrl(url)) {
+    const err = new Error('INVALID_YOUTUBE_URL');
+    (err as unknown as { userMessage: string }).userMessage =
+      'Invalid YouTube URL format. Supported: youtube.com/watch, youtu.be, youtube.com/shorts, youtube.com/live';
+    throw err;
+  }
+
+  try {
+    const { stdout } = await execFileAsync(
+      'yt-dlp',
+      ['--dump-single-json', '--no-playlist', '--skip-download', '--no-warnings', url],
+      { timeout: 15000, maxBuffer: 10 * 1024 * 1024 }
+    );
+
+    const data = JSON.parse(stdout) as {
+      is_live?: boolean;
+      was_live?: boolean;
+      live_status?: string;
+      duration?: number;
+      title?: string;
+    };
+
+    if (data.is_live === true || (data.was_live === false && data.live_status === 'is_live')) {
+      const err = new Error('LIVE_STREAM_NOT_SUPPORTED');
+      (err as unknown as { userMessage: string }).userMessage = 'Live streams are not supported until ended';
+      throw err;
+    }
+
+    const duration = typeof data.duration === 'number' ? data.duration : 300;
+    if (duration > 7200) {
+      const err = new Error('VIDEO_TOO_LONG');
+      (err as unknown as { userMessage: string }).userMessage = 'Max supported video length is 120 minutes';
+      throw err;
+    }
+
+    return {
+      durationSec: Math.max(10, Math.round(duration)),
+      title: data.title,
+      isLive: false,
+    };
+  } catch (err: unknown) {
+    if (
+      err instanceof Error &&
+      ('userMessage' in err ||
+        err.message === 'LIVE_STREAM_NOT_SUPPORTED' ||
+        err.message === 'VIDEO_TOO_LONG' ||
+        err.message === 'INVALID_YOUTUBE_URL')
+    ) {
+      throw err;
+    }
+
+    const isMissingBinary = (err as { code?: string })?.code === 'ENOENT';
+    if (isMissingBinary) {
+      console.warn('[ProjectsService] yt-dlp not found on system PATH. Proceeding with URL regex validation.');
+      return { durationSec: 300, isLive: false };
+    }
+
+    const errStr = String(err);
+    if (
+      errStr.includes('Video unavailable') ||
+      errStr.includes('Private video') ||
+      errStr.includes('Sign in') ||
+      errStr.includes('copyright') ||
+      errStr.includes('This video is not available')
+    ) {
+      const unavailableErr = new Error('VIDEO_UNAVAILABLE');
+      (unavailableErr as unknown as { userMessage: string }).userMessage =
+        'Video is private, unavailable, or restricted';
+      throw unavailableErr;
+    }
+
+    if ((err as { killed?: boolean })?.killed) {
+      console.warn('[ProjectsService] yt-dlp inspection timed out after 15s. Proceeding with fallback duration.');
+      return { durationSec: 300, isLive: false };
+    }
+
+    console.warn('[ProjectsService] yt-dlp inspection warning:', err);
+    return { durationSec: 300, isLive: false };
+  }
+}
+
 export class ProjectsService {
   constructor(private prisma: PrismaClient) {}
 
@@ -17,17 +132,39 @@ export class ProjectsService {
    * and enqueues the AI clipping pipeline job.
    */
   async ingest(userId: string, input: IngestProjectInput) {
-    const durationSec = input.estimatedDurationSec || 300;
+    // 0. Idempotency Check: Prevent duplicate jobs on rapid double-submit
+    if (input.idempotencyKey) {
+      const existingProject = await this.prisma.project.findUnique({
+        where: { idempotencyKey: input.idempotencyKey },
+      });
+      if (existingProject) {
+        return { project: existingProject, newBalance: null, deduplicated: true };
+      }
+    }
+
+    // 1. Pre-Flight Video Inspection (before deducting any credits)
+    let durationSec = input.estimatedDurationSec || 300;
+    let videoTitle = input.title;
+
+    if (input.youtubeUrl) {
+      const preflight = await inspectYouTubeVideo(input.youtubeUrl);
+      durationSec = preflight.durationSec;
+      if (preflight.title && (!videoTitle || videoTitle === 'Untitled Project')) {
+        videoTitle = preflight.title;
+      }
+    }
+
     const requiredCredits = Math.max(1, Math.ceil(durationSec / 60));
 
-    // Verify credits atomically
+    // 2. Atomic Conditional Credit Deduction & Project Creation
     const { project, newBalance } = await this.prisma.$transaction(async (tx) => {
-      let sub = await tx.subscription.findUnique({
+      // Ensure subscription row exists
+      const existingSub = await tx.subscription.findUnique({
         where: { userId },
       });
 
-      if (!sub) {
-        sub = await tx.subscription.create({
+      if (!existingSub) {
+        await tx.subscription.create({
           data: {
             userId,
             planTier: 'FREE',
@@ -45,23 +182,31 @@ export class ProjectsService {
         });
       }
 
-      if (sub.creditBalance < requiredCredits) {
+      // Race-condition proof atomic conditional decrement:
+      // Guarantees rapid parallel requests can never drive creditBalance below 0
+      const updateResult = await tx.subscription.updateMany({
+        where: {
+          userId,
+          creditBalance: { gte: requiredCredits },
+        },
+        data: {
+          creditBalance: { decrement: requiredCredits },
+        },
+      });
+
+      if (updateResult.count === 0) {
+        const currentSub = await tx.subscription.findUnique({ where: { userId } });
         const err = new Error('INSUFFICIENT_CREDITS') as Error & {
           required: number;
           available: number;
         };
         err.required = requiredCredits;
-        err.available = sub.creditBalance;
+        err.available = currentSub?.creditBalance ?? 0;
         throw err;
       }
 
-      // Deduct credits
-      const updatedSub = await tx.subscription.update({
-        where: { userId },
-        data: {
-          creditBalance: { decrement: requiredCredits },
-        },
-      });
+      const refreshedSub = await tx.subscription.findUnique({ where: { userId } });
+      const currentBalance = refreshedSub?.creditBalance ?? 0;
 
       const initialTimelineData = {
         version: 1,
@@ -74,10 +219,12 @@ export class ProjectsService {
         duration: durationSec,
       };
 
-      // Create Project
+      // Create Project with idempotencyKey & refundedAt guards
       const createdProject = await tx.project.create({
         data: {
-          title: input.title,
+          idempotencyKey: input.idempotencyKey || null,
+          refundedAt: null,
+          title: videoTitle,
           description: input.aiFocusPrompt || 'Auto-generated viral shorts',
           ownerId: userId,
           status: 'QUEUED',
@@ -113,7 +260,7 @@ export class ProjectsService {
         },
       });
 
-      return { project: createdProject, newBalance: updatedSub.creditBalance };
+      return { project: createdProject, newBalance: currentBalance };
     });
 
     // Enqueue BullMQ job

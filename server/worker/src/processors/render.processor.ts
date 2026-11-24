@@ -190,7 +190,7 @@ export async function processRenderJob(job: Job<RenderJobPayload>) {
     const compilerOutput = compileTimelineToFFmpeg(timelineDoc, assetPathMap, preset, { fontFile });
 
     // 6. Build ffmpeg argument array
-    const ffmpegArgs: string[] = ['-y'];
+    const ffmpegArgs: string[] = ['-y', '-threads', '1', '-max_muxing_queue_size', '1024'];
 
     for (const inputPath of compilerOutput.inputs) {
       ffmpegArgs.push('-i', inputPath);

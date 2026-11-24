@@ -35,14 +35,31 @@ export const projectsRoutes: FastifyPluginAsync = async (server) => {
         const result = await projectsService.ingest(request.user.id, ingestParse.data);
         return reply.status(201).send(result);
       } catch (err: unknown) {
-        if (err instanceof Error && err.message === 'INSUFFICIENT_CREDITS') {
-          const creditErr = err as Error & { required?: number; available?: number };
-          return reply.status(402).send({
-            code: 'INSUFFICIENT_CREDITS',
-            message: 'Insufficient video processing credits remaining.',
-            required: creditErr.required ?? 5,
-            available: creditErr.available ?? 0,
-          });
+        if (err instanceof Error) {
+          if (err.message === 'INSUFFICIENT_CREDITS') {
+            const creditErr = err as Error & { required?: number; available?: number };
+            return reply.status(402).send({
+              code: 'INSUFFICIENT_CREDITS',
+              message: 'Insufficient video processing credits remaining.',
+              required: creditErr.required ?? 5,
+              available: creditErr.available ?? 0,
+            });
+          }
+
+          const userMessage = (err as unknown as { userMessage?: string }).userMessage;
+          const preflightErrors = [
+            'INVALID_YOUTUBE_URL',
+            'LIVE_STREAM_NOT_SUPPORTED',
+            'VIDEO_TOO_LONG',
+            'VIDEO_UNAVAILABLE',
+          ];
+
+          if (userMessage || preflightErrors.includes(err.message)) {
+            return reply.status(400).send({
+              code: err.message,
+              error: userMessage || err.message,
+            });
+          }
         }
         server.log.error(err);
         return reply.status(500).send({ error: 'Failed to ingest video project' });

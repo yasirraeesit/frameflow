@@ -13,6 +13,8 @@ export const viewport: Viewport = {
   themeColor: '#FAF9F5',
 };
 
+import { ColdStartPill } from '@/components/common/ColdStartPill';
+
 export default function RootLayout({
   children,
 }: {
@@ -22,6 +24,7 @@ export default function RootLayout({
     <html lang="en" className="dark overflow-x-hidden">
       <body className="min-h-screen bg-[#0C0C0E] text-[#F4F4F6] antialiased selection:bg-[#E84C2B] selection:text-white overflow-x-hidden">
         {children}
+        <ColdStartPill />
       </body>
     </html>
   );

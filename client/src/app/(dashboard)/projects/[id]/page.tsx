@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { MOCK_PROJECTS, MOCK_VIRAL_CLIPS, MockProject } from '@/lib/mock-data';
 import type { GeneratedClipResponse, WordTiming } from '@frameflow/shared';
+import { apiFetch } from '@/lib/api';
 import {
   Flame,
   Play,
@@ -31,6 +32,9 @@ import {
   Smartphone,
   Square,
   RectangleHorizontal,
+  Film,
+  RotateCcw,
+  AlertCircle,
 } from 'lucide-react';
 
 type FilterCategory = 'all' | 'top90' | 'under30' | 'gaming';
@@ -48,6 +52,9 @@ export default function ProjectShortsFeedPage(): JSX.Element {
   const [aiPrompt, setAiPrompt] = useState('');
   const [isPrompting, setIsPrompting] = useState(false);
   const [appliedBrandKit, setAppliedBrandKit] = useState('Founder Minimal');
+  const [projectStatus, setProjectStatus] = useState<string>('COMPLETED');
+  const [projectError, setProjectError] = useState<string | null>(null);
+  const [projectSourceUrl, setProjectSourceUrl] = useState<string>('');
 
   // Video playback preview state
   const [playingClipId, setPlayingClipId] = useState<string | null>(null);
@@ -87,18 +94,24 @@ export default function ProjectShortsFeedPage(): JSX.Element {
     return () => clearInterval(interval);
   }, [playingClipId]);
 
-  // Load real project clips from Fastify API
+  // Load real project info & clips from Fastify API
   useEffect(() => {
-    if (projectId === 'demo-1') return;
+    if (projectId === 'demo-1' || projectId === 'gta6-demo') return;
 
-    const token = typeof window !== 'undefined' ? localStorage.getItem('frameflow_token') : null;
-    if (!token) return;
+    // 1. Fetch Project Details (for status/error)
+    apiFetch(`/api/projects/${projectId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { project?: { status?: string; errorMessage?: string; sourceUrl?: string } } | null) => {
+        if (data?.project) {
+          if (data.project.status) setProjectStatus(data.project.status);
+          if (data.project.errorMessage) setProjectError(data.project.errorMessage);
+          if (data.project.sourceUrl) setProjectSourceUrl(data.project.sourceUrl);
+        }
+      })
+      .catch((err) => console.warn('Failed to fetch project info:', err));
 
-    fetch(`/api/projects/${projectId}/clips`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    // 2. Fetch Project Clips
+    apiFetch(`/api/projects/${projectId}/clips`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { clips?: Array<{ id: string; projectId: string; title: string; aiInsight?: string; viralityScore: number; scoreBreakdownJson?: { hook: number; flow: number; topicRelevance: number }; startSeconds: number; endSeconds: number; layoutMode?: string; commentaryHookScript?: string | null; sourceType?: 'original' | 'commentary'; monetizationStatus?: 'ready' | 'needs_voiceover' | 'transformative_applied'; timelineAstJson?: object; socialCopyJson?: { tiktok?: string; reels?: string; shorts?: string }; createdAt: string; updatedAt: string }> } | null) => {
         if (data?.clips && Array.isArray(data.clips) && data.clips.length > 0) {
@@ -166,17 +179,13 @@ export default function ProjectShortsFeedPage(): JSX.Element {
     setEditingClipId(null);
 
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('frameflow_token') : null;
-      if (token) {
-        await fetch(`/api/clips/${clipId}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ title: updatedTitle }),
-        });
-      }
+      await apiFetch(`/api/clips/${clipId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title: updatedTitle }),
+      });
     } catch (err) {
       console.warn('Failed to persist title update:', err);
     }
@@ -195,17 +204,13 @@ export default function ProjectShortsFeedPage(): JSX.Element {
     setDownloadingClipId(clipId);
 
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('frameflow_token') : null;
-      if (token) {
-        await fetch(`/api/clips/${clipId}/export`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ format: 'mp4_1080p' }),
-        });
-      }
+      await apiFetch(`/api/clips/${clipId}/export`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ format: 'mp4_1080p' }),
+      });
     } catch (err) {
       console.warn('Export dispatch error:', err);
     }
@@ -360,7 +365,46 @@ export default function ProjectShortsFeedPage(): JSX.Element {
       {/* ========================================================= */}
       {/* 2. SIGNATURE OPUSCLIP RANKED SHORTS GRID (3–4 Columns)    */}
       {/* ========================================================= */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      {projectStatus === 'FAILED' ? (
+        <div className="rounded-2xl border border-red-200 bg-[#FFF8F6] p-8 text-center shadow-xs flex flex-col items-center justify-center space-y-4 max-w-2xl mx-auto my-8">
+          <div className="h-12 w-12 rounded-2xl bg-red-100 flex items-center justify-center text-red-600">
+            <AlertCircle className="h-6 w-6" />
+          </div>
+          <div className="space-y-1 text-center">
+            <h3 className="text-base font-bold text-[#14151A]">Video Processing Failed</h3>
+            <p className="text-xs text-[#52545E] max-w-md mx-auto">
+              {projectError || 'The worker pipeline was interrupted or encountered an unexpected issue with this source video. All video processing credits have been automatically refunded to your balance.'}
+            </p>
+          </div>
+          <Link
+            href={`/dashboard?retryUrl=${encodeURIComponent(projectSourceUrl || '')}`}
+            className="inline-flex items-center gap-2 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white px-5 py-2.5 text-xs font-bold transition-all shadow-xs cursor-pointer"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            <span>Retry with Refunded Credits</span>
+          </Link>
+        </div>
+      ) : filteredClips.length === 0 ? (
+        <div className="col-span-full rounded-2xl border border-[#E6E4DD] bg-white p-12 text-center shadow-xs flex flex-col items-center justify-center space-y-3 my-6">
+          <div className="h-12 w-12 rounded-2xl bg-[#FAF3EE] border border-[#E84C2B]/20 flex items-center justify-center text-[#E84C2B]">
+            <Film className="h-6 w-6" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-sm font-bold text-[#14151A]">No viral clips match this filter</h3>
+            <p className="text-xs text-[#52545E] max-w-sm">
+              Try clearing the active filter or search query to review all generated 9:16 shorts.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => { setFilter('all'); setAiPrompt(''); }}
+            className="rounded-xl bg-[#14151A] hover:bg-[#2A2B35] text-white px-4 py-2 text-xs font-bold transition-all shadow-xs cursor-pointer"
+          >
+            Reset Filters
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredClips.map((clip, index) => {
           const isPlaying = playingClipId === clip.id;
           const currentAspect = aspectRatios[clip.id] || '9:16';
@@ -728,6 +772,7 @@ export default function ProjectShortsFeedPage(): JSX.Element {
           );
         })}
       </div>
+      )}
     </div>
   );
 }
