@@ -12,15 +12,23 @@ export interface ClipExportJobData {
 
 let clipExportQueue: Queue<ClipExportJobData> | null = null;
 
+export function parseBullMqConnection(urlStr: string) {
+  const url = new URL(urlStr);
+  const isTls = url.protocol === 'rediss:';
+  return {
+    host: url.hostname,
+    port: parseInt(url.port || '6379', 10),
+    maxRetriesPerRequest: null,
+    ...(url.password ? { password: decodeURIComponent(url.password) } : {}),
+    ...(url.username && url.username !== 'default' ? { username: decodeURIComponent(url.username) } : {}),
+    ...(isTls ? { tls: {} } : {}),
+  };
+}
+
 export function getClipExportQueue(): Queue<ClipExportJobData> {
   if (!clipExportQueue) {
-    const redisUrl = new URL(process.env.REDIS_URL || 'redis://localhost:6379');
     clipExportQueue = new Queue<ClipExportJobData>(CLIP_EXPORT_QUEUE_NAME, {
-      connection: {
-        host: redisUrl.hostname,
-        port: parseInt(redisUrl.port || '6379', 10),
-        maxRetriesPerRequest: null,
-      },
+      connection: parseBullMqConnection(process.env.REDIS_URL || 'redis://localhost:6379'),
       defaultJobOptions: {
         attempts: 3,
         backoff: {

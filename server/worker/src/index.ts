@@ -5,13 +5,21 @@ import { processClipGenerationJob } from './processors/clip-generation.processor
 import { processClipExportJob } from './processors/clip-export.processor.js';
 import { CONFIG } from './config.js';
 
-export function startWorker() {
-  const redisUrl = new URL(CONFIG.REDIS_URL);
-  const connection = {
-    host: redisUrl.hostname,
-    port: parseInt(redisUrl.port || '6379', 10),
+export function parseBullMqConnection(urlStr: string) {
+  const url = new URL(urlStr);
+  const isTls = url.protocol === 'rediss:';
+  return {
+    host: url.hostname,
+    port: parseInt(url.port || '6379', 10),
     maxRetriesPerRequest: null,
+    ...(url.password ? { password: decodeURIComponent(url.password) } : {}),
+    ...(url.username && url.username !== 'default' ? { username: decodeURIComponent(url.username) } : {}),
+    ...(isTls ? { tls: {} } : {}),
   };
+}
+
+export function startWorker() {
+  const connection = parseBullMqConnection(CONFIG.REDIS_URL);
 
   const mediaWorker = new Worker(
     'media-processing',
