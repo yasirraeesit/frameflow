@@ -21,8 +21,8 @@ COPY server/api/package*.json ./server/api/
 COPY server/worker/package*.json ./server/worker/
 COPY client/package*.json ./client/
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (skipping scripts until sources are copied)
+RUN npm ci --ignore-scripts
 
 # Copy database schema and generate prisma client
 COPY server/database ./server/database
