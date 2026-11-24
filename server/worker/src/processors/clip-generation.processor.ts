@@ -1,5 +1,5 @@
 import { Job } from 'bullmq';
-import { prisma } from '@frameflow/database';
+import { prisma, Prisma } from '@frameflow/database';
 import type { TimelineDocument, WordTiming } from '@frameflow/shared';
 
 export interface ClipGenJobPayload {
@@ -752,7 +752,7 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
     // Automatic Failure Refund: Refund credits back to user
     try {
       if (creditsDeducted > 0) {
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
           await tx.subscription.update({
             where: { userId },
             data: { creditBalance: { increment: creditsDeducted } },

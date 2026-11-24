@@ -24,17 +24,16 @@ COPY client/package*.json ./client/
 # Install dependencies (skipping scripts until sources are copied)
 RUN npm ci --ignore-scripts
 
-# Copy database schema and generate prisma client
-COPY server/database ./server/database
-RUN npm --workspace=@frameflow/database run prisma:generate
-
 # Copy source code across workspaces
 COPY shared ./shared
+COPY server/database ./server/database
 COPY server/worker ./server/worker
 COPY server/api ./server/api
 
-# Build shared, worker, and api
-RUN npm --workspace=@frameflow/shared run build \
+# Generate prisma client & compile all workspaces in dependency order
+RUN npm --workspace=@frameflow/database run prisma:generate \
+    && npm --workspace=@frameflow/database run build \
+    && npm --workspace=@frameflow/shared run build \
     && npm --workspace=@frameflow/worker run build \
     && npm --workspace=@frameflow/api run build
 
