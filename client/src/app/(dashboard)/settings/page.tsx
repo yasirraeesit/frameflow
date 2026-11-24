@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fetchBillingStatus, launchPaddleCheckout } from '@/lib/paddle';
+import { signOutUser, getStoredUser, StoredUser } from '@/lib/auth';
 import type { WorkspaceBillingState, CreditTransactionDTO } from '@frameflow/shared';
 import {
   CreditCard,
@@ -24,6 +25,8 @@ import {
   Download,
   AlertCircle,
   Clock,
+  LogOut,
+  UserCheck,
 } from 'lucide-react';
 
 interface SocialChannel {
@@ -36,6 +39,9 @@ interface SocialChannel {
 }
 
 export default function WorkspaceAndBillingPage(): JSX.Element {
+  // User Profile State
+  const [storedUser, setStoredUser] = useState<StoredUser | null>(null);
+
   // Billing & Plan State
   const [billingState, setBillingState] = useState<WorkspaceBillingState | null>(null);
   const [transactions, setTransactions] = useState<CreditTransactionDTO[]>([]);
@@ -45,6 +51,7 @@ export default function WorkspaceAndBillingPage(): JSX.Element {
   const [topUpToast, setTopUpToast] = useState<string | null>(null);
 
   useEffect(() => {
+    setStoredUser(getStoredUser());
     fetchBillingStatus().then((res) => {
       if (res?.billing) {
         setBillingState(res.billing);
@@ -629,6 +636,61 @@ export default function WorkspaceAndBillingPage(): JSX.Element {
                 <div className="w-11 h-6 bg-[#E6E4DD] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#DCDAD2] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#E84C2B]" />
               </label>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* SECTION 4: ACCOUNT SESSION & SECURITY                     */}
+      {/* ========================================================= */}
+      <section className="space-y-4">
+        <div className="space-y-0.5">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-[#14151A] flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-[#E84C2B]" />
+            <span>Account Session & Security</span>
+          </h2>
+          <p className="text-xs text-[#52545E]">
+            Active session authentication tokens, security credentials, and sign-out controls.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-[#E6E4DD] bg-white p-6 sm:p-7 space-y-5 shadow-2xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#FAF3EE] border border-[#E84C2B]/30 text-[#E84C2B] font-bold text-base shrink-0 shadow-2xs">
+                {(storedUser?.name || 'Creator').charAt(0).toUpperCase()}
+              </div>
+              <div className="space-y-0.5">
+                <h4 className="text-sm font-bold text-[#14151A]">
+                  {storedUser?.name || 'Creator Studio Account'}
+                </h4>
+                <p className="text-xs text-[#52545E] font-mono">
+                  {storedUser?.email || 'creator@frameflow.dev'} • Connected Workspace
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-[11px] font-mono font-bold text-emerald-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                ACTIVE SESSION
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-5 border-t border-[#F0EFEA] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="text-xs text-[#52545E] max-w-xl leading-relaxed">
+              Signing out will invalidate your session tokens, clear local workspace caches, and return you to the login screen. Any ongoing background exports will continue processing in your worker queue.
+            </div>
+
+            <button
+              type="button"
+              onClick={() => void signOutUser()}
+              className="inline-flex items-center gap-2 rounded-xl border border-[#E6E4DD] bg-white hover:bg-[#FFF8F6] hover:border-[#E84C2B]/40 hover:text-[#E84C2B] text-[#52545E] px-4 py-2.5 text-xs font-bold transition-all shadow-2xs active:scale-[0.98] cursor-pointer shrink-0"
+            >
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+              <span>Sign Out of FrameFlow</span>
+            </button>
           </div>
         </div>
       </section>

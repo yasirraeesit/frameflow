@@ -1,10 +1,16 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, LogOut } from 'lucide-react';
+import { isUserAuthenticated, signOutUser } from '@/lib/auth';
 
 export function LandingNavbar(): JSX.Element {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsAuthenticated(isUserAuthenticated());
+  }, []);
   return (
     <header className="sticky top-0 z-50 h-[64px] w-full border-b border-[#E6E4DD] bg-[#FAF9F5]/90 backdrop-blur-md transition-colors">
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -69,20 +75,43 @@ export function LandingNavbar(): JSX.Element {
 
         {/* Right: Commercial Actions */}
         <div className="flex items-center gap-3">
-          <Link
-            href="/login"
-            className="text-xs font-semibold text-[#52545E] hover:text-[#14151A] transition-colors px-2.5 py-1"
-          >
-            Log in
-          </Link>
+          {isAuthenticated ? (
+            <>
+              <button
+                type="button"
+                onClick={() => void signOutUser()}
+                className="flex items-center gap-1.5 text-xs font-semibold text-[#52545E] hover:text-[#E84C2B] hover:bg-[#FFF8F6] border border-transparent hover:border-[#E84C2B]/20 transition-all px-3 py-1.5 rounded-xl cursor-pointer"
+              >
+                <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Sign Out</span>
+              </button>
 
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white px-4 py-2 text-xs font-bold transition-all shadow-sm active:scale-[0.98]"
-          >
-            <span>Make My Shorts</span>
-            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-          </Link>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white px-4 py-2 text-xs font-bold transition-all shadow-sm active:scale-[0.98]"
+              >
+                <span>Open Dashboard</span>
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-xs font-semibold text-[#52545E] hover:text-[#14151A] transition-colors px-2.5 py-1"
+              >
+                Log in
+              </Link>
+
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white px-4 py-2 text-xs font-bold transition-all shadow-sm active:scale-[0.98]"
+              >
+                <span>Make My Shorts</span>
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

@@ -61,5 +61,30 @@ export const authRoutes: FastifyPluginAsync = async (server) => {
       return reply.status(500).send({ error: 'Internal Server Error' });
     }
   });
+
+  server.post('/logout', async (_request, reply) => {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const clearOptions = {
+      path: '/',
+      sameSite: 'lax' as const,
+      secure: isProduction,
+      httpOnly: true,
+    };
+
+    reply.clearCookie('frameflow_token', clearOptions);
+    reply.clearCookie('token', clearOptions);
+    reply.clearCookie('frameflow_session', clearOptions);
+    reply.clearCookie('frameflow_demo', {
+      path: '/',
+      sameSite: 'lax' as const,
+      secure: isProduction,
+      httpOnly: false,
+    });
+
+    return reply.status(200).send({
+      success: true,
+      message: 'Signed out successfully',
+    });
+  });
 };
 

@@ -1,5 +1,6 @@
 import fastify, { FastifyInstance } from 'fastify';
 import fastifyCors from '@fastify/cors';
+import fastifyCookie from '@fastify/cookie';
 import fastifyMultipart from '@fastify/multipart';
 import fastifyWebsocket from '@fastify/websocket';
 import prismaPlugin from './plugins/prisma.js';
@@ -31,6 +32,8 @@ export function buildServer(): FastifyInstance {
     origin: true,
     credentials: true,
   });
+
+  server.register(fastifyCookie);
 
   server.register(fastifyMultipart, {
     limits: {

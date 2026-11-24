@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -13,7 +13,9 @@ import {
   Zap,
   CreditCard,
   SlidersHorizontal,
+  LogOut,
 } from 'lucide-react';
+import { signOutUser, getStoredUser } from '@/lib/auth';
 
 interface NavItem {
   label: string;
@@ -31,6 +33,14 @@ const NAV_ITEMS: NavItem[] = [
 
 export function Sidebar(): JSX.Element {
   const pathname = usePathname();
+  const [userName, setUserName] = useState<string>('Creator');
+  const [userEmail, setUserEmail] = useState<string>('creator@frameflow.dev');
+
+  useEffect(() => {
+    const user = getStoredUser();
+    if (user?.name) setUserName(user.name);
+    if (user?.email) setUserEmail(user.email);
+  }, []);
 
   return (
     <aside
@@ -82,7 +92,7 @@ export function Sidebar(): JSX.Element {
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 space-y-1 px-3 py-4 bg-white" aria-label="Main Navigation">
+      <nav className="flex-1 space-y-1 px-3 py-4 bg-white overflow-y-auto" aria-label="Main Navigation">
         <p className="px-3 pb-2 text-[10px] font-mono uppercase tracking-wider text-[#8C8E9A] font-semibold">
           Studio Workspace
         </p>
@@ -163,6 +173,35 @@ export function Sidebar(): JSX.Element {
           <Link href="/pricing" className="hover:text-[#14151A] underline decoration-dotted">
             Tax compliant
           </Link>
+        </div>
+      </div>
+
+      {/* User Account & Sign Out Footer */}
+      <div className="border-t border-[#E6E4DD] p-3 bg-white">
+        <div className="flex items-center justify-between gap-2 rounded-xl p-1.5 transition-colors">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FAF3EE] border border-[#E84C2B]/20 text-[#E84C2B] font-bold text-xs shrink-0">
+              {userName.charAt(0).toUpperCase()}
+            </div>
+            <div className="truncate text-left min-w-0">
+              <p className="font-bold text-[#14151A] truncate text-xs">
+                {userName}
+              </p>
+              <p className="text-[10px] text-[#52545E] truncate font-mono">
+                {userEmail}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => void signOutUser()}
+            title="Sign out of FrameFlow"
+            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#52545E] hover:text-[#E84C2B] hover:bg-[#FFF8F6] border border-transparent hover:border-[#E84C2B]/20 transition-all cursor-pointer shrink-0"
+          >
+            <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="hidden sm:inline">Sign Out</span>
+          </button>
         </div>
       </div>
     </aside>
