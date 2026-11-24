@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { apiFetch } from '@/lib/api';
 import {
   X,
   Download,
@@ -65,7 +66,7 @@ export function ExportModal({
           exportFormat = subtitleFormat === 'vtt' ? 'subtitles_vtt' : subtitleFormat === 'txt' ? 'transcript_txt' : 'subtitles_srt';
         }
 
-        await fetch(`/api/clips/${clipId}/export`, {
+        await apiFetch(`/api/clips/${clipId}/export`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

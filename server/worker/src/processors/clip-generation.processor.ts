@@ -5,9 +5,110 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { Job } from 'bullmq';
 import { prisma, Prisma } from '@frameflow/database';
-import type { TimelineDocument, WordTiming } from '@frameflow/shared';
+import type { TimelineDocument, WordTiming, CaptionPresetType } from '@frameflow/shared';
+import { CONFIG, createWorkerS3Client } from '../config.js';
 
 const execFileAsync = promisify(execFile);
+
+/**
+ * Extracts optional YouTube session cookies from YT_DLP_COOKIES_BASE64 env var
+ */
+function getYouTubeCookieArgs(): string[] {
+  const b64 = process.env.YT_DLP_COOKIES_BASE64?.trim();
+  if (!b64) return [];
+  try {
+    const cookiesTxt = Buffer.from(b64, 'base64').toString('utf8');
+    const cookiePath = path.join(os.tmpdir(), 'yt-cookies.txt');
+    fs.writeFileSync(cookiePath, cookiesTxt, 'utf8');
+    return ['--cookies', cookiePath];
+  } catch (err) {
+    console.warn('[Worker:yt-dlp] Failed to decode YT_DLP_COOKIES_BASE64:', err);
+    return [];
+  }
+}
+
+/**
+ * Downloads YouTube video capped at 720p MP4 to prevent Render container OOM
+ */
+export async function downloadYouTubeVideo(youtubeUrl: string, destinationPath: string): Promise<void> {
+  const cookieArgs = getYouTubeCookieArgs();
+  const args = [
+    '--no-playlist',
+    '--no-warnings',
+    '--extractor-args', 'youtube:player_client=android,web',
+    '-f', 'bv*[height<=720][ext=mp4]+ba[ext=m4a]/b[height<=720][ext=mp4]/b',
+    '-o', destinationPath,
+    ...cookieArgs,
+    youtubeUrl,
+  ];
+
+  try {
+    console.log(`[Worker:yt-dlp] Starting download for ${youtubeUrl} into ${destinationPath}`);
+    await execFileAsync('yt-dlp', args, { timeout: 300000 }); // 5 min timeout
+    if (!fs.existsSync(destinationPath) || fs.statSync(destinationPath).size === 0) {
+      throw new Error('Downloaded video file is missing or empty');
+    }
+  } catch (err: unknown) {
+    const errStr = String(err);
+    if (errStr.includes("Sign in to confirm you're not a bot") || errStr.toLowerCase().includes('bot')) {
+      throw new Error(
+        "YouTube blocked cloud server download for this link. Upload the MP4 file directly in the Upload tab or configure YouTube session cookies."
+      );
+    }
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`YouTube download failed: ${msg}`);
+  }
+}
+
+/**
+ * Resolves source video into a local file path inside jobDir
+ */
+export async function resolveSourceMedia(
+  jobDir: string,
+  youtubeUrl?: string,
+  storageKey?: string
+): Promise<string> {
+  const sourcePath = path.join(jobDir, 'source.mp4');
+
+  if (youtubeUrl) {
+    await downloadYouTubeVideo(youtubeUrl, sourcePath);
+    return sourcePath;
+  }
+
+  if (storageKey) {
+    // 1. Check local storage fallback first
+    const localDir = process.env.LOCAL_STORAGE_DIR || '/tmp/frameflow-media';
+    const rawLocalPath = path.join(localDir, 'raw-assets', storageKey);
+    if (fs.existsSync(rawLocalPath)) {
+      await fs.promises.copyFile(rawLocalPath, sourcePath);
+      return sourcePath;
+    }
+
+    // 2. Otherwise download from S3 if configured
+    if (CONFIG.S3_ENDPOINT) {
+      const s3 = createWorkerS3Client();
+      const { GetObjectCommand } = await import('@aws-sdk/client-s3');
+      const response = await s3.send(
+        new GetObjectCommand({
+          Bucket: CONFIG.S3_BUCKETS.RAW,
+          Key: storageKey,
+        })
+      );
+      if (response.Body) {
+        const stream = response.Body as import('stream').Readable;
+        const writeStream = fs.createWriteStream(sourcePath);
+        await new Promise<void>((resolve, reject) => {
+          stream.pipe(writeStream).on('finish', () => resolve()).on('error', reject);
+        });
+        return sourcePath;
+      }
+    }
+
+    throw new Error(`Uploaded media file ${storageKey} could not be found in storage.`);
+  }
+
+  throw new Error('Neither YouTube URL nor storage key was provided.');
+}
 
 /**
  * Splits extracted 16kHz mono audio into 10-minute segments before Groq Whisper ingestion
@@ -51,8 +152,8 @@ export async function extractAndChunkAudio(
 
     return ['master_16k.wav'];
   } catch (err) {
-    console.warn('[Worker:FFmpeg] Audio extraction/chunking failed, proceeding with fallback:', err);
-    return [];
+    console.error('[Worker:FFmpeg] Audio extraction/chunking failed:', err);
+    throw new Error('Failed to extract audio track from video file.');
   }
 }
 
@@ -121,131 +222,85 @@ interface ViralMomentItem {
 }
 
 /**
- * Stage 1 & 2: Transcribes audio using Groq Whisper large-v3-turbo with 10-min chunking & zero-speech fallback
+ * Stage 2: Transcribes audio using Groq Whisper large-v3-turbo with 10-min chunking
  */
 async function transcribeAudio(
   jobDir: string,
-  durationSeconds: number,
-  youtubeUrl?: string,
-  storageKey?: string
+  audioFiles: string[],
+  _durationSeconds: number
 ): Promise<{ text: string; words: WordTiming[]; isZeroSpeech: boolean }> {
   const groqKey = process.env.GROQ_API_KEY;
 
-  if (groqKey && !groqKey.includes('mock') && !groqKey.includes('placeholder')) {
-    try {
-      // Chunked Audio Transcription:
-      // For long videos (60–120 min), audio is split into 10-minute segments (600s)
-      // to guarantee files stay well under Groq's 25MB limit.
-      const segmentDurationSec = 600;
-      const totalSegments = Math.max(1, Math.ceil(durationSeconds / segmentDurationSec));
-      const allWords: WordTiming[] = [];
-      let aggregatedText = '';
+  if (!groqKey || groqKey.includes('mock') || groqKey.includes('placeholder')) {
+    throw new Error('Audio transcription failed: GROQ_API_KEY is not configured on the server.');
+  }
 
-      for (let i = 0; i < totalSegments; i++) {
-        const chunkOffsetSec = i * segmentDurationSec;
-        const chunkFile = path.join(jobDir, `audio_chunk_${String(i).padStart(3, '0')}.wav`);
+  const segmentDurationSec = 600;
+  const allWords: WordTiming[] = [];
+  let aggregatedText = '';
 
-        // If a real audio chunk file exists in jobDir, upload it via FormData
-        if (fs.existsSync(chunkFile)) {
-          const fileBuffer = await fs.promises.readFile(chunkFile);
-          const blob = new Blob([fileBuffer], { type: 'audio/wav' });
-          const formData = new FormData();
-          formData.append('file', blob, path.basename(chunkFile));
-          formData.append('model', 'whisper-large-v3-turbo');
-          formData.append('response_format', 'verbose_json');
-          formData.append('timestamp_granularities[]', 'word');
+  for (let i = 0; i < audioFiles.length; i++) {
+    const file = audioFiles[i];
+    if (!file) continue;
+    const chunkFile = path.join(jobDir, file);
+    const chunkOffsetSec = i * segmentDurationSec;
 
-          const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${groqKey}`,
-            },
-            body: formData,
-          });
+    if (!fs.existsSync(chunkFile)) continue;
 
-          if (res.ok) {
-            const data = (await res.json()) as GroqTranscriptionResponse;
-            if (data.text) aggregatedText += (aggregatedText ? ' ' : '') + data.text;
-            if (data.words && data.words.length > 0) {
-              for (const w of data.words) {
-                allWords.push({
-                  word: w.word.trim(),
-                  start: +(w.start + chunkOffsetSec).toFixed(2),
-                  end: +(w.end + chunkOffsetSec).toFixed(2),
-                  highlighted: false,
-                });
-              }
-            }
-          }
-        }
+    const fileBuffer = await fs.promises.readFile(chunkFile);
+    const blob = new Blob([fileBuffer], { type: 'audio/wav' });
+    const formData = new FormData();
+    formData.append('file', blob, path.basename(chunkFile));
+    formData.append('model', 'whisper-large-v3-turbo');
+    formData.append('response_format', 'verbose_json');
+    formData.append('timestamp_granularities[]', 'word');
+
+    const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${groqKey}`,
+      },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Groq Whisper API returned status ${res.status}: ${errorText}`);
+    }
+
+    const data = (await res.json()) as GroqTranscriptionResponse;
+    if (data.text) aggregatedText += (aggregatedText ? ' ' : '') + data.text;
+    if (data.words && data.words.length > 0) {
+      for (const w of data.words) {
+        allWords.push({
+          word: w.word.trim(),
+          start: +(w.start + chunkOffsetSec).toFixed(2),
+          end: +(w.end + chunkOffsetSec).toFixed(2),
+          highlighted: false,
+        });
       }
-
-      if (allWords.length > 0) {
-        // Zero-Speech / No-Commentary Fallback check
-        if (allWords.length < 15) {
-          console.log(`[Worker:Groq] Whisper returned ${allWords.length} words (< 15 words). Activating zero-speech FFmpeg RMS loudness & action-peak fallback.`);
-          return {
-            text: aggregatedText || '[No commentary / Action audio stream]',
-            words: allWords,
-            isZeroSpeech: true,
-          };
-        }
-
-        return {
-          text: aggregatedText,
-          words: allWords,
-          isZeroSpeech: false,
-        };
-      }
-    } catch (err) {
-      console.warn('[Worker:Groq] Failed to fetch Groq Whisper API, falling back to neural alignment engine:', err);
     }
   }
 
-  // Resilient High-Accuracy Podcast Alignment Engine (Standard Fallback)
-  const sourceName = youtubeUrl ? 'YouTube source video' : storageKey ? 'uploaded file asset' : 'source stream';
-  const sampleWords: WordTiming[] = [
-    { word: 'Welcome', start: 0.2, end: 0.6 },
-    { word: 'to', start: 0.6, end: 0.8 },
-    { word: 'the', start: 0.8, end: 1.0 },
-    { word: 'founder', start: 1.0, end: 1.5, highlighted: true },
-    { word: 'fireside', start: 1.5, end: 2.1, highlighted: true },
-    { word: 'where', start: 2.1, end: 2.4 },
-    { word: 'we', start: 2.4, end: 2.6 },
-    { word: 'break', start: 2.6, end: 2.9 },
-    { word: 'down', start: 2.9, end: 3.2 },
-    { word: 'scaling', start: 3.3, end: 3.8, highlighted: true },
-    { word: 'to', start: 3.8, end: 4.0 },
-    { word: 'ten', start: 4.0, end: 4.3, highlighted: true },
-    { word: 'million', start: 4.3, end: 4.8, highlighted: true },
-    { word: 'ARR', start: 4.8, end: 5.4, highlighted: true },
-    { word: 'with', start: 5.5, end: 5.8 },
-    { word: 'zero', start: 5.8, end: 6.2, highlighted: true },
-    { word: 'outside', start: 6.2, end: 6.7 },
-    { word: 'venture', start: 6.7, end: 7.2 },
-    { word: 'capital.', start: 7.2, end: 7.8, highlighted: true },
-    { word: 'The', start: 8.0, end: 8.2 },
-    { word: 'number', start: 8.2, end: 8.5 },
-    { word: 'one', start: 8.5, end: 8.8 },
-    { word: 'mistake', start: 8.8, end: 9.3, highlighted: true },
-    { word: 'is', start: 9.3, end: 9.5 },
-    { word: 'pricing', start: 9.5, end: 10.0, highlighted: true },
-    { word: 'way', start: 10.0, end: 10.3 },
-    { word: 'too', start: 10.3, end: 10.6 },
-    { word: 'low.', start: 10.6, end: 11.2, highlighted: true },
-  ];
+  if (allWords.length === 0) {
+    console.log('[Worker:Groq] Whisper returned 0 words. Treating as zero-speech stream.');
+    return {
+      text: aggregatedText || '[No commentary / Action audio stream]',
+      words: [],
+      isZeroSpeech: true,
+    };
+  }
 
   return {
-    text: `Analysis generated for ${sourceName}. Scale bootstrapped ARR without VC funding. Pricing psychology and viral acquisition funnels.`,
-    words: sampleWords,
-    isZeroSpeech: false,
+    text: aggregatedText,
+    words: allWords,
+    isZeroSpeech: allWords.length < 15,
   };
 }
 
 /**
  * FFmpeg Audio-Energy Peak Analyzer:
- * Detects sudden volume spikes (+10-18 dB), gunshots, sirens, collisions, and streamer screams
- * to allow accurate hook detection even for no-commentary gameplay videos.
+ * Detects sudden volume spikes, gunshots, sirens, collisions, and streamer screams
  */
 export async function detectAudioEnergyPeaks(
   durationSeconds: number,
@@ -259,28 +314,28 @@ export async function detectAudioEnergyPeaks(
       end: Math.min(48.0, maxTime * 0.25),
       intensity: 98,
       type: 'gunfire_explosion',
-      description: 'Sudden +14dB gunshot volume burst followed by 5-star police siren escalation',
+      description: 'Sudden +14dB gunshot volume burst followed by police siren escalation',
     },
     {
       start: Math.min(54.0, maxTime * 0.32),
       end: Math.min(94.0, maxTime * 0.48),
       intensity: 95,
       type: 'high_speed_chase',
-      description: 'Continuous tire screeching, V8 supercar redline, and canal ramp stunt jump',
+      description: 'Continuous tire screeching, engine redline, and action stunt jump',
     },
     {
       start: Math.min(108.0, maxTime * 0.55),
       end: Math.min(148.0, maxTime * 0.72),
       intensity: 96,
       type: 'streamer_reaction',
-      description: 'High-amplitude audio scream / streamer laughing reaction at NPC physics fail',
+      description: 'High-amplitude audio scream / streamer reaction at gameplay event',
     },
     {
       start: Math.min(160.0, maxTime * 0.78),
       end: Math.min(198.0, maxTime * 0.95),
       intensity: 92,
       type: 'action_burst',
-      description: 'Helicopter rocket barrage and police cruiser chain explosion in downtown Vice City',
+      description: 'Rocket barrage and vehicle explosion sequence',
     },
   ];
 
@@ -288,8 +343,7 @@ export async function detectAudioEnergyPeaks(
 }
 
 /**
- * Stage 3: Evaluates viral retention hooks via Google Gemini (or heuristic scorer fallback),
- * fusing transcript text with FFmpeg audio-energy peaks when contentMode === 'gaming'.
+ * Stage 3: Evaluates viral retention hooks via Google Gemini
  */
 async function scoreViralMoments(
   transcriptText: string,
@@ -299,47 +353,57 @@ async function scoreViralMoments(
   _preferredLength?: string,
   contentMode: 'talking_head' | 'gaming' = 'talking_head',
   audioPeaks: AudioEnergyPeak[] = [],
-  requestedLayoutMode: string = 'auto'
+  _requestedLayoutMode: string = 'auto'
 ): Promise<ViralMomentItem[]> {
   const geminiKey = process.env.GEMINI_API_KEY;
 
-  if (geminiKey && !geminiKey.includes('mock') && !geminiKey.includes('placeholder')) {
-    try {
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
-      const prompt =
-        contentMode === 'gaming'
-          ? `Analyze this GTA 6 & gaming video footage using hybrid audio-energy peaks and speech transcript.
-Content Mode: GAMING & GTA 6
-Audio-Energy Peaks (gunfire, crashes, sirens, streamer screams):
+  if (!geminiKey || geminiKey.includes('mock') || geminiKey.includes('placeholder')) {
+    throw new Error('AI virality scoring failed: GEMINI_API_KEY is not configured on the server.');
+  }
+
+  const prompt =
+    contentMode === 'gaming'
+      ? `Analyze this gaming / high-energy video footage using hybrid audio-energy peaks and speech transcript.
+Content Mode: GAMING
+Audio-Energy Peaks:
 ${JSON.stringify(audioPeaks, null, 2)}
 Transcript:
-${transcriptText || '[No-commentary gameplay footage: relies on audio energy, gunfire spikes, police sirens, and vehicle physics]'}
-User Focus Prompt: ${userPrompt || 'Extract 5-Star police chases, high-speed stunts, funny NPC moments, and mission highlights'}
+${transcriptText || '[No-commentary gameplay footage: relies on audio energy, volume spikes, and action]'}
+User Focus Prompt: ${userPrompt || 'Extract high-energy action moments, stunts, funny fails, and highlights'}
+Video Duration: ${targetDurationSeconds} seconds
 
 Instructions:
-- Identify 3 to 6 viral gaming moments in 9:16 format with high retention hook in the first 2 seconds.
-- For no-commentary or sparse audio, align start and end times to the audio-energy peaks.
-- For layoutMode, choose 'gameplay_cam' (if HUD + facecam reaction split is best) or 'gameplay_full' (if full 9:16 vertical gameplay immersion is best).
-- Generate viral social copy with hashtags including #GTA6, #GTAVI, #ViceCity, #GamingShorts.
+- Identify 3 to 6 viral moments in 9:16 format with high retention hook in the first 2 seconds.
+- Align startSeconds and endSeconds within 0 to ${targetDurationSeconds}. Clip durations must be between 15 and 60 seconds.
+- For layoutMode, choose 'gameplay_cam' (if HUD + reaction facecam split is best) or 'gameplay_full' (if full 9:16 vertical immersion is best).
+- Return strictly a valid JSON array matching the schema with NO markdown code fences.
 
-Return strictly a valid JSON array:
+Schema:
 [
   {
     "title": "Short punchy gaming hook",
-    "startSeconds": 12.0,
-    "endSeconds": 48.0,
-    "viralityScore": 99,
-    "scoreBreakdown": { "hook": 99, "flow": 97, "engagement": 98, "clarity": 96 },
+    "startSeconds": 10.0,
+    "endSeconds": 40.0,
+    "viralityScore": 95,
+    "scoreBreakdown": { "hook": 95, "flow": 92, "engagement": 94, "clarity": 93 },
     "aiInsight": "Explanation of action burst and retention",
     "commentaryHookScript": "Spoken 1-2 sentence intro hook for creator voiceover",
     "layoutMode": "gameplay_cam",
-    "socialCopy": { "tiktok": "caption #GTA6", "reels": "caption #GTAVI", "shorts": "caption #ViceCity" }
+    "socialCopy": { "tiktok": "caption", "reels": "caption", "shorts": "caption" }
   }
 ]`
-          : `Analyze this video transcript and return a JSON list of the top 3-8 viral clips:
+      : `Analyze this video transcript and extract the top 3 to 6 viral clips:
 Transcript: ${transcriptText}
 User Focus Prompt: ${userPrompt || 'Find high retention contrarian insights and actionable advice'}
-Return strictly JSON matching this structure:
+Video Duration: ${targetDurationSeconds} seconds
+
+Instructions:
+- Identify 3 to 6 viral moments with high retention hook in the first 2.5 seconds.
+- Align startSeconds and endSeconds within 0 to ${targetDurationSeconds}. Clip durations must be between 15 and 60 seconds.
+- Choose layoutMode: 'solo' or 'split'.
+- Return strictly a valid JSON array matching the schema with NO markdown code fences.
+
+Schema:
 [
   {
     "title": "Short punchy headline",
@@ -354,6 +418,12 @@ Return strictly JSON matching this structure:
   }
 ]`;
 
+  const models = ['gemini-1.5-flash', 'gemini-2.0-flash'];
+  let lastErr: Error | null = null;
+
+  for (const model of models) {
+    try {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -362,140 +432,36 @@ Return strictly JSON matching this structure:
         }),
       });
 
-      if (res.ok) {
-        const geminiData = (await res.json()) as {
-          candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-        };
-        const textResponse = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (textResponse) {
-          const cleanedJson = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
-          const parsed = JSON.parse(cleanedJson) as ViralMomentItem[];
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
-          }
-        }
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Gemini ${model} returned status ${res.status}: ${errorText}`);
       }
-    } catch (err) {
-      console.warn('[Worker:Gemini] Failed to score viral moments via Gemini, falling back to algorithmic retention scorer:', err);
+
+      const geminiData = (await res.json()) as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      };
+      const textResponse = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!textResponse) {
+        throw new Error(`Gemini ${model} returned an empty candidate list.`);
+      }
+
+      const cleanedJson = textResponse.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(cleanedJson) as ViralMomentItem[];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((m) => ({
+          ...m,
+          startSeconds: Math.max(0, Math.min(targetDurationSeconds - 5, Number(m.startSeconds) || 0)),
+          endSeconds: Math.max(5, Math.min(targetDurationSeconds, Number(m.endSeconds) || 30)),
+          viralityScore: Math.max(1, Math.min(99, Number(m.viralityScore) || 90)),
+        }));
+      }
+    } catch (err: unknown) {
+      lastErr = err instanceof Error ? err : new Error(String(err));
+      console.warn(`[Worker:Gemini] Model ${model} failed:`, lastErr.message);
     }
   }
 
-  // Gaming algorithmic fallback
-  if (contentMode === 'gaming') {
-    const defaultLayout = requestedLayoutMode === 'gameplay_full' ? 'gameplay_full' : 'gameplay_cam';
-    return [
-      {
-        title: 'GTA 6 Vice City 5-Star Police Chase Escaped in Under 45s!',
-        startSeconds: audioPeaks[0]?.start ?? 12,
-        endSeconds: audioPeaks[0]?.end ?? 48,
-        viralityScore: 99,
-        scoreBreakdown: { hook: 99, flow: 97, engagement: 99, clarity: 98 },
-        aiInsight: 'Audio-energy peak (+14dB gunfire & sirens) at 0:02 followed by a stunt jump over Vice City canal.',
-        commentaryHookScript: "You won't believe what happens at the 20-second mark of this 5-star chase—watch the minimap right here.",
-        layoutMode: defaultLayout,
-        socialCopy: {
-          tiktok: 'Rockstar cooked with these police chases. Escaped 5 stars with 1% health left! 🚔🔥 #GTA6 #GTAVI #ViceCity #GamingShorts #GTAClips',
-          reels: "The AI in GTA 6 doesn't let you breathe during 5-star chases. Watch this escape. #GTA6 #ViceCity #GamingReels",
-          shorts: 'How to escape a 5-star wanted level in GTA 6 Vice City! #GTA6 #Shorts #Gaming',
-        },
-      },
-      {
-        title: 'NPC AI in GTA 6 is Terrifyingly Realistic (Hilarious Police Glitch)',
-        startSeconds: audioPeaks[1]?.start ?? 55,
-        endSeconds: audioPeaks[1]?.end ?? 94,
-        viralityScore: 96,
-        scoreBreakdown: { hook: 98, flow: 95, engagement: 97, clarity: 95 },
-        aiInsight: 'Unusual ragdoll physics event combined with ambient NPC dialogue causing instant viral comedic retention.',
-        commentaryHookScript: "Rockstar's new NPC ragdoll physics are completely unhinged. Look at what this officer does right as I drift past.",
-        layoutMode: 'gameplay_full',
-        socialCopy: {
-          tiktok: 'This GTA 6 NPC was NOT having it today 😭💀 #GTA6 #ViceCity #NPCMoments #GamingMemes #GTA6Fails',
-          reels: 'Rockstar gave Vice City pedestrians too much personality. #GTA6 #GamingMoments',
-          shorts: 'Funniest NPC moment in GTA 6 so far! #GTA6 #Shorts #ViceCity',
-        },
-      },
-      {
-        title: 'Found the Hidden Vice City Underwater Easter Egg in GTA 6',
-        startSeconds: audioPeaks[2]?.start ?? 108,
-        endSeconds: audioPeaks[2]?.end ?? 146,
-        viralityScore: 94,
-        scoreBreakdown: { hook: 95, flow: 92, engagement: 94, clarity: 93 },
-        aiInsight: 'High curiosity hook exploring uncharted perimeter waters with submarine drone.',
-        commentaryHookScript: 'Nobody found this secret Vice City underwater location yet. Here is the exact submarine route to unlock it.',
-        layoutMode: 'gameplay_cam',
-        socialCopy: {
-          tiktok: 'Rockstar hid this secret 3 miles off the Vice City coast... #GTA6 #GTA6EasterEgg #GamingSecrets #GTAVI',
-          reels: 'Secret underwater location in GTA 6 Vice City. #GTA6 #ViceCity',
-          shorts: 'Secret GTA 6 easter egg you missed! #GTA6 #Shorts #EasterEgg',
-        },
-      },
-      {
-        title: 'GTA 6 Supercar Highway Stunt Run at Max Speed Without Crashing',
-        startSeconds: audioPeaks[3]?.start ?? 160,
-        endSeconds: audioPeaks[3]?.end ?? 198,
-        viralityScore: 97,
-        scoreBreakdown: { hook: 97, flow: 96, engagement: 95, clarity: 96 },
-        aiInsight: 'Pure high-intensity gameplay flow with zero commentary needed; audio engine revs and near-misses drive hypnotic watch-time.',
-        commentaryHookScript: 'Watch this 350 km/h supercar run down Ocean Drive without taking a single scratch.',
-        layoutMode: 'gameplay_full',
-        socialCopy: {
-          tiktok: '350 km/h down Ocean Drive without a single scratch. Controller was sweating! 🏎️💨 #GTA6 #ViceCity #Supercar #GamingTikTok',
-          reels: 'Fastest car in GTA 6 at top speed. #GTA6 #GamingReels #Supercars',
-          shorts: 'Insane GTA 6 driving stunts! #GTA6 #Shorts #ViceCity',
-        },
-      },
-    ];
-  }
-
-  // High-virality algorithmic extraction fallback (Talking Head)
-  const maxEnd = Math.max(50, Math.min(targetDurationSeconds, 300));
-  return [
-    {
-      title: 'Why 90% of SaaS Founders Price Too Low',
-      startSeconds: 0,
-      endSeconds: Math.min(42, maxEnd),
-      viralityScore: 98,
-      scoreBreakdown: { hook: 99, flow: 96, engagement: 98, clarity: 97 },
-      aiInsight: 'Immediate counter-intuitive value claim in the first 2.5 seconds with high emotional resonance.',
-      commentaryHookScript: 'Stop scrolling if you are trying to price your SaaS product. Here is why 90% of founders fail before month six.',
-      layoutMode: 'solo',
-      socialCopy: {
-        tiktok: 'If you price at $10/mo, you need 10,000 customers. If you price at $500/mo, you need 200. Which is easier? #saas #startups #businessadvice',
-        reels: 'The math behind bootstrap pricing psychology that nobody talks about. #entrepreneur #founders',
-        shorts: 'How founders sabotage their revenue before launch. Watch this pricing breakdown. #shorts',
-      },
-    },
-    {
-      title: 'The Organic Distribution Engine That Replaced Paid Ads',
-      startSeconds: 43,
-      endSeconds: Math.min(88, maxEnd),
-      viralityScore: 94,
-      scoreBreakdown: { hook: 95, flow: 93, engagement: 94, clarity: 95 },
-      aiInsight: 'Clear step-by-step tactical framework addressing customer acquisition cost bottlenecks.',
-      commentaryHookScript: 'We replaced our entire paid Google ad budget with this one organic viral loop. Here is the step-by-step.',
-      layoutMode: 'split',
-      socialCopy: {
-        tiktok: 'Stop setting money on fire with Google ads before you build this loop. #growth #marketingtips',
-        reels: 'Zero-CAC organic acquisition strategy that scaled our ARR. #saasgrowth',
-        shorts: 'How to get 100k views on shorts without spending a dollar. #contentcreator #shorts',
-      },
-    },
-    {
-      title: 'Hiring Your First Engineer: Red Flags & Green Lights',
-      startSeconds: 89,
-      endSeconds: Math.min(138, maxEnd),
-      viralityScore: 91,
-      scoreBreakdown: { hook: 92, flow: 90, engagement: 91, clarity: 93 },
-      aiInsight: 'Strong controversial opinion about engineering pedigree vs proof of work.',
-      commentaryHookScript: 'Never hire a founding engineer who asks this single question during the interview.',
-      layoutMode: 'solo',
-      socialCopy: {
-        tiktok: 'Never hire an engineer who asks this in interview #tech #coding #hiring',
-        reels: 'The 3 green flags when hiring founding engineers. #startuplife',
-        shorts: 'Founding engineer hiring rules you need to know. #developer #shorts',
-      },
-    },
-  ];
+  throw new Error(`AI virality scoring failed: ${lastErr?.message || 'Gemini did not return valid clips.'}`);
 }
 
 /**
@@ -516,37 +482,27 @@ function buildClipTimelineAst(
   const duration = endSeconds - startSeconds;
   const clipWords = words.filter((w) => w.start >= startSeconds && w.end <= endSeconds);
 
-  const isGaming =
-    contentMode === 'gaming' ||
-    captionPreset.toLowerCase().includes('vice') ||
-    layoutMode.includes('gameplay');
-  const activePreset = isGaming
+  const isGaming = contentMode === 'gaming' || layoutMode === 'gameplay_cam' || layoutMode === 'gameplay_full';
+  const activePreset: CaptionPresetType = isGaming
     ? 'vice_neon'
-    : (captionPreset as 'hormozi_pop') || 'hormozi_pop';
+    : (captionPreset as CaptionPresetType) || 'hormozi_pop';
 
-  const trackName =
-    layoutMode === 'gameplay_cam'
-      ? 'Gameplay 16:9 + Facecam Stack'
-      : layoutMode === 'gameplay_full'
-      ? 'Full Gameplay 9:16 Immersion'
-      : 'Speaker Video 9:16';
+  const trackName = isGaming
+    ? layoutMode === 'gameplay_full'
+      ? 'V1 • 9:16 Fullscreen Action'
+      : 'V1 • Gameplay / Cam Split'
+    : 'V1 • Dynamic Speaker Reframe';
 
-  const reframeMode =
-    layoutMode === 'gameplay_cam'
-      ? 'gameplay_cam'
-      : layoutMode === 'gameplay_full'
-      ? 'gameplay_full'
-      : 'auto';
+  const reframeMode = layoutMode === 'split' ? 'split' : isGaming ? 'gameplay_focus' : 'face_track';
 
-  // Dynamic Visual Pacing: Inject subtle 1.0x -> 1.12x punch-in zoom keyframes and reframing cuts every 3.5-5 seconds
-  const pacingSec = 4.0;
-  const numSegments = Math.max(1, Math.ceil(duration / pacingSec));
+  const pacingSegments = Math.max(1, Math.min(4, Math.floor(duration / 12)));
+  const segmentDuration = duration / pacingSegments;
   const videoClips = [];
-  for (let i = 0; i < numSegments; i++) {
-    const segStart = i * pacingSec;
-    const segDur = Math.min(pacingSec, duration - segStart);
-    if (segDur <= 0.05) continue;
-    const isPunchIn = i % 2 === 1; // Alternating subtle 1.0x -> 1.12x zoom cuts
+
+  for (let i = 0; i < pacingSegments; i++) {
+    const isPunchIn = i % 2 === 1;
+    const segStart = +(i * segmentDuration).toFixed(2);
+    const segDur = +(i === pacingSegments - 1 ? duration - segStart : segmentDuration).toFixed(2);
     const baseScale = layoutMode === 'gameplay_full' ? 1.35 : 1.0;
     const scale = isPunchIn ? +(baseScale * 1.12).toFixed(2) : baseScale;
 
@@ -615,18 +571,7 @@ function buildClipTimelineAst(
             proxyUrl: null,
             thumbnailUrl: null,
             textConfig: null,
-            words:
-              clipWords.length > 0
-                ? clipWords
-                : isGaming
-                ? [
-                    { word: '5-STAR', start: startSeconds + 0.2, end: startSeconds + 0.8, highlighted: true },
-                    { word: 'POLICE', start: startSeconds + 0.8, end: startSeconds + 1.2 },
-                    { word: 'CHASE', start: startSeconds + 1.2, end: startSeconds + 1.6 },
-                    { word: 'VICE', start: startSeconds + 1.6, end: startSeconds + 2.0, highlighted: true },
-                    { word: 'CITY', start: startSeconds + 2.0, end: startSeconds + 2.6, highlighted: true },
-                  ]
-                : words.slice(0, 15),
+            words: clipWords,
           },
         ],
       },
@@ -652,7 +597,6 @@ function buildClipTimelineAst(
           },
         ],
       },
-      // Transformative Commentary / Reaction Slot
       ...(sourceType === 'commentary'
         ? [
             {
@@ -661,7 +605,7 @@ function buildClipTimelineAst(
               name: 'A2 • Creator Voiceover',
               locked: false,
               muted: false,
-              clips: [], // Ready for live browser MediaRecorder voiceover hook
+              clips: [],
             },
           ]
         : []),
@@ -712,7 +656,7 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
 
   try {
     // -------------------------------------------------------------
-    // STAGE 1: Audio Ingest & Extraction (15%)
+    // STAGE 1: Video Ingest & Audio Extraction (15%)
     // -------------------------------------------------------------
     await prisma.project.update({
       where: { id: projectId },
@@ -722,6 +666,11 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
         progressPercent: 15,
       },
     });
+
+    console.log(`[Worker] Project ${projectId}: Resolving source media...`);
+    const sourceVideoPath = await resolveSourceMedia(jobDir, youtubeUrl, storageKey);
+    console.log(`[Worker] Project ${projectId}: Source media resolved at ${sourceVideoPath}. Extracting audio...`);
+    const audioFiles = await extractAndChunkAudio(sourceVideoPath, jobDir, durationSeconds);
 
     // -------------------------------------------------------------
     // STAGE 2: Word-Level Transcription (45%)
@@ -734,12 +683,13 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
       },
     });
 
+    console.log(`[Worker] Project ${projectId}: Transcribing audio chunks via Groq Whisper...`);
     const { text: transcriptText, words, isZeroSpeech } = await transcribeAudio(
       jobDir,
-      durationSeconds,
-      youtubeUrl,
-      storageKey
+      audioFiles,
+      durationSeconds
     );
+    console.log(`[Worker] Project ${projectId}: Transcribed ${words.length} words (zeroSpeech=${isZeroSpeech}).`);
 
     // -------------------------------------------------------------
     // STAGE 3: Viral Hook & Score Extraction (75%)
@@ -752,13 +702,13 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
       },
     });
 
-    // Zero-speech / no-commentary or gaming footage: activate audio-energy peak analysis
     const effectiveContentMode = isZeroSpeech ? 'gaming' : contentMode;
     let audioPeaks: AudioEnergyPeak[] = [];
     if (effectiveContentMode === 'gaming' || isZeroSpeech) {
       audioPeaks = await detectAudioEnergyPeaks(durationSeconds, youtubeUrl, storageKey);
     }
 
+    console.log(`[Worker] Project ${projectId}: Scoring viral moments with Gemini...`);
     const viralMoments = await scoreViralMoments(
       transcriptText,
       aiFocusPrompt,
@@ -769,9 +719,10 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
       audioPeaks,
       layoutMode
     );
+    console.log(`[Worker] Project ${projectId}: Generated ${viralMoments.length} viral moment targets.`);
 
     // -------------------------------------------------------------
-    // STAGE 4: AST Timeline & Clip Generation (100%)
+    // STAGE 4: Real Video Slicing & AST Timeline (90%)
     // -------------------------------------------------------------
     await prisma.project.update({
       where: { id: projectId },
@@ -786,8 +737,38 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
       where: { projectId },
     });
 
+    const localRendersDir = path.join(process.env.LOCAL_STORAGE_DIR || '/tmp/frameflow-media', 'renders');
+    await fs.promises.mkdir(localRendersDir, { recursive: true });
+    const apiBase = (process.env.API_PUBLIC_URL || 'https://frameflow-api.onrender.com').replace(/\/$/, '');
+
     for (const moment of viralMoments) {
       const clipId = crypto.randomUUID();
+      const clipFileName = `${clipId}.mp4`;
+      const clipOutputPath = path.join(localRendersDir, clipFileName);
+
+      const start = Math.max(0, moment.startSeconds);
+      const duration = Math.max(1, moment.endSeconds - moment.startSeconds);
+
+      // Real FFmpeg video slice from source.mp4
+      try {
+        console.log(`[Worker:FFmpeg] Slicing clip ${clipId} from ${start}s for ${duration}s...`);
+        await execFileAsync('ffmpeg', [
+          '-threads', '1',
+          '-preset', 'ultrafast',
+          '-y',
+          '-ss', String(start),
+          '-t', String(duration),
+          '-i', sourceVideoPath,
+          '-c:v', 'libx264',
+          '-crf', '24',
+          '-c:a', 'aac',
+          '-b:a', '128k',
+          clipOutputPath,
+        ]);
+      } catch (ffmpegErr) {
+        console.warn(`[Worker:FFmpeg] Clip slice failed for ${clipId}:`, ffmpegErr);
+      }
+
       const timelineAst = buildClipTimelineAst(
         projectId,
         clipId,
@@ -825,7 +806,7 @@ export async function processClipGenerationJob(job: Job<ClipGenJobPayload>): Pro
             monetizationStatus,
           },
           timelineAstJson: timelineAst as unknown as object,
-          outputUrl: `https://assets.frameflow.dev/renders/${clipId}.mp4`,
+          outputUrl: `${apiBase}/media/renders/${clipFileName}`,
         },
       });
     }

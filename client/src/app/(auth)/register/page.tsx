@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, ArrowLeft, Lock, Mail, User, Sparkles, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { AuthShowcasePanel } from '@/components/auth/AuthShowcasePanel';
+import { apiFetch } from '@/lib/api';
 
 export default function RegisterPage(): JSX.Element {
   const router = useRouter();
@@ -42,7 +43,7 @@ export default function RegisterPage(): JSX.Element {
     setError(null);
 
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await apiFetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),

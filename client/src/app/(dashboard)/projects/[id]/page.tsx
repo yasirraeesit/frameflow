@@ -44,10 +44,33 @@ export default function ProjectShortsFeedPage(): JSX.Element {
   const params = useParams();
   const projectId = (params?.id as string) || 'demo-1';
 
+  const isDemo = projectId === 'demo-1' || projectId === 'gta6-demo';
   const project: MockProject =
-    MOCK_PROJECTS.find((p) => p.id === projectId) || MOCK_PROJECTS[0];
+    MOCK_PROJECTS.find((p) => p.id === projectId) || (isDemo ? MOCK_PROJECTS[0] : {
+      id: projectId,
+      title: 'Processing Video',
+      description: 'Extracted short-form clips',
+      ownerId: '',
+      sourceVideoUrl: '',
+      thumbnailUrl: '',
+      channelName: 'Creator',
+      sourceDurationSec: 0,
+      clipCount: 0,
+      status: 'PROCESSING',
+      contentMode: 'talking_head',
+      sourceType: 'original',
+      targetAspect: '9:16',
+      targetLength: '30-60s',
+      transcript: null,
+      width: 1920,
+      height: 1080,
+      fps: 30,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
 
-  const [clips, setClips] = useState<GeneratedClipResponse[]>(MOCK_VIRAL_CLIPS);
+  const [clips, setClips] = useState<GeneratedClipResponse[]>(isDemo ? MOCK_VIRAL_CLIPS : []);
+  const [isLoading, setIsLoading] = useState<boolean>(!isDemo);
   const [filter, setFilter] = useState<FilterCategory>('all');
   const [aiPrompt, setAiPrompt] = useState('');
   const [isPrompting, setIsPrompting] = useState(false);
@@ -114,36 +137,41 @@ export default function ProjectShortsFeedPage(): JSX.Element {
     apiFetch(`/api/projects/${projectId}/clips`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { clips?: Array<{ id: string; projectId: string; title: string; aiInsight?: string; viralityScore: number; scoreBreakdownJson?: { hook: number; flow: number; topicRelevance: number }; startSeconds: number; endSeconds: number; layoutMode?: string; commentaryHookScript?: string | null; sourceType?: 'original' | 'commentary'; monetizationStatus?: 'ready' | 'needs_voiceover' | 'transformative_applied'; timelineAstJson?: object; socialCopyJson?: { tiktok?: string; reels?: string; shorts?: string }; createdAt: string; updatedAt: string }> } | null) => {
-        if (data?.clips && Array.isArray(data.clips) && data.clips.length > 0) {
-          const mappedClips: GeneratedClipResponse[] = data.clips.map((c) => ({
-            id: c.id,
-            projectId: c.projectId,
-            title: c.title,
-            hookSummary: c.aiInsight || null,
-            viralityScore: c.viralityScore,
-            scoreBreakdown: c.scoreBreakdownJson || { hook: 95, flow: 92, topicRelevance: 90 },
-            startTime: c.startSeconds,
-            endTime: c.endSeconds,
-            duration: c.endSeconds - c.startSeconds,
-            aspectRatio: '9:16',
-            reframeMode: c.layoutMode || 'auto',
-            timelineDocument: (c.timelineAstJson as unknown as GeneratedClipResponse['timelineDocument']) || MOCK_VIRAL_CLIPS[0].timelineDocument,
-            socialPack: c.socialCopyJson ? {
+        if (data?.clips && Array.isArray(data.clips)) {
+          if (data.clips.length > 0) {
+            const mappedClips: GeneratedClipResponse[] = data.clips.map((c) => ({
+              id: c.id,
+              projectId: c.projectId,
               title: c.title,
-              caption: c.socialCopyJson.tiktok || c.socialCopyJson.reels || c.socialCopyJson.shorts || '',
-              hashtags: ['#shorts', '#viral', '#creator'],
-            } : null,
-            commentaryHookScript: c.commentaryHookScript || null,
-            sourceType: c.sourceType || 'original',
-            monetizationStatus: c.monetizationStatus || 'ready',
-            status: 'READY',
-            createdAt: c.createdAt,
-            updatedAt: c.updatedAt,
-          }));
-          setClips(mappedClips);
+              hookSummary: c.aiInsight || null,
+              viralityScore: c.viralityScore,
+              scoreBreakdown: c.scoreBreakdownJson || { hook: 95, flow: 92, topicRelevance: 90 },
+              startTime: c.startSeconds,
+              endTime: c.endSeconds,
+              duration: c.endSeconds - c.startSeconds,
+              aspectRatio: '9:16',
+              reframeMode: c.layoutMode || 'auto',
+              timelineDocument: (c.timelineAstJson as unknown as GeneratedClipResponse['timelineDocument']) || MOCK_VIRAL_CLIPS[0].timelineDocument,
+              socialPack: c.socialCopyJson ? {
+                title: c.title,
+                caption: c.socialCopyJson.tiktok || c.socialCopyJson.reels || c.socialCopyJson.shorts || '',
+                hashtags: ['#shorts', '#viral', '#creator'],
+              } : null,
+              commentaryHookScript: c.commentaryHookScript || null,
+              sourceType: c.sourceType || 'original',
+              monetizationStatus: c.monetizationStatus || 'ready',
+              status: 'READY',
+              createdAt: c.createdAt,
+              updatedAt: c.updatedAt,
+            }));
+            setClips(mappedClips);
+          } else {
+            setClips([]);
+          }
         }
       })
-      .catch((err) => console.warn('Failed to fetch project clips:', err));
+      .catch((err) => console.warn('Failed to fetch project clips:', err))
+      .finally(() => setIsLoading(false));
   }, [projectId]);
 
   const togglePlay = (clipId: string) => {
@@ -372,16 +400,46 @@ export default function ProjectShortsFeedPage(): JSX.Element {
           </div>
           <div className="space-y-1 text-center">
             <h3 className="text-base font-bold text-[#14151A]">Video Processing Failed</h3>
-            <p className="text-xs text-[#52545E] max-w-md mx-auto">
+            <p className="text-xs text-[#52545E] max-w-md mx-auto leading-relaxed">
               {projectError || 'The worker pipeline was interrupted or encountered an unexpected issue with this source video. All video processing credits have been automatically refunded to your balance.'}
             </p>
           </div>
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+            <Link
+              href="/dashboard?tab=upload"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white px-5 py-2.5 text-xs font-bold transition-all shadow-xs cursor-pointer"
+            >
+              <span>Refunded — Try Uploading MP4 Instead</span>
+            </Link>
+            <Link
+              href={`/dashboard?retryUrl=${encodeURIComponent(projectSourceUrl || '')}`}
+              className="inline-flex items-center gap-2 rounded-xl bg-white border border-[#E6E4DD] hover:bg-neutral-50 text-[#14151A] px-5 py-2.5 text-xs font-bold transition-all shadow-xs cursor-pointer"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>Retry with Refunded Credits</span>
+            </Link>
+          </div>
+        </div>
+      ) : isLoading ? (
+        <div className="col-span-full py-20 flex flex-col items-center justify-center space-y-3">
+          <div className="w-8 h-8 border-2 border-[#E84C2B] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs text-[#52545E] font-medium">Loading extracted clips...</p>
+        </div>
+      ) : projectStatus === 'PROCESSING' || projectStatus === 'QUEUED' ? (
+        <div className="rounded-2xl border border-[#E6E4DD] bg-white p-8 text-center shadow-xs flex flex-col items-center justify-center space-y-4 max-w-xl mx-auto my-8">
+          <div className="w-10 h-10 border-2 border-[#E84C2B] border-t-transparent rounded-full animate-spin" />
+          <div className="space-y-1 text-center">
+            <h3 className="text-sm font-bold text-[#14151A]">Generating Viral Clips</h3>
+            <p className="text-xs text-[#52545E] max-w-md mx-auto">
+              Whisper transcription and AI hook scoring are currently in progress.
+            </p>
+          </div>
           <Link
-            href={`/dashboard?retryUrl=${encodeURIComponent(projectSourceUrl || '')}`}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white px-5 py-2.5 text-xs font-bold transition-all shadow-xs cursor-pointer"
+            href={`/projects/${projectId}/processing`}
+            className="inline-flex items-center gap-2 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white px-5 py-2.5 text-xs font-bold transition-all shadow-xs"
           >
-            <RotateCcw className="h-3.5 w-3.5" />
-            <span>Retry with Refunded Credits</span>
+            <span>View Live Processing Progress</span>
+            <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       ) : filteredClips.length === 0 ? (
@@ -390,18 +448,22 @@ export default function ProjectShortsFeedPage(): JSX.Element {
             <Film className="h-6 w-6" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-sm font-bold text-[#14151A]">No viral clips match this filter</h3>
+            <h3 className="text-sm font-bold text-[#14151A]">No viral clips found</h3>
             <p className="text-xs text-[#52545E] max-w-sm">
-              Try clearing the active filter or search query to review all generated 9:16 shorts.
+              {clips.length === 0
+                ? 'No clips were generated for this video.'
+                : 'Try clearing the active filter or search query to review all generated 9:16 shorts.'}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => { setFilter('all'); setAiPrompt(''); }}
-            className="rounded-xl bg-[#14151A] hover:bg-[#2A2B35] text-white px-4 py-2 text-xs font-bold transition-all shadow-xs cursor-pointer"
-          >
-            Reset Filters
-          </button>
+          {clips.length > 0 && (
+            <button
+              type="button"
+              onClick={() => { setFilter('all'); setAiPrompt(''); }}
+              className="rounded-xl bg-[#14151A] hover:bg-[#2A2B35] text-white px-4 py-2 text-xs font-bold transition-all shadow-xs cursor-pointer"
+            >
+              Reset Filters
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

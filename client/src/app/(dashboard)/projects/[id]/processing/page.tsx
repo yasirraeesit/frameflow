@@ -19,7 +19,9 @@ import {
   Zap,
   Play,
   ShieldCheck,
+  AlertCircle,
 } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 interface PipelineStage {
   id: number;
@@ -89,15 +91,7 @@ export default function ProcessingPage(): JSX.Element {
 
     const pollProject = async () => {
       try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('frameflow_token') : null;
-        if (!token) return;
-
-        const res = await fetch(`/api/projects/${projectId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
+        const res = await apiFetch(`/api/projects/${projectId}`);
         if (res.ok) {
           const data = await res.json();
           const p = data.project;
@@ -140,13 +134,26 @@ export default function ProcessingPage(): JSX.Element {
       {/* ========================================================= */}
       <div className="max-w-[680px] w-full mx-auto bg-white border border-[#E6E4DD] rounded-2xl p-5 sm:p-8 shadow-[0_14px_40px_rgba(20,21,26,0.06)] space-y-7">
         {errorMessage && (
-          <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-xs text-red-800 space-y-2">
-            <p className="font-bold flex items-center gap-1.5">
-              <span>{errorMessage}</span>
-            </p>
-            <div>
-              <Link href="/dashboard" className="font-bold underline text-red-900">
-                &larr; Return to Dashboard
+          <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-xs text-red-800 space-y-3">
+            <div className="flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-red-900">Processing Failed</p>
+                <p className="mt-0.5 text-red-800 leading-relaxed">{errorMessage}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <Link
+                href="/dashboard?tab=upload"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#E84C2B] text-white text-xs font-semibold rounded-lg hover:bg-[#D03B1C] transition-colors shadow-sm"
+              >
+                Refunded — Try Uploading MP4 Instead
+              </Link>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E6E4DD] text-[#52545E] text-xs font-semibold rounded-lg hover:text-[#14151A] hover:bg-neutral-50 transition-colors"
+              >
+                Return to Dashboard
               </Link>
             </div>
           </div>

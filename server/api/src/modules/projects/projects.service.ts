@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { PrismaClient } from '@frameflow/database';
@@ -51,11 +54,33 @@ export async function inspectYouTubeVideo(url: string): Promise<YouTubePreflight
     throw err;
   }
 
+  const cookieArgs: string[] = [];
+  const b64 = process.env.YT_DLP_COOKIES_BASE64?.trim();
+  if (b64) {
+    try {
+      const cookiesTxt = Buffer.from(b64, 'base64').toString('utf8');
+      const cookiePath = path.join(os.tmpdir(), 'yt-cookies.txt');
+      fs.writeFileSync(cookiePath, cookiesTxt, 'utf8');
+      cookieArgs.push('--cookies', cookiePath);
+    } catch (cookieErr) {
+      console.warn('[ProjectsService] Failed to decode YT_DLP_COOKIES_BASE64:', cookieErr);
+    }
+  }
+
   try {
     const { stdout } = await execFileAsync(
       'yt-dlp',
-      ['--dump-single-json', '--no-playlist', '--skip-download', '--no-warnings', url],
-      { timeout: 15000, maxBuffer: 10 * 1024 * 1024 }
+      [
+        '--dump-single-json',
+        '--no-playlist',
+        '--skip-download',
+        '--no-warnings',
+        '--extractor-args',
+        'youtube:player_client=android,web',
+        ...cookieArgs,
+        url,
+      ],
+      { timeout: 20000, maxBuffer: 10 * 1024 * 1024 }
     );
 
     const data = JSON.parse(stdout) as {
@@ -102,6 +127,13 @@ export async function inspectYouTubeVideo(url: string): Promise<YouTubePreflight
     }
 
     const errStr = String(err);
+    if (errStr.includes("Sign in to confirm you're not a bot") || errStr.toLowerCase().includes('bot')) {
+      const botErr = new Error('YOUTUBE_BOT_BLOCK');
+      (botErr as unknown as { userMessage: string }).userMessage =
+        "YouTube blocked cloud server download for this link. Upload the MP4 file directly in the Upload tab or configure YouTube session cookies.";
+      throw botErr;
+    }
+
     if (
       errStr.includes('Video unavailable') ||
       errStr.includes('Private video') ||
@@ -116,7 +148,7 @@ export async function inspectYouTubeVideo(url: string): Promise<YouTubePreflight
     }
 
     if ((err as { killed?: boolean })?.killed) {
-      console.warn('[ProjectsService] yt-dlp inspection timed out after 15s. Proceeding with fallback duration.');
+      console.warn('[ProjectsService] yt-dlp inspection timed out after 20s. Proceeding with fallback duration.');
       return { durationSec: 300, isLive: false };
     }
 

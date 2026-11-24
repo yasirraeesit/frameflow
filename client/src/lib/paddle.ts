@@ -1,5 +1,6 @@
 import { initializePaddle, Paddle } from '@paddle/paddle-js';
 import type { WorkspaceBillingState, BillingStatusResponse, CreditTransactionDTO } from '@frameflow/shared';
+import { apiFetch } from './api';
 
 let paddleInstancePromise: Promise<Paddle | undefined> | null = null;
 
@@ -87,7 +88,7 @@ export async function fetchBillingStatus(): Promise<BillingStatusResponse> {
       return getDemoBillingState();
     }
 
-    const res = await fetch('/api/billing/status', {
+    const res = await apiFetch('/api/billing/status', {
       headers: {
         Authorization: `Bearer ${token}`,
       },
