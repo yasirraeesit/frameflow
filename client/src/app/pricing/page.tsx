@@ -769,7 +769,7 @@ export default function PricingPage(): JSX.Element {
               <table className="w-full text-left border-collapse min-w-[720px]">
                 <thead>
                   <tr className="border-b border-[#E6E4DD] bg-[#FAF9F5]/70">
-                    <th className="py-4 px-6 text-xs font-mono font-bold uppercase tracking-wider text-[#52545E] w-[34%]">
+                    <th className="sticky left-0 bg-[#FAF9F5] z-20 py-4 px-6 text-xs font-mono font-bold uppercase tracking-wider text-[#52545E] w-[34%] shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
                       Features
                     </th>
                     <th className="py-4 px-4 text-xs font-mono font-bold uppercase tracking-wider text-[#52545E] w-[16%]">
@@ -792,7 +792,7 @@ export default function PricingPage(): JSX.Element {
                     <React.Fragment key={cIdx}>
                       {/* Category Header Row */}
                       <tr className="bg-[#FAF9F5]/40 font-mono text-[11px] font-bold text-[#8C8E9A] uppercase tracking-wider">
-                        <td colSpan={5} className="py-3 px-6">
+                        <td colSpan={5} className="sticky left-0 bg-[#FAF9F5] py-3 px-6 z-10">
                           {cat.category}
                         </td>
                       </tr>
@@ -803,7 +803,7 @@ export default function PricingPage(): JSX.Element {
                           key={iIdx}
                           className="hover:bg-[#FAF9F5]/50 transition-colors"
                         >
-                          <td className="py-3.5 px-6 space-y-0.5">
+                          <td className="sticky left-0 bg-white z-10 py-3.5 px-6 space-y-0.5 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
                             <div className="font-semibold text-[#14151A]">
                               {item.name}
                             </div>

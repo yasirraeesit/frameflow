@@ -113,7 +113,7 @@ export function StudioHeader({
               className="group flex items-center gap-1.5 text-xs font-bold text-[#14151A] hover:text-[#E84C2B] transition-colors truncate text-left"
               title="Click to edit clip title"
             >
-              <span className="truncate max-w-[180px] sm:max-w-[280px] lg:max-w-[340px]">
+              <span className="truncate max-w-[100px] sm:max-w-[240px] md:max-w-[340px]">
                 {title}
               </span>
               <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-70 transition-opacity shrink-0 text-[#8C8E9A]" />
@@ -191,10 +191,11 @@ export function StudioHeader({
         <button
           type="button"
           onClick={onOpenExport}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white px-3.5 py-1.5 text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white px-3 sm:px-3.5 py-1.5 text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer shrink-0"
         >
           <Download className="h-3.5 w-3.5" />
-          <span>Export 1080p MP4</span>
+          <span className="hidden sm:inline">Export 1080p MP4</span>
+          <span className="sm:hidden">Export</span>
         </button>
       </div>
     </header>

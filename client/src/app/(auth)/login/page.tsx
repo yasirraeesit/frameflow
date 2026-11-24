@@ -83,7 +83,7 @@ export default function LoginPage(): JSX.Element {
       {/* ========================================================= */}
       {/* LEFT COLUMN: Warm Vellum Editorial Auth Container         */}
       {/* ========================================================= */}
-      <div className="lg:col-span-6 flex flex-col justify-between min-h-screen p-6 sm:p-10 lg:p-12 xl:p-14">
+      <div className="lg:col-span-6 flex flex-col justify-between min-h-screen p-4 sm:p-8 lg:p-12 xl:p-14">
         {/* Top Bar: Viewfinder Brand Mark + Back Link */}
         <header className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">

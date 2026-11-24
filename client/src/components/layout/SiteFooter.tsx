@@ -56,10 +56,10 @@ export function SiteFooter(): JSX.Element {
             </div>
 
             {/* Right Column (5 cols) */}
-            <div className="lg:col-span-5 flex flex-wrap lg:justify-end gap-3.5">
+            <div className="lg:col-span-5 flex flex-col sm:flex-row lg:justify-end gap-3.5 w-full">
               <Link
                 href="/register"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white font-semibold px-6 py-3.5 text-sm transition-all shadow-md active:scale-[0.98]"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white font-semibold px-6 py-3.5 text-sm transition-all shadow-md active:scale-[0.98] w-full sm:w-auto text-center"
               >
                 <span>Start Clipping Free</span>
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -67,7 +67,7 @@ export function SiteFooter(): JSX.Element {
 
               <Link
                 href="/pricing"
-                className="inline-flex items-center gap-2 rounded-xl border border-[#2C2E38] hover:border-white/40 text-white px-6 py-3.5 text-sm font-semibold transition-colors bg-white/5 hover:bg-white/10"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#2C2E38] hover:border-white/40 text-white px-6 py-3.5 text-sm font-semibold transition-colors bg-white/5 hover:bg-white/10 w-full sm:w-auto text-center"
               >
                 <span>View Plans & Credits</span>
               </Link>
@@ -359,7 +359,7 @@ export function SiteFooter(): JSX.Element {
 
         {/* Oversized Typographic Watermark */}
         <div
-          className="text-[72px] sm:text-[110px] lg:text-[148px] font-bold tracking-[-0.04em] text-[#14151A]/[0.035] leading-none text-center select-none mt-6 overflow-hidden pointer-events-none"
+          className="text-5xl sm:text-8xl lg:text-[148px] font-bold tracking-[-0.04em] text-[#14151A]/[0.035] leading-none text-center select-none mt-6 overflow-hidden pointer-events-none truncate"
           aria-hidden="true"
         >
           FrameFlow

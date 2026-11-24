@@ -138,7 +138,7 @@ export default function ProcessingPage(): JSX.Element {
       {/* ========================================================= */}
       {/* CENTERED PROCESSING CARD                                  */}
       {/* ========================================================= */}
-      <div className="max-w-[680px] w-full mx-auto bg-white border border-[#E6E4DD] rounded-2xl p-6 sm:p-8 shadow-[0_14px_40px_rgba(20,21,26,0.06)] space-y-7">
+      <div className="max-w-[680px] w-full mx-auto bg-white border border-[#E6E4DD] rounded-2xl p-5 sm:p-8 shadow-[0_14px_40px_rgba(20,21,26,0.06)] space-y-7">
         {errorMessage && (
           <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-xs text-red-800 space-y-2">
             <p className="font-bold flex items-center gap-1.5">

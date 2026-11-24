@@ -89,16 +89,16 @@ export function HeroOverlappingStage(): JSX.Element {
             </div>
 
             {/* Display Headline with Expressive Editorial Serif Italic */}
-            <h1 className="text-4xl sm:text-5xl xl:text-[54px] font-bold tracking-[-0.035em] leading-[1.06] text-[#14151A]">
+            <h1 className="text-3xl sm:text-5xl lg:text-[64px] font-bold tracking-[-0.035em] leading-[1.1] text-[#14151A]">
               1 long video in.{' '}
-              <span className="font-editorial text-[#E84C2B] text-5xl sm:text-6xl xl:text-[62px] font-normal not-italic sm:italic px-1 underline decoration-[#E84C2B]/30 decoration-4 underline-offset-8">
+              <span className="font-editorial text-[#E84C2B] text-4xl sm:text-5xl lg:text-[64px] font-normal not-italic sm:italic px-1 underline decoration-[#E84C2B]/30 decoration-4 underline-offset-8">
                 15 viral shorts
               </span>{' '}
               out in one click.
             </h1>
 
             {/* Subheadline */}
-            <p className="text-[17px] text-[#52545E] leading-relaxed max-w-[48ch]">
+            <p className="text-sm sm:text-base lg:text-[17px] text-[#52545E] leading-relaxed max-w-[48ch]">
               Paste a YouTube link or drop a raw MP4. FrameFlow finds your highest-retention hooks, tracks speakers into 9:16, burns animated captions, and gives you a real multi-track timeline underneath.
             </p>
 
@@ -107,21 +107,23 @@ export function HeroOverlappingStage(): JSX.Element {
               <div className="rounded-2xl border border-[#DCDAD2] bg-white p-2 shadow-[0_8px_30px_rgba(20,21,26,0.06)] space-y-2">
                 <form
                   onSubmit={handleGetClips}
-                  className="relative flex items-center gap-2"
+                  className="relative flex flex-col sm:flex-row items-stretch sm:items-center gap-2"
                 >
-                  <div className="pl-3 flex items-center pointer-events-none text-[#E84C2B]">
-                    <LinkIcon className="h-4 w-4" aria-hidden="true" />
+                  <div className="relative flex-1 flex items-center">
+                    <div className="pl-3 flex items-center pointer-events-none text-[#E84C2B]">
+                      <LinkIcon className="h-4 w-4" aria-hidden="true" />
+                    </div>
+                    <input
+                      type="url"
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      placeholder="Paste a YouTube, Loom, or Drive link..."
+                      className="w-full bg-transparent text-xs sm:text-sm text-[#14151A] placeholder-[#8C8E9A] focus:outline-none font-sans py-2.5 pl-2 pr-3"
+                    />
                   </div>
-                  <input
-                    type="url"
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder="Paste a YouTube, Loom, or Drive link..."
-                    className="w-full bg-transparent text-xs sm:text-sm text-[#14151A] placeholder-[#8C8E9A] focus:outline-none font-sans py-2"
-                  />
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white px-5 py-2.5 text-xs font-bold transition-all shadow-sm active:scale-[0.98] shrink-0 cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white px-5 py-3 sm:py-2.5 text-xs font-bold transition-all shadow-sm active:scale-[0.98] w-full sm:w-auto shrink-0 cursor-pointer"
                   >
                     <span>Get Free Clips</span>
                     <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -186,13 +188,13 @@ export function HeroOverlappingStage(): JSX.Element {
           {/* ========================================================= */}
           {/* RIGHT COLUMN: 2 Flagship Phones (Max Height 510px)        */}
           {/* ========================================================= */}
-          <div className="lg:col-span-6 relative flex flex-col items-center justify-center max-h-[510px]">
-            {/* TWO VERTICAL PHONES SIDE BY SIDE WITH CLEAR BREATHING ROOM */}
-            <div className="flex items-center justify-center gap-6 w-full">
+          <div className="lg:col-span-6 relative flex flex-col items-center justify-center max-h-[510px] w-full overflow-hidden">
+            {/* TWO VERTICAL PHONES (1 centered on mobile, 2 side-by-side on tablet/desktop) */}
+            <div className="flex items-center justify-center gap-6 w-full max-w-full overflow-hidden">
               {/* ----------------------------------------------------- */}
-              {/* LEFT PHONE: iPhone Frame (w-[215px] h-[435px])        */}
+              {/* LEFT PHONE: iPhone Frame (w-[250px] sm:w-[215px])     */}
               {/* ----------------------------------------------------- */}
-              <div className="w-[215px] h-[435px] rounded-[38px] border-[6px] border-[#1F2028] bg-[#121318] p-2 shadow-[0_24px_60px_rgba(20,21,26,0.28)] flex flex-col justify-between shrink-0 relative overflow-hidden ring-1 ring-white/10">
+              <div className="w-[250px] sm:w-[215px] h-[435px] rounded-[38px] border-[6px] border-[#1F2028] bg-[#121318] p-2 shadow-[0_24px_60px_rgba(20,21,26,0.28)] flex flex-col justify-between shrink-0 relative overflow-hidden ring-1 ring-white/10">
                 {/* iPhone Dynamic Island + iOS Status Bar */}
                 <div className="relative z-30 pt-1 px-3 flex items-center justify-between text-white text-[10px] select-none">
                   <span className="font-semibold tracking-tight text-[10px]">9:41</span>
@@ -288,7 +290,7 @@ export function HeroOverlappingStage(): JSX.Element {
               {/* ----------------------------------------------------- */}
               {/* RIGHT PHONE: Android Flagship Frame (w-[215px] h-[435px]) */}
               {/* ----------------------------------------------------- */}
-              <div className="w-[215px] h-[435px] rounded-[26px] border-[5px] border-[#22242F] bg-[#101116] p-2 shadow-[0_20px_50px_rgba(20,21,26,0.22)] flex flex-col justify-between shrink-0 relative overflow-hidden translate-y-3 ring-1 ring-white/10">
+              <div className="hidden sm:flex w-[215px] h-[435px] rounded-[26px] border-[5px] border-[#22242F] bg-[#101116] p-2 shadow-[0_20px_50px_rgba(20,21,26,0.22)] flex-col justify-between shrink-0 relative overflow-hidden translate-y-3 ring-1 ring-white/10">
                 {/* Android Punch-Hole Camera + Android Status Bar */}
                 <div className="relative z-30 pt-0.5 px-3 flex items-center justify-between text-white text-[10px] select-none">
                   <span className="font-mono text-[9px] text-zinc-300">10:42</span>

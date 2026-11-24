@@ -336,7 +336,7 @@ export default function DashboardPage(): JSX.Element {
           {/* ========================================================= */}
           <div className="space-y-3 pt-1">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-1.5 p-1 bg-[#F0EFEA] rounded-xl border border-[#E6E4DD]">
+              <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#F0EFEA] rounded-xl border border-[#E6E4DD]">
                 <button
                   type="button"
                   onClick={() => setContentMode('talking_head')}
@@ -657,7 +657,7 @@ export default function DashboardPage(): JSX.Element {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] px-7 py-3.5 text-xs sm:text-sm font-bold text-white shadow-md active:scale-[0.99] transition-all disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] px-7 py-3.5 text-xs sm:text-sm font-bold text-white shadow-md active:scale-[0.99] transition-all disabled:opacity-50 cursor-pointer w-full sm:w-auto"
             >
               <span>{isSubmitting ? 'Dispatching Worker...' : 'Get Clips in 1 Click'}</span>
               <ArrowRight className="h-4 w-4" />
@@ -682,7 +682,7 @@ export default function DashboardPage(): JSX.Element {
           <span className="text-xs font-mono text-[#8C8E9A]">4 Projects Saved</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {MOCK_PROJECTS.map((project: MockProject) => {
             const minutes = Math.floor(project.sourceDurationSec / 60);
             const seconds = project.sourceDurationSec % 60;

@@ -14,6 +14,7 @@ import {
   CreditCard,
   SlidersHorizontal,
   LogOut,
+  X,
 } from 'lucide-react';
 import { signOutUser, getStoredUser } from '@/lib/auth';
 
@@ -24,6 +25,11 @@ interface NavItem {
   badge?: string;
 }
 
+export interface SidebarProps {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
 const NAV_ITEMS: NavItem[] = [
   { label: 'Clip Generator', href: '/dashboard', icon: Film },
   { label: 'Brand Templates', href: '/brand-kit', icon: Palette },
@@ -31,7 +37,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Workspace & Billing', href: '/settings', icon: SlidersHorizontal },
 ];
 
-export function Sidebar(): JSX.Element {
+export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps): JSX.Element {
   const pathname = usePathname();
   const [userName, setUserName] = useState<string>('Creator');
   const [userEmail, setUserEmail] = useState<string>('creator@frameflow.dev');
@@ -42,14 +48,15 @@ export function Sidebar(): JSX.Element {
     if (user?.email) setUserEmail(user.email);
   }, []);
 
-  return (
-    <aside
-      className="fixed left-0 top-0 bottom-0 z-40 flex w-64 flex-col border-r border-[#E6E4DD] bg-white text-[#14151A]"
-      aria-label="Sidebar Navigation Rail"
-    >
+  const renderContent = (isMobile = false) => (
+    <>
       {/* Brand & Workspace Logo */}
-      <div className="flex h-16 items-center justify-between border-b border-[#E6E4DD] px-5 bg-white">
-        <Link href="/" className="flex items-center gap-2.5 group">
+      <div className="flex h-16 items-center justify-between border-b border-[#E6E4DD] px-5 bg-white shrink-0">
+        <Link
+          href="/"
+          onClick={isMobile ? onMobileClose : undefined}
+          className="flex items-center gap-2.5 group"
+        >
           {/* Custom geometric FrameFlow viewfinder mark */}
           <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-[#E6E4DD] shadow-xs group-hover:border-[#E84C2B]/60 transition-colors">
             <div className="absolute top-1 left-1 h-1.5 w-1.5 border-t-2 border-l-2 border-[#E84C2B]" />
@@ -69,10 +76,21 @@ export function Sidebar(): JSX.Element {
             <span className="text-[11px] text-[#52545E]">AI Video Repurposing</span>
           </div>
         </Link>
+
+        {isMobile && onMobileClose && (
+          <button
+            type="button"
+            onClick={onMobileClose}
+            aria-label="Close sidebar navigation"
+            className="p-1.5 rounded-lg text-[#52545E] hover:text-[#14151A] hover:bg-[#FAF9F5] transition-colors cursor-pointer"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* Active Project Switcher Pill */}
-      <div className="p-3 border-b border-[#E6E4DD] bg-white">
+      <div className="p-3 border-b border-[#E6E4DD] bg-white shrink-0">
         <div className="flex items-center justify-between rounded-xl bg-[#FAF9F5] border border-[#E6E4DD] hover:border-[#DCDAD2] px-3 py-2 text-xs transition-colors cursor-pointer group">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-white border border-[#E6E4DD] text-[#E84C2B] shrink-0 shadow-2xs">
@@ -104,6 +122,7 @@ export function Sidebar(): JSX.Element {
             <Link
               key={item.href}
               href={item.href}
+              onClick={isMobile ? onMobileClose : undefined}
               className={`group flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
                 isActive
                   ? 'bg-[#FAF3EE] text-[#E84C2B] border border-[#E84C2B]/25 shadow-2xs'
@@ -136,7 +155,7 @@ export function Sidebar(): JSX.Element {
       </nav>
 
       {/* Credit Balance & Subscription Widget */}
-      <div className="border-t border-[#E6E4DD] p-4 space-y-2.5 bg-[#FAF9F5]">
+      <div className="border-t border-[#E6E4DD] p-4 space-y-2.5 bg-[#FAF9F5] shrink-0">
         <div className="rounded-xl border border-[#E6E4DD] bg-white p-3 space-y-2 shadow-2xs">
           <div className="flex items-center justify-between text-xs font-semibold text-[#14151A]">
             <span className="flex items-center gap-1.5 font-bold">
@@ -145,6 +164,7 @@ export function Sidebar(): JSX.Element {
             </span>
             <Link
               href="/pricing"
+              onClick={isMobile ? onMobileClose : undefined}
               className="rounded-lg bg-[#E84C2B] hover:bg-[#D13B1C] text-white text-[10px] font-bold px-2 py-0.5 transition-all shadow-2xs active:scale-95"
             >
               Upgrade
@@ -170,14 +190,18 @@ export function Sidebar(): JSX.Element {
 
         <div className="flex items-center justify-between px-1 text-[10px] text-[#8C8E9A] font-mono">
           <span>Powered by Paddle</span>
-          <Link href="/pricing" className="hover:text-[#14151A] underline decoration-dotted">
+          <Link
+            href="/pricing"
+            onClick={isMobile ? onMobileClose : undefined}
+            className="hover:text-[#14151A] underline decoration-dotted"
+          >
             Tax compliant
           </Link>
         </div>
       </div>
 
       {/* User Account & Sign Out Footer */}
-      <div className="border-t border-[#E6E4DD] p-3 bg-white">
+      <div className="border-t border-[#E6E4DD] p-3 bg-white shrink-0">
         <div className="flex items-center justify-between gap-2 rounded-xl p-1.5 transition-colors">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FAF3EE] border border-[#E84C2B]/20 text-[#E84C2B] font-bold text-xs shrink-0">
@@ -200,10 +224,42 @@ export function Sidebar(): JSX.Element {
             className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#52545E] hover:text-[#E84C2B] hover:bg-[#FFF8F6] border border-transparent hover:border-[#E84C2B]/20 transition-all cursor-pointer shrink-0"
           >
             <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
-            <span className="hidden sm:inline">Sign Out</span>
+            <span className="inline">Sign Out</span>
           </button>
         </div>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* 1. Desktop Fixed Sidebar (lg and above) */}
+      <aside
+        className="hidden lg:flex fixed left-0 top-0 bottom-0 z-40 w-64 flex-col border-r border-[#E6E4DD] bg-white text-[#14151A]"
+        aria-label="Sidebar Navigation Rail"
+      >
+        {renderContent(false)}
+      </aside>
+
+      {/* 2. Mobile Slide-Over Drawer (< lg) */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Backdrop overlay */}
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+            onClick={onMobileClose}
+            aria-hidden="true"
+          />
+
+          {/* Drawer panel */}
+          <aside
+            className="fixed inset-y-0 left-0 w-[290px] max-w-[85vw] bg-white flex flex-col shadow-2xl z-50 animate-in slide-in-from-left duration-200 text-[#14151A]"
+            aria-label="Mobile Navigation Drawer"
+          >
+            {renderContent(true)}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }

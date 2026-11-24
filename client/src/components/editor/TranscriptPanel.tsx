@@ -69,6 +69,11 @@ interface TranscriptPanelProps {
   // Monetization Voiceover Hook
   commentaryHookScript?: string;
   onSaveVoiceover?: (audioUrl: string, durationSec: number) => void;
+  // Responsive / Mobile Container Props
+  className?: string;
+  activeTab?: EditorTab;
+  onTabChange?: (tab: EditorTab) => void;
+  hideTabBar?: boolean;
 }
 
 const COLOR_SWATCHES = [
@@ -102,8 +107,17 @@ export function TranscriptPanel({
   onToggleBRoll,
   commentaryHookScript,
   onSaveVoiceover,
+  className,
+  activeTab: controlledActiveTab,
+  onTabChange,
+  hideTabBar = false,
 }: TranscriptPanelProps): JSX.Element {
-  const [activeTab, setActiveTab] = useState<EditorTab>('transcript');
+  const [internalActiveTab, setInternalActiveTab] = useState<EditorTab>('transcript');
+  const activeTab = controlledActiveTab !== undefined ? controlledActiveTab : internalActiveTab;
+  const setActiveTab = (tab: EditorTab) => {
+    setInternalActiveTab(tab);
+    onTabChange?.(tab);
+  };
 
   // Voiceover Hook Recording State
   const [showRecorder, setShowRecorder] = useState<boolean>(false);
@@ -192,33 +206,35 @@ export function TranscriptPanel({
   }
 
   return (
-    <div className="w-[330px] bg-white border-r border-[#E6E4DD] flex flex-col h-full select-none shrink-0 z-10 text-[#14151A]">
+    <div className={className || "w-[330px] bg-white border-r border-[#E6E4DD] flex flex-col h-full select-none shrink-0 z-10 text-[#14151A]"}>
       {/* 3-Tab Studio Rail Header */}
-      <div className="grid grid-cols-3 border-b border-[#E6E4DD] bg-[#FAF9F5] p-1.5 gap-1 shrink-0">
-        {[
-          { id: 'transcript', label: 'Transcript', icon: FileText },
-          { id: 'captions', label: 'Captions', icon: Type },
-          { id: 'broll', label: 'B-Roll & Layout', icon: Layers },
-        ].map((t) => {
-          const Icon = t.icon;
-          const isSelected = activeTab === t.id;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setActiveTab(t.id as EditorTab)}
-              className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                isSelected
-                  ? 'bg-white text-[#14151A] shadow-2xs border border-[#E6E4DD]'
-                  : 'text-[#52545E] hover:text-[#14151A]'
-              }`}
-            >
-              <Icon className={`h-3.5 w-3.5 ${isSelected ? 'text-[#E84C2B]' : 'text-[#8C8E9A]'}`} />
-              <span className="truncate">{t.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {!hideTabBar && (
+        <div className="grid grid-cols-3 border-b border-[#E6E4DD] bg-[#FAF9F5] p-1.5 gap-1 shrink-0">
+          {[
+            { id: 'transcript', label: 'Transcript', icon: FileText },
+            { id: 'captions', label: 'Captions', icon: Type },
+            { id: 'broll', label: 'B-Roll & Layout', icon: Layers },
+          ].map((t) => {
+            const Icon = t.icon;
+            const isSelected = activeTab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setActiveTab(t.id as EditorTab)}
+                className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  isSelected
+                    ? 'bg-white text-[#14151A] shadow-2xs border border-[#E6E4DD]'
+                    : 'text-[#52545E] hover:text-[#14151A]'
+                }`}
+              >
+                <Icon className={`h-3.5 w-3.5 ${isSelected ? 'text-[#E84C2B]' : 'text-[#8C8E9A]'}`} />
+                <span className="truncate">{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Tab 1: Transcript */}
       {activeTab === 'transcript' && (

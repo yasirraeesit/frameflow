@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { FileText, Type, Layers, Film } from 'lucide-react';
 import { MOCK_VIRAL_CLIPS } from '@/lib/mock-data';
 import type { GeneratedClipResponse, WordTiming } from '@frameflow/shared';
 
@@ -104,6 +105,7 @@ export default function StudioEditorPage(): JSX.Element {
   // 6. Timeline Dock State
   const [timelineZoom, setTimelineZoom] = useState<number>(1.0);
   const [snapEnabled, setSnapEnabled] = useState<boolean>(true);
+  const [mobileTab, setMobileTab] = useState<'transcript' | 'captions' | 'broll' | 'timeline'>('transcript');
 
   // 7. AST History Undo / Redo Stack
   const [historyStack, setHistoryStack] = useState<TimelineHistoryState[]>([
@@ -319,9 +321,9 @@ export default function StudioEditorPage(): JSX.Element {
       />
 
       {/* ======================================================== */}
-      {/* 2. UPPER SPLIT STAGE (TRANSCRIPT RAIL + VIDEO MONITOR)   */}
+      {/* 2. UPPER SPLIT STAGE (DESKTOP: TRANSCRIPT RAIL + MONITOR) */}
       {/* ======================================================== */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="hidden lg:flex flex-1 overflow-hidden">
         {/* Left Panel: Transcript, Captions & B-Roll */}
         <TranscriptPanel
           words={wordsList}
@@ -379,20 +381,135 @@ export default function StudioEditorPage(): JSX.Element {
       {/* ======================================================== */}
       {/* 3. BOTTOM NON-DESTRUCTIVE MULTI-TRACK AST TIMELINE DOCK  */}
       {/* ======================================================== */}
-      <TimelineDock
-        playheadTime={playheadTime}
-        totalDuration={currentDuration}
-        onSeek={setPlayheadTime}
-        words={wordsList}
-        cutWordIndices={cutWordIndices}
-        bRollList={bRollList}
-        onSplitAtPlayhead={handleSplitAtPlayhead}
-        timelineZoom={timelineZoom}
-        onZoomIn={() => setTimelineZoom((z) => Math.min(3.0, z + 0.5))}
-        onZoomOut={() => setTimelineZoom((z) => Math.max(1.0, z - 0.5))}
-        snapEnabled={snapEnabled}
-        onToggleSnap={() => setSnapEnabled((s) => !s)}
-      />
+      <div className="hidden lg:block shrink-0">
+        <TimelineDock
+          playheadTime={playheadTime}
+          totalDuration={currentDuration}
+          onSeek={setPlayheadTime}
+          words={wordsList}
+          cutWordIndices={cutWordIndices}
+          bRollList={bRollList}
+          onSplitAtPlayhead={handleSplitAtPlayhead}
+          timelineZoom={timelineZoom}
+          onZoomIn={() => setTimelineZoom((z) => Math.min(3.0, z + 0.5))}
+          onZoomOut={() => setTimelineZoom((z) => Math.max(1.0, z - 0.5))}
+          snapEnabled={snapEnabled}
+          onToggleSnap={() => setSnapEnabled((s) => !s)}
+        />
+      </div>
+
+      {/* ======================================================== */}
+      {/* 4. MOBILE STUDIO DOCK (< lg)                              */}
+      {/* ======================================================== */}
+      <div className="lg:hidden flex-1 flex flex-col overflow-hidden bg-[#FAF9F5]">
+        {/* Compact Video Monitor Stage */}
+        <div className="h-[36vh] sm:h-[44vh] shrink-0 border-b border-[#E6E4DD] overflow-hidden bg-[#14151A] flex items-center justify-center">
+          <VideoMonitor
+            aspectRatio={aspectRatio}
+            isPlaying={isPlaying}
+            onTogglePlay={() => setIsPlaying((p) => !p)}
+            playheadTime={playheadTime}
+            totalDuration={currentDuration}
+            onSeek={setPlayheadTime}
+            words={wordsList}
+            cutWordIndices={cutWordIndices}
+            captionPreset={captionPreset}
+            highlightColor={highlightColor}
+            captionPosition={captionPosition}
+            showSafeZones={showSafeZones}
+            onToggleSafeZones={() => setShowSafeZones((s) => !s)}
+            bRollList={bRollList}
+            playbackSpeed={playbackSpeed}
+            onChangeSpeed={setPlaybackSpeed}
+            layoutMode={layoutMode}
+          />
+        </div>
+
+        {/* 4-Tab Switcher (min 44px touch targets) */}
+        <div className="grid grid-cols-4 border-b border-[#E6E4DD] bg-white p-1 gap-1 shrink-0 h-11 items-center">
+          {[
+            { id: 'transcript', label: 'Cuts', icon: FileText },
+            { id: 'captions', label: 'Captions', icon: Type },
+            { id: 'broll', label: 'B-Roll', icon: Layers },
+            { id: 'timeline', label: 'Timeline', icon: Film },
+          ].map((t) => {
+            const Icon = t.icon;
+            const isSelected = mobileTab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setMobileTab(t.id as 'transcript' | 'captions' | 'broll' | 'timeline')}
+                className={`min-h-[36px] flex items-center justify-center gap-1.5 py-1 px-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  isSelected
+                    ? 'bg-[#FAF9F5] text-[#E84C2B] shadow-2xs border border-[#E6E4DD]'
+                    : 'text-[#52545E] hover:text-[#14151A]'
+                }`}
+              >
+                <Icon className={`h-3.5 w-3.5 ${isSelected ? 'text-[#E84C2B]' : 'text-[#8C8E9A]'}`} />
+                <span className="truncate">{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Mobile Tab Content Container */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-white">
+          {mobileTab === 'timeline' ? (
+            <div className="flex-1 overflow-x-auto overflow-y-hidden">
+              <TimelineDock
+                playheadTime={playheadTime}
+                totalDuration={currentDuration}
+                onSeek={setPlayheadTime}
+                words={wordsList}
+                cutWordIndices={cutWordIndices}
+                bRollList={bRollList}
+                onSplitAtPlayhead={handleSplitAtPlayhead}
+                timelineZoom={timelineZoom}
+                onZoomIn={() => setTimelineZoom((z) => Math.min(3.0, z + 0.5))}
+                onZoomOut={() => setTimelineZoom((z) => Math.max(1.0, z - 0.5))}
+                snapEnabled={snapEnabled}
+                onToggleSnap={() => setSnapEnabled((s) => !s)}
+              />
+            </div>
+          ) : (
+            <TranscriptPanel
+              className="flex-1 w-full bg-white flex flex-col min-h-0 overflow-y-auto"
+              words={wordsList}
+              cutWordIndices={cutWordIndices}
+              onToggleWordCut={handleToggleWordCut}
+              playheadTime={playheadTime}
+              onSeekWord={(timeSec) => setPlayheadTime(timeSec)}
+              silencesRemoved={silencesRemoved}
+              fillersRemoved={fillersRemoved}
+              onToggleSilences={handleToggleSilences}
+              onToggleFillers={handleToggleFillers}
+              captionPreset={captionPreset}
+              onSelectCaptionPreset={setCaptionPreset}
+              highlightColor={highlightColor}
+              onSelectColor={setHighlightColor}
+              captionPosition={captionPosition}
+              onSelectPosition={setCaptionPosition}
+              layoutMode={layoutMode}
+              onSelectLayoutMode={setLayoutMode}
+              bRollList={bRollList}
+              onToggleBRoll={handleToggleBRoll}
+              commentaryHookScript={
+                clip.socialPack?.caption ||
+                (clip.title.includes('GTA')
+                  ? "You won't believe what happens at the 20-second mark of this 5-star chase—watch the minimap right here."
+                  : "Stop scrolling if you are trying to price your SaaS product. Here is why 90% of founders fail before month six.")
+              }
+              onSaveVoiceover={(url) => {
+                setCreatorVoiceoverUrl(url);
+              }}
+              activeTab={mobileTab as 'transcript' | 'captions' | 'broll'}
+              onTabChange={(t) => setMobileTab(t)}
+              hideTabBar={true}
+            />
+          )}
+        </div>
+      </div>
 
       {/* ======================================================== */}
       {/* 4. EXPORT & NLE PROJECT MODAL                            */}
