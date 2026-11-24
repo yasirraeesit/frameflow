@@ -59,6 +59,19 @@ export function buildServer(): FastifyInstance {
     return { status: 'ok', timestamp: new Date().toISOString() };
   });
 
+  // Local storage media fallback
+  server.get('/media/:bucket/:key', async (request, reply) => {
+    const { bucket, key } = request.params as { bucket: string; key: string };
+    const fs = await import('fs');
+    const path = await import('path');
+    const baseDir = process.env.LOCAL_STORAGE_DIR || '/tmp/frameflow-media';
+    const filePath = path.join(baseDir, bucket, key);
+    if (!fs.existsSync(filePath)) {
+      return reply.status(404).send({ error: 'Media file not found' });
+    }
+    return reply.send(fs.createReadStream(filePath));
+  });
+
   // Modules
   server.register(authRoutes, { prefix: '/api/auth' });
   server.register(projectsRoutes, { prefix: '/api/projects' });
@@ -83,6 +96,17 @@ export async function startServer() {
   try {
     await server.listen({ port, host });
     console.log(`Server listening on http://${host}:${port}`);
+
+    // Embedded BullMQ worker mode for monolithic container deployment
+    if (process.env.ENABLE_EMBEDDED_WORKER === 'true') {
+      try {
+        const { startWorker } = await import('@frameflow/worker');
+        startWorker();
+        console.log('[EmbeddedWorker] BullMQ Worker mesh initialized in-process');
+      } catch (workerErr) {
+        console.error('[EmbeddedWorker] Failed to start embedded worker:', workerErr);
+      }
+    }
   } catch (err) {
     server.log.error(err);
     process.exit(1);

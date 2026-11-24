@@ -12,6 +12,8 @@ out/
 .env
 .env.local
 .env.*.local
+.neon
+.neon/
 server/database/.env
 
 # Logs
