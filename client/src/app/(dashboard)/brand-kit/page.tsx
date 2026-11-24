@@ -165,7 +165,7 @@ export default function BrandKitPage(): JSX.Element {
                   Brand Templates
                 </h1>
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#FAF3EE] text-[#E84C2B] border border-[#E84C2B]/20">
-                  Starter: 1 Template
+                  Pro: 2 Templates &bull; Max: 5 Templates
                 </span>
               </div>
               <p className="text-xs text-[#52545E] mt-0.5">
@@ -181,7 +181,7 @@ export default function BrandKitPage(): JSX.Element {
             className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-200 bg-amber-50/70 hover:bg-amber-100/70 text-amber-900 text-[11px] font-semibold transition-colors"
           >
             <Crown className="h-3 w-3 text-amber-600" />
-            <span>Upgrade to Pro for up to 4 templates & custom fonts</span>
+            <span>Upgrade to Max for 5 templates & custom fonts</span>
             <ArrowRight className="h-3 w-3 text-amber-600" />
           </Link>
 
@@ -837,13 +837,13 @@ export default function BrandKitPage(): JSX.Element {
             </div>
 
             <p className="text-xs text-[#52545E] leading-relaxed">
-              FrameFlow Starter gives you 1 universal Brand Kit. Upgrade to <strong>FrameFlow Pro</strong> to create up to 4 custom brand templates, upload custom OTF/TTF fonts, and manage different caption styles across multiple channels or clients.
+              FrameFlow Free includes 1 Brand Template, and Pro includes 2. Upgrade to <strong>FrameFlow Max</strong> ($10/mo) to create up to 5 custom brand templates, upload custom OTF/TTF fonts, and manage different caption styles across multiple channels or clients.
             </p>
 
             <div className="rounded-xl bg-[#FAF9F5] border border-[#E6E4DD] p-3 text-xs space-y-2">
               <div className="flex items-center gap-2 text-[#14151A] font-medium">
                 <Check className="h-3.5 w-3.5 text-[#10B981]" />
-                <span>Up to 4 Brand Templates for different shows & clients</span>
+                <span>Up to 5 Brand Templates for different shows & clients</span>
               </div>
               <div className="flex items-center gap-2 text-[#14151A] font-medium">
                 <Check className="h-3.5 w-3.5 text-[#10B981]" />
@@ -851,7 +851,7 @@ export default function BrandKitPage(): JSX.Element {
               </div>
               <div className="flex items-center gap-2 text-[#14151A] font-medium">
                 <Check className="h-3.5 w-3.5 text-[#10B981]" />
-                <span>300 AI Video Processing Credits / month included</span>
+                <span>500 AI Video Processing Credits / month included</span>
               </div>
             </div>
 

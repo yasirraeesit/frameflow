@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import type { WordTiming } from '@frameflow/shared';
 import {
   FileText,
@@ -28,6 +29,7 @@ import {
   RotateCcw,
   Volume2,
   ShieldCheck,
+  ArrowRight,
 } from 'lucide-react';
 
 export type EditorTab = 'transcript' | 'captions' | 'broll';
@@ -69,6 +71,8 @@ interface TranscriptPanelProps {
   // Monetization Voiceover Hook
   commentaryHookScript?: string;
   onSaveVoiceover?: (audioUrl: string, durationSec: number) => void;
+  // Plan Tier for Entitlements
+  userPlanTier?: 'FREE' | 'PRO' | 'MAX' | 'BUSINESS';
   // Responsive / Mobile Container Props
   className?: string;
   activeTab?: EditorTab;
@@ -107,6 +111,7 @@ export function TranscriptPanel({
   onToggleBRoll,
   commentaryHookScript,
   onSaveVoiceover,
+  userPlanTier = 'PRO',
   className,
   activeTab: controlledActiveTab,
   onTabChange,
@@ -601,10 +606,29 @@ export function TranscriptPanel({
               <label className="text-xs font-bold text-[#14151A] block">
                 Auto-Detected B-Roll Assets
               </label>
-              <span className="text-[10px] font-mono font-bold bg-[#FAF3EE] text-[#E84C2B] px-1.5 py-0.2 rounded border border-[#E84C2B]/30">
-                PRO
+              <span className="text-[10px] font-mono font-bold bg-[#FAF3EE] text-[#E84C2B] px-1.5 py-0.5 rounded border border-[#E84C2B]/30">
+                MAX
               </span>
             </div>
+
+            {userPlanTier !== 'MAX' && userPlanTier !== 'BUSINESS' && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 space-y-2 text-xs">
+                <div className="flex items-center gap-1.5 font-bold text-amber-950">
+                  <Sparkles className="h-3.5 w-3.5 text-[#E84C2B]" />
+                  <span>AI B-Roll (V2) &bull; Max Plan</span>
+                </div>
+                <p className="text-[11px] text-amber-900 leading-relaxed">
+                  Automatic contextual B-roll inserts require <strong>FrameFlow Max</strong> ($10/mo). Upgrade to unlock 500 monthly credits and priority rendering.
+                </p>
+                <Link
+                  href="/pricing"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#E84C2B] hover:text-[#D13B1C] transition-colors"
+                >
+                  <span>Upgrade to Max</span>
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+            )}
 
             <div className="space-y-2">
               {bRollList.map((item) => (

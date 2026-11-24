@@ -10,21 +10,19 @@ import {
   HelpCircle,
   Info,
   Zap,
-  Shield,
   Film,
-  Layers,
-  Key,
-  Users,
-  Building2,
-  ChevronDown,
   CreditCard,
   Lock,
   CheckCircle2,
   X,
+  ChevronDown,
+  Building2,
+  Mail,
 } from 'lucide-react';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { SiteFooter } from '@/components/layout/SiteFooter';
-import { launchPaddleCheckout, fetchBillingStatus } from '@/lib/paddle';
+import { BusinessContactModal } from '@/components/modals/BusinessContactModal';
+import { launchPaddleCheckout } from '@/lib/paddle';
 
 type BillingCycle = 'annual' | 'monthly';
 
@@ -62,120 +60,147 @@ interface PricingTier {
 
 const TIERS: PricingTier[] = [
   {
-    id: 'starter',
-    name: 'Starter',
-    description: 'Perfect for individual creators and podcasters publishing 1–2 videos weekly.',
+    id: 'free',
+    name: 'Free',
+    description: 'Explore FrameFlow with 30 one-time trial credits and full text timeline editing.',
     price: {
       annual: {
-        monthlyEquivalent: '$12',
-        originalPrice: '$15',
-        billedNote: 'Billed annually at $144/year',
-        savingsBadge: 'Save 20%',
+        monthlyEquivalent: '$0',
+        billedNote: 'Free forever trial',
       },
       monthly: {
-        amount: '$15',
-        billedNote: 'Billed monthly, cancel anytime',
+        amount: '$0',
+        billedNote: 'No credit card required',
       },
     },
     credits: {
-      annual: '1,800 credits / yr (150/mo)',
-      monthly: '150 credits / month',
-      tooltip: '1 credit = 1 minute of source video processed. Unused credits roll over with an active subscription.',
+      annual: '30 trial credits',
+      monthly: '30 trial credits',
+      tooltip: '1 credit = 1 minute of raw video processed. 30 one-time credits on registration.',
     },
     features: [
-      '150 processing credits / month',
-      'Auto 9:16 Reframe & Face Tracking',
-      'Hormozi, Karaoke & Cinema Captions',
-      '1080p 60fps Clean Exports (No Watermark)',
-      'Full Studio Timeline & Text Cut Editor',
-      'Fast Cloud GPU Processing (Zero Local Load)',
-      'Unused Credits Rollover Each Month',
-      '1 Custom Brand Kit preset',
-      'Standard Cloud Processing Queue',
+      '30 trial credits (30 mins of video)',
+      '720p Clean Exports',
+      'Gaming & GTA 6 hybrid detector',
+      '1 Brand Template preset',
+      'Full Multi-Track Timeline & Word Cut Editor',
+      'Solo & 2-Speaker split layouts',
+      'Standard cloud processing queue',
     ],
     cta: {
-      label: 'Get Starter',
-      href: '/register?plan=starter',
+      label: 'Start Free',
+      href: '/register',
       primary: false,
     },
   },
   {
     id: 'pro',
     name: 'Pro',
-    badge: 'MOST POPULAR • BEST VALUE',
-    isPopular: true,
-    description: 'For serious creators, growth channels, and editors delivering daily high-retention shorts.',
+    description: 'Essential toolkit for active creators and streamers publishing consistent short-form videos.',
     price: {
       annual: {
-        monthlyEquivalent: '$11.5',
-        originalPrice: '$29',
-        billedNote: 'Billed annually at $138/year',
-        savingsBadge: 'Save 60%',
+        monthlyEquivalent: '$2.40',
+        originalPrice: '$3.00',
+        billedNote: 'Billed annually at $29/year',
+        savingsBadge: 'Save 20%',
       },
       monthly: {
-        amount: '$29',
+        amount: '$3.00',
         billedNote: 'Billed monthly, cancel anytime',
       },
     },
     credits: {
-      annual: '3,600 credits / yr (300/mo)',
-      monthly: '300 credits / month',
-      tooltip: '1 credit = 1 minute of video processed. Includes high-priority GPU cloud rendering queue.',
+      annual: '1,440 credits / yr (120/mo)',
+      monthly: '120 credits / month',
+      tooltip: '1 credit = 1 minute of video processed. Unused credits roll over each month with active subscription.',
     },
     features: [
-      '300 processing credits / month (or 3,600/yr)',
-      'Everything in Starter +',
-      'AI Virality Score Engine & Hook Ranking (1–99)',
-      'AI Image & Video B-Roll Generation',
-      'Export to Premiere Pro (XML) & DaVinci Resolve (EDL)',
-      'Auto Filler Word & Silence Removal',
-      'Multi-speaker Active Switcher Layouts',
-      'Unlimited Custom Brand Kits & Font Uploads',
-      'Priority GPU Cloud Rendering Queue',
-      '2 Team Seats included',
+      '120 video minutes / month (1,440/yr)',
+      'Watermark-free 1080p 60fps exports',
+      '2 Custom Brand Templates',
+      'Voiceover Hook Teleprompter & Mic Recorder',
+      'Auto filler word & silence removal',
+      'Hormozi, Karaoke & Vice Neon captions',
+      'Unused credits rollover automatically',
     ],
     cta: {
-      label: 'Get Pro',
+      label: 'Get Pro — $3/mo',
       href: '/register?plan=pro',
+      primary: false,
+    },
+  },
+  {
+    id: 'max',
+    name: 'Max',
+    badge: 'MOST POPULAR • BEST VALUE',
+    isPopular: true,
+    description: 'Our flagship studio tier for professional creators, podcasters, and daily content agencies.',
+    price: {
+      annual: {
+        monthlyEquivalent: '$8.00',
+        originalPrice: '$10.00',
+        billedNote: 'Billed annually at $96/year',
+        savingsBadge: 'Save 20%',
+      },
+      monthly: {
+        amount: '$10.00',
+        billedNote: 'Billed monthly, cancel anytime',
+      },
+    },
+    credits: {
+      annual: '6,000 credits / yr (500/mo)',
+      monthly: '500 credits / month',
+      tooltip: '1 credit = 1 minute of video processed. Includes priority cloud rendering queue.',
+    },
+    features: [
+      '500 video minutes / month (6,000/yr)',
+      'AI B-Roll (V2) image & video overlays',
+      'Watermark-free 1080p 60fps exports',
+      '5 Brand Templates + Custom Fonts & Logos',
+      'Priority GPU cloud rendering queue',
+      'Full 3-metric AI Virality Score Engine',
+      'Multi-speaker active switching layouts',
+    ],
+    cta: {
+      label: 'Get Max — $10/mo',
+      href: '/register?plan=max',
       primary: true,
     },
   },
   {
     id: 'business',
     name: 'Business',
-    badge: 'TEAMS & AGENCIES',
+    badge: 'STUDIOS & NETWORKS',
     isDark: true,
-    description: 'Fit for business, dressed in a tux. Custom volume, team collaboration, and dedicated processing.',
+    description: 'Custom volume, 4K exports, and dedicated workflow integrations for media companies.',
     price: {
       annual: {
-        monthlyEquivalent: "Let's talk",
-        billedNote: 'Custom annual contract with SLA',
-        savingsBadge: 'Volume Discount',
+        monthlyEquivalent: 'Custom',
+        billedNote: 'Custom annual contract & SLA',
+        savingsBadge: 'Volume Pricing',
       },
       monthly: {
-        amount: "Let's talk",
-        billedNote: 'Custom monthly invoicing available',
+        amount: 'Custom',
+        billedNote: 'Tailored monthly billing available',
       },
     },
     credits: {
-      annual: 'Unlimited or Tailored Credits',
-      monthly: 'Custom Allocation (1,000+ mins)',
+      annual: 'Custom credit quota (1,000+ mins)',
+      monthly: 'Custom monthly credit pool',
       tooltip: 'Dedicated custom GPU processing capacity and guaranteed SLAs for studios and media teams.',
     },
     features: [
-      'Custom credit allocations (1,000+ mins/mo)',
-      'Everything in Pro +',
-      'Dedicated Slack / Discord VIP Channel',
-      'Custom Watermark Presets & Multi-tenant Workspaces',
-      'Shared Team Brand Assets & Approval Flows',
-      'Custom AI Model Tuning & Vocabulary Prompts',
-      '4K 60fps Master Export Options',
-      'Custom MSA, Invoicing & Dedicated Account Manager',
-      'Unlimited Team Seats & Granular Permissions',
+      'Custom monthly credit allocation',
+      '4K master exports',
+      'Unlimited Brand Templates',
+      'Premiere Pro & DaVinci Resolve XML export',
+      'Dedicated Slack / WhatsApp VIP support',
+      'Custom AI vocabulary & prompt tuning',
+      'Shared multi-seat team workspace',
     ],
     cta: {
       label: 'Contact Sales',
-      href: '/register?plan=business',
+      href: '#contact-sales',
       primary: false,
     },
   },
@@ -187,8 +212,8 @@ interface ComparisonCategory {
     name: string;
     description?: string;
     free: string | boolean;
-    starter: string | boolean;
     pro: string | boolean;
+    max: string | boolean;
     business: string | boolean;
   }[];
 }
@@ -200,48 +225,48 @@ const COMPARISON_CATEGORIES: ComparisonCategory[] = [
       {
         name: 'Monthly Processing Credits',
         description: '1 credit = 1 minute of raw video ingested',
-        free: '30 mins (free trial)',
-        starter: '150 mins / mo',
-        pro: '300 mins / mo',
+        free: '30 mins (trial)',
+        pro: '120 mins / mo',
+        max: '500 mins / mo',
         business: 'Custom (1,000+)',
       },
       {
         name: 'Max Video Upload Length',
         description: 'Per single raw file or YouTube link',
         free: '15 mins',
-        starter: '60 mins',
-        pro: '120 mins',
+        pro: '60 mins',
+        max: '120 mins',
         business: 'Unlimited',
       },
       {
         name: 'Export Resolution & Framerate',
-        free: '720p / 1080p 30fps',
-        starter: '1080p 60fps',
-        pro: '1080p 60fps Ultra',
+        free: '720p',
+        pro: '1080p 60fps',
+        max: '1080p 60fps',
         business: '4K 60fps Master',
       },
       {
         name: 'Watermark on Exports',
-        free: false,
-        starter: false,
-        pro: false,
-        business: false,
+        free: 'Has Watermark',
+        pro: 'Watermark-Free',
+        max: 'Watermark-Free',
+        business: 'Watermark-Free',
       },
       {
         name: 'Paddle Tax & Invoicing Compliance',
         description: 'Instant VAT receipts and compliant corporate invoices',
         free: 'Self-serve',
-        starter: 'Automated VAT',
         pro: 'Automated VAT',
+        max: 'Automated VAT',
         business: 'Custom Invoicing & MSA',
       },
       {
         name: 'Cloud GPU Pipeline Speed',
         description: 'Serverless neural processing cluster',
         free: 'Standard Queue',
-        starter: 'Fast Cloud GPU',
-        pro: 'Priority GPU Cluster',
-        business: 'Dedicated Multi-GPU Nodes',
+        pro: 'Fast Cloud GPU',
+        max: 'Priority Queue',
+        business: 'Dedicated GPU Nodes',
       },
     ],
   },
@@ -251,38 +276,39 @@ const COMPARISON_CATEGORIES: ComparisonCategory[] = [
       {
         name: 'AI Virality Score & Ranking (1–99)',
         free: 'Basic Preview',
-        starter: 'Standard',
-        pro: 'Full 3-Metric Audit',
+        pro: 'Standard Audit',
+        max: 'Full 3-Metric Audit',
         business: 'Custom Tuning',
       },
       {
         name: 'Face Tracking & Active Speaker Reframe',
-        free: 'Single Speaker',
-        starter: '1–2 Speakers',
-        pro: 'Multi-Speaker Switcher',
-        business: 'Custom Layouts',
+        free: 'Solo & 2-Split',
+        pro: 'Solo & 2-Split',
+        max: 'Multi-Speaker Switcher',
+        business: 'Custom Multi-Cam',
       },
       {
         name: 'Signature Animated Captions',
-        description: 'Hormozi, Karaoke, Clean Cinema & Minimal Top',
+        description: 'Hormozi, Karaoke, Clean Cinema, Vice Neon & Minimal Top',
         free: '2 styles',
-        starter: 'All 4 styles',
-        pro: 'All 4 + Custom Fonts',
+        pro: 'All 5 styles',
+        max: 'All 5 + Custom Fonts',
         business: 'Full Brand Styling',
       },
       {
-        name: 'AI Image & Video B-Roll Generation',
+        name: 'AI B-Roll (V2) Overlays',
+        description: 'Contextual image and video overlay detection',
         free: false,
-        starter: false,
-        pro: true,
+        pro: false,
+        max: true,
         business: true,
       },
       {
         name: 'Filler Word & Silence Removal',
         description: 'Auto-cut "um", "uh", pauses, and stutters',
         free: false,
-        starter: true,
         pro: true,
+        max: true,
         business: true,
       },
     ],
@@ -294,37 +320,30 @@ const COMPARISON_CATEGORIES: ComparisonCategory[] = [
         name: 'Full Multi-Track Studio Timeline Editor',
         description: 'Non-destructive trim, split, and reorder',
         free: true,
-        starter: true,
         pro: true,
+        max: true,
         business: true,
       },
       {
         name: 'Text-Based Transcript Cut Editor',
         free: true,
-        starter: true,
         pro: true,
+        max: true,
         business: true,
       },
       {
-        name: 'Export to Adobe Premiere Pro (XML)',
+        name: 'Export to Adobe Premiere Pro & DaVinci XML',
         free: false,
-        starter: false,
-        pro: true,
+        pro: false,
+        max: false,
         business: true,
       },
       {
-        name: 'Export to DaVinci Resolve (EDL)',
-        free: false,
-        starter: false,
-        pro: true,
-        business: true,
-      },
-      {
-        name: 'Brand Kit Presets',
-        free: 'None',
-        starter: '1 Brand Kit',
-        pro: 'Unlimited',
-        business: 'Multi-Tenant Kits',
+        name: 'Brand Kit Templates',
+        free: '1 Template',
+        pro: '2 Templates',
+        max: '5 Templates',
+        business: 'Unlimited (99)',
       },
     ],
   },
@@ -334,29 +353,29 @@ const COMPARISON_CATEGORIES: ComparisonCategory[] = [
       {
         name: 'Team Seats',
         free: '1 seat',
-        starter: '1 seat',
-        pro: '2 seats included',
+        pro: '1 seat',
+        max: '2 seats included',
         business: 'Unlimited seats',
       },
       {
         name: 'Cloud Rendering Priority',
         free: 'Standard',
-        starter: 'Standard',
-        pro: 'Priority GPU',
+        pro: 'Standard',
+        max: 'Priority GPU',
         business: 'Dedicated Nodes',
       },
       {
         name: 'Customer Support',
         free: 'Community',
-        starter: 'Email Support',
-        pro: 'Priority Email',
+        pro: 'Email Support',
+        max: 'Priority Support',
         business: 'Dedicated Slack VIP',
       },
       {
         name: 'Security & Enterprise Contracts',
         free: false,
-        starter: false,
         pro: false,
+        max: false,
         business: true,
       },
     ],
@@ -371,19 +390,23 @@ interface PricingFaq {
 const PRICING_FAQS: PricingFaq[] = [
   {
     q: 'What is a credit and how does minute calculation work?',
-    a: '1 credit equals 1 minute of source video processed by our cloud engine. For example, uploading a 30-minute podcast episode to generate 10 viral clips consumes 30 credits. Trimming, previewing, changing caption colors, or exporting your finished 9:16 shorts never consumes additional credits—you only pay once for ingest.',
+    a: '1 credit equals 1 minute of source video processed by our cloud engine. For example, processing a 30-minute podcast episode to generate viral shorts consumes 30 credits. Trimming, previewing, changing caption styles, and exporting your final 9:16 shorts never costs extra credits—you only pay once on ingest.',
   },
   {
     q: 'How does Paddle billing and global tax compliance work?',
-    a: 'Paddle acts as our Merchant of Record. They automatically calculate and remit local VAT, sales tax, and GST across 200+ countries. Your payment details are encrypted with bank-level security, and official VAT invoices are delivered instantly via email upon checkout.',
+    a: 'Paddle acts as our Merchant of Record. They automatically calculate and remit local VAT, sales tax, and GST across 200+ countries. Official compliant invoices are delivered instantly via email upon checkout.',
+  },
+  {
+    q: 'What is the difference between Pro ($3/mo) and Max ($10/mo)?',
+    a: 'Pro ($3/mo or $29/yr) includes 120 minutes of video processing, watermark-free 1080p exports, and 2 Brand Templates. Max ($10/mo or $96/yr) increases capacity to 500 minutes and unlocks V2 AI B-Roll generation, custom fonts/logos, and priority cloud rendering.',
   },
   {
     q: 'Can I cancel, upgrade, or switch plans at any time?',
-    a: 'Yes, absolutely. You can upgrade, downgrade, or cancel your subscription anytime directly from your billing settings with a single click. If you cancel, your account remains active and retains all plan benefits and unused credits until the end of your current billing period.',
+    a: 'Yes, absolutely. You can upgrade, downgrade, or cancel your subscription anytime directly from your billing settings with a single click. Unused credits roll over with an active subscription.',
   },
   {
-    q: 'What happens if I run out of credits mid-month?',
-    a: 'You can purchase instant one-click top-up credit packs with zero penalty, or upgrade to Pro anytime. Unused credits roll over each billing cycle as long as your subscription remains active.',
+    q: 'How do enterprise teams use the Business plan?',
+    a: 'The Business plan is tailored for podcast networks, agencies, and high-volume gaming channels. It offers custom credit pools (1,000+ mins), 4K master exports, DaVinci Resolve & Premiere Pro XML exports, and dedicated Slack/WhatsApp support.',
   },
 ];
 
@@ -395,19 +418,32 @@ export default function PricingPage(): JSX.Element {
   const [paymentSuccess, setPaymentSuccess] = useState<boolean>(false);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'apple' | 'paypal'>('card');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState<boolean>(false);
 
   const handleSelectTier = async (tier: PricingTier) => {
+    if (tier.id === 'free') {
+      window.location.assign('/register');
+      return;
+    }
+
+    if (tier.id === 'business') {
+      setIsContactModalOpen(true);
+      return;
+    }
+
+    const priceId =
+      tier.id === 'max'
+        ? billingCycle === 'annual'
+          ? process.env.NEXT_PUBLIC_PADDLE_MAX_ANNUAL_PRICE_ID || 'pri_max_annual'
+          : process.env.NEXT_PUBLIC_PADDLE_MAX_PRICE_ID || 'pri_max_monthly'
+        : billingCycle === 'annual'
+        ? process.env.NEXT_PUBLIC_PADDLE_PRO_ANNUAL_PRICE_ID || 'pri_pro_annual'
+        : process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID || 'pri_pro_monthly';
+
     const launched = await launchPaddleCheckout({
       planName: tier.name,
       interval: billingCycle,
-      priceId:
-        tier.id === 'pro'
-          ? billingCycle === 'annual'
-            ? 'pri_pro_annual'
-            : 'pri_pro_monthly'
-          : billingCycle === 'annual'
-          ? 'pri_starter_annual'
-          : 'pri_starter_monthly',
+      priceId,
       onSuccess: () => {
         setSelectedCheckout({ tier, interval: billingCycle });
         setPaymentSuccess(true);
@@ -438,77 +474,63 @@ export default function PricingPage(): JSX.Element {
 
       <main className="flex-1 py-16 sm:py-20 lg:py-24 space-y-20 lg:space-y-28">
         {/* ========================================================= */}
-        {/* SECTION 1: HEADER & BILLING TOGGLE                        */}
+        {/* SECTION 1: HEADER & BILLING CYCLE TOGGLE                   */}
         {/* ========================================================= */}
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center space-y-5">
-            {/* Eyebrow badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#E6E4DD] bg-white px-3.5 py-1 text-xs font-mono font-bold tracking-wider uppercase text-[#E84C2B] shadow-2xs">
-              <Zap className="h-3.5 w-3.5" />
-              <span>SIMPLE, TRANSPARENT PLANS</span>
-            </div>
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center space-y-6">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#E6E4DD] bg-white px-3.5 py-1 text-xs font-mono font-bold tracking-wider uppercase text-[#E84C2B] shadow-2xs">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>HONEST PRICING & ZERO MINUTE EXTORTION</span>
+          </div>
 
-            {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-bold tracking-[-0.035em] text-[#14151A] leading-[1.08]">
-              Pick a plan that scales with your{' '}
-              <span className="font-editorial text-[#E84C2B] font-normal italic">
-                upload schedule
-              </span>
-              .
-            </h1>
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-[-0.04em] text-[#14151A] leading-[1.08] max-w-4xl mx-auto">
+            Plans built for creators.{' '}
+            <span className="font-serif italic font-normal text-[#E84C2B]">
+              Starting at $3/month.
+            </span>
+          </h1>
 
-            {/* Subcopy */}
-            <p className="text-base sm:text-lg text-[#52545E] leading-relaxed max-w-[52ch] mx-auto">
-              Start clipping in minutes. Upgrade, downgrade, or switch between monthly and annual billing anytime. Zero hidden credit traps.
-            </p>
+          <p className="text-sm sm:text-base text-[#52545E] max-w-2xl mx-auto leading-relaxed">
+            Other clipping tools charge $49–$99/mo for expiring minutes and lock you in single-track editors. FrameFlow gives you full timeline precision with fair, creator-first pricing.
+          </p>
 
-            {/* Interactive Billing Pill Toggle */}
-            <div className="pt-4 flex items-center justify-center">
-              <div className="relative inline-flex items-center rounded-2xl border border-[#E6E4DD] bg-white p-1.5 shadow-xs">
-                {/* Monthly Option */}
-                <button
-                  type="button"
-                  onClick={() => setBillingCycle('monthly')}
-                  className={`relative px-5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all ${
-                    billingCycle === 'monthly'
-                      ? 'bg-[#14151A] text-white shadow-xs'
-                      : 'text-[#52545E] hover:text-[#14151A]'
-                  }`}
-                >
-                  Monthly
-                </button>
+          {/* Billing Cycle Toggle */}
+          <div className="pt-2 flex justify-center">
+            <div className="inline-flex items-center rounded-2xl border border-[#E6E4DD] bg-white p-1.5 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setBillingCycle('annual')}
+                className={`relative px-4 sm:px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  billingCycle === 'annual'
+                    ? 'bg-[#14151A] text-white shadow-xs'
+                    : 'text-[#52545E] hover:text-[#14151A]'
+                }`}
+              >
+                <span>Annual Billing</span>
+                <span className="ml-2 inline-block rounded-md bg-[#E84C2B] px-1.5 py-0.5 text-[10px] font-mono font-bold text-white uppercase tracking-wider">
+                  Save 20%
+                </span>
+              </button>
 
-                {/* Annual Option (Default with Savings Pill) */}
-                <button
-                  type="button"
-                  onClick={() => setBillingCycle('annual')}
-                  className={`relative flex items-center gap-2 px-5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all ${
-                    billingCycle === 'annual'
-                      ? 'bg-[#E84C2B] text-white shadow-xs'
-                      : 'text-[#52545E] hover:text-[#14151A]'
-                  }`}
-                >
-                  <span>Annual Billing</span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-mono font-bold uppercase transition-colors ${
-                      billingCycle === 'annual'
-                        ? 'bg-white text-[#E84C2B]'
-                        : 'bg-emerald-100 text-emerald-800'
-                    }`}
-                  >
-                    Save up to 60%
-                  </span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setBillingCycle('monthly')}
+                className={`px-4 sm:px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  billingCycle === 'monthly'
+                    ? 'bg-[#14151A] text-white shadow-xs'
+                    : 'text-[#52545E] hover:text-[#14151A]'
+                }`}
+              >
+                <span>Monthly Billing</span>
+              </button>
             </div>
           </div>
         </section>
 
         {/* ========================================================= */}
-        {/* SECTION 2: 3-COLUMN COMMERCIAL PRICING GRID               */}
+        {/* SECTION 2: 4-COLUMN COMMERCIAL PRICING GRID               */}
         {/* ========================================================= */}
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch max-w-[1200px] mx-auto">
+        <section className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 items-stretch">
             {TIERS.map((tier) => {
               const isAnnual = billingCycle === 'annual';
               const priceData = isAnnual ? tier.price.annual : tier.price.monthly;
@@ -519,16 +541,16 @@ export default function PricingPage(): JSX.Element {
                   key={tier.id}
                   className={`rounded-2xl flex flex-col justify-between transition-all duration-200 relative ${
                     tier.isDark
-                      ? 'bg-[#121318] border border-[#2A2C38] text-white p-7 sm:p-8 shadow-xl'
+                      ? 'bg-[#121318] border border-[#2A2C38] text-white p-6 shadow-xl'
                       : tier.isPopular
-                      ? 'bg-white border-2 border-[#E84C2B] text-[#14151A] p-7 sm:p-8 shadow-[0_12px_40px_rgba(232,76,43,0.08)]'
-                      : 'bg-white border border-[#E6E4DD] text-[#14151A] p-7 sm:p-8 shadow-sm hover:shadow-md'
+                      ? 'bg-white border-2 border-[#E84C2B] text-[#14151A] p-6 shadow-[0_12px_40px_rgba(232,76,43,0.08)] ring-1 ring-[#E84C2B]/10'
+                      : 'bg-white border border-[#E6E4DD] text-[#14151A] p-6 shadow-xs hover:shadow-md'
                   }`}
                 >
-                  {/* Floating Badge (Popular / Teams) */}
+                  {/* Floating Badge (Popular / Studios) */}
                   {tier.badge && (
                     <div
-                      className={`absolute -top-3.5 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[11px] font-mono font-bold tracking-wider uppercase shadow-xs ${
+                      className={`absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-[10px] font-mono font-bold tracking-wider uppercase shadow-xs ${
                         tier.isPopular
                           ? 'bg-[#E84C2B] text-white'
                           : 'bg-[#2A2C38] text-white border border-white/10'
@@ -540,11 +562,11 @@ export default function PricingPage(): JSX.Element {
                   )}
 
                   {/* Card Header & Pricing */}
-                  <div className="space-y-6">
+                  <div className="space-y-5">
                     {/* Title & Description */}
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-xl sm:text-2xl font-bold tracking-[-0.02em]">
+                        <h3 className="text-xl font-bold tracking-tight">
                           {tier.name}
                         </h3>
                         {isAnnual && tier.price.annual.savingsBadge && (
@@ -554,7 +576,7 @@ export default function PricingPage(): JSX.Element {
                         )}
                       </div>
                       <p
-                        className={`text-xs leading-relaxed ${
+                        className={`text-xs leading-relaxed min-h-[36px] ${
                           tier.isDark ? 'text-[#9A9BA6]' : 'text-[#52545E]'
                         }`}
                       >
@@ -563,34 +585,34 @@ export default function PricingPage(): JSX.Element {
                     </div>
 
                     {/* Price Numbers */}
-                    <div className="space-y-1 pt-2 border-t border-dashed border-[#E6E4DD]/40">
-                      <div className="flex items-baseline gap-2">
+                    <div className="space-y-1 pt-2 border-t border-dashed border-[#E6E4DD]/50">
+                      <div className="flex items-baseline gap-1.5">
                         {isAnnual && tier.price.annual.originalPrice && (
                           <span
-                            className={`text-lg line-through font-mono ${
+                            className={`text-sm line-through font-mono ${
                               tier.isDark ? 'text-[#6A6C7A]' : 'text-[#8C8E9A]'
                             }`}
                           >
                             {tier.price.annual.originalPrice}
                           </span>
                         )}
-                        <span className="text-4xl sm:text-5xl font-black tracking-tight">
+                        <span className="text-3xl sm:text-4xl font-black tracking-tight">
                           {isAnnual
                             ? tier.price.annual.monthlyEquivalent
                             : tier.price.monthly.amount}
                         </span>
                         {tier.id !== 'business' && (
                           <span
-                            className={`text-xs font-mono font-semibold ${
+                            className={`text-xs font-mono ${
                               tier.isDark ? 'text-[#8C8E9A]' : 'text-[#8C8E9A]'
                             }`}
                           >
-                            USD / month
+                            / mo
                           </span>
                         )}
                       </div>
                       <p
-                        className={`text-xs font-mono ${
+                        className={`text-[11px] font-mono ${
                           tier.isDark ? 'text-[#8C8E9A]' : 'text-[#8C8E9A]'
                         }`}
                       >
@@ -600,7 +622,7 @@ export default function PricingPage(): JSX.Element {
 
                     {/* Credits Callout Box with Interactive Tooltip */}
                     <div
-                      className={`relative rounded-xl p-3.5 border transition-colors ${
+                      className={`relative rounded-xl p-3 border transition-colors ${
                         tier.isDark
                           ? 'bg-[#1A1C24] border-[#2A2C38]'
                           : tier.isPopular
@@ -609,19 +631,19 @@ export default function PricingPage(): JSX.Element {
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
                           <Film
-                            className={`h-4 w-4 ${
+                            className={`h-3.5 w-3.5 shrink-0 ${
                               tier.isPopular ? 'text-[#E84C2B]' : 'text-[#10B981]'
                             }`}
                           />
-                          <span className="text-xs font-bold font-mono">
+                          <span className="text-xs font-bold font-mono truncate">
                             {creditsText}
                           </span>
                         </div>
 
                         {/* Tooltip trigger */}
-                        <div className="relative">
+                        <div className="relative shrink-0">
                           <button
                             type="button"
                             aria-label="Credits info"
@@ -649,23 +671,23 @@ export default function PricingPage(): JSX.Element {
                     </div>
 
                     {/* Features List */}
-                    <div className="space-y-3 pt-2">
+                    <div className="space-y-2.5 pt-1">
                       <div
-                        className={`text-[11px] font-mono uppercase font-bold tracking-wider ${
+                        className={`text-[10px] font-mono uppercase font-bold tracking-wider ${
                           tier.isDark ? 'text-[#8C8E9A]' : 'text-[#8C8E9A]'
                         }`}
                       >
-                        Includes:
+                        Included:
                       </div>
 
-                      <ul className="space-y-2.5">
+                      <ul className="space-y-2 text-xs">
                         {tier.features.map((feat, fIdx) => (
                           <li
                             key={fIdx}
-                            className="flex items-start gap-2.5 text-xs leading-relaxed"
+                            className="flex items-start gap-2 leading-relaxed"
                           >
                             <Check
-                              className={`h-4 w-4 shrink-0 mt-0.5 ${
+                              className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${
                                 tier.isPopular
                                   ? 'text-[#E84C2B]'
                                   : 'text-emerald-500'
@@ -685,31 +707,42 @@ export default function PricingPage(): JSX.Element {
                   </div>
 
                   {/* Card Bottom CTA */}
-                  <div className="pt-8 space-y-2">
+                  <div className="pt-6 space-y-2">
                     {tier.id === 'business' ? (
-                      <Link
-                        href={tier.cta.href}
-                        className="w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-xs sm:text-sm font-bold transition-all shadow-sm active:scale-[0.98] bg-white hover:bg-[#FAF9F5] text-[#14151A]"
+                      <button
+                        type="button"
+                        onClick={() => setIsContactModalOpen(true)}
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-xs font-bold transition-all shadow-sm active:scale-[0.98] bg-white hover:bg-[#FAF9F5] text-[#14151A] cursor-pointer"
                       >
                         <span>{tier.cta.label}</span>
-                        <ArrowRight className="h-4 w-4" />
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
+                    ) : tier.id === 'free' ? (
+                      <Link
+                        href={tier.cta.href}
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-xs font-bold transition-all shadow-sm active:scale-[0.98] bg-white hover:bg-[#FAF9F5] text-[#14151A] border border-[#E6E4DD] hover:border-[#14151A]"
+                      >
+                        <span>{tier.cta.label}</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     ) : (
                       <button
                         type="button"
                         onClick={() => handleSelectTier(tier)}
-                        className={`w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-xs sm:text-sm font-bold transition-all shadow-sm active:scale-[0.98] cursor-pointer ${
+                        className={`w-full inline-flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-xs font-bold transition-all shadow-sm active:scale-[0.98] cursor-pointer ${
                           tier.isPopular
                             ? 'bg-[#E84C2B] hover:bg-[#D13B1C] text-white shadow-[0_4px_16px_rgba(232,76,43,0.3)]'
-                            : 'bg-white hover:bg-[#FAF9F5] text-[#14151A] border border-[#E6E4DD] hover:border-[#14151A]'
+                            : 'bg-[#14151A] hover:bg-black text-white'
                         }`}
                       >
                         <span>{tier.cta.label}</span>
-                        <ArrowRight className="h-4 w-4" />
+                        <ArrowRight className="h-3.5 w-3.5" />
                       </button>
                     )}
                     <p className="text-[10px] text-center font-mono text-[#8C8E9A]">
-                      Secure checkout & tax compliance powered by Paddle
+                      {tier.id === 'business'
+                        ? 'Custom SLA & Invoicing'
+                        : 'Instant access via Paddle Checkout'}
                     </p>
                   </div>
                 </div>
@@ -718,13 +751,13 @@ export default function PricingPage(): JSX.Element {
           </div>
 
           {/* Paddle Billing & Compliance Reassurance Banner */}
-          <div className="mt-8 max-w-[1200px] mx-auto rounded-2xl border border-[#E6E4DD] bg-white p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs">
+          <div className="mt-8 max-w-[1400px] mx-auto rounded-2xl border border-[#E6E4DD] bg-white p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs">
             <div className="flex items-center gap-3.5">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FAF3EE] text-[#E84C2B] border border-[#E84C2B]/20">
                 <CreditCard className="h-5 w-5" />
               </div>
               <div className="space-y-0.5 text-left">
-                <h4 className="text-sm font-bold text-[#14151A] flex items-center gap-2">
+                <h4 className="text-sm font-bold text-[#14151A] flex items-center gap-2 flex-wrap">
                   <span>Global Tax Compliance & Instant Activation Powered by Paddle</span>
                   <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.2 rounded-full">
                     Merchant of Record
@@ -738,147 +771,140 @@ export default function PricingPage(): JSX.Element {
 
             <a
               href="#faq"
-              className="shrink-0 text-xs font-bold text-[#E84C2B] hover:text-[#D13B1C] flex items-center gap-1.5"
+              className="text-xs font-mono font-bold text-[#E84C2B] hover:underline whitespace-nowrap self-start sm:self-auto"
             >
-              <span>Learn About Billing & Refunds</span>
-              <ArrowRight className="h-3.5 w-3.5" />
+              Billing FAQs &darr;
             </a>
           </div>
         </section>
 
         {/* ========================================================= */}
-        {/* SECTION 3: FULL FEATURE COMPARISON TABLE                  */}
+        {/* SECTION 3: 4-COLUMN FEATURE COMPARISON MATRIX              */}
         {/* ========================================================= */}
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-[1200px] mx-auto space-y-8">
-            <div className="text-center space-y-2">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#E6E4DD] bg-white px-3 py-1 text-xs font-mono font-bold tracking-wider uppercase text-[#E84C2B] shadow-2xs">
-                <Layers className="h-3.5 w-3.5" />
-                <span>DETAILED BREAKDOWN</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-[-0.035em] text-[#14151A]">
-                Compare all features side by side.
-              </h2>
-              <p className="text-sm text-[#52545E]">
-                Everything you need to produce viral short-form content at scale.
-              </p>
-            </div>
+        <section className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#14151A]">
+              Detailed Plan Feature Matrix
+            </h2>
+            <p className="text-xs sm:text-sm text-[#52545E]">
+              Compare exact limits across Free ($0), Pro ($3), Max ($10), and Business.
+            </p>
+          </div>
 
-            {/* Desktop & Tablet Table */}
-            <div className="overflow-x-auto rounded-2xl border border-[#E6E4DD] bg-white shadow-sm">
-              <table className="w-full text-left border-collapse min-w-[720px]">
-                <thead>
-                  <tr className="border-b border-[#E6E4DD] bg-[#FAF9F5]/70">
-                    <th className="sticky left-0 bg-[#FAF9F5] z-20 py-4 px-6 text-xs font-mono font-bold uppercase tracking-wider text-[#52545E] w-[34%] shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
-                      Features
-                    </th>
-                    <th className="py-4 px-4 text-xs font-mono font-bold uppercase tracking-wider text-[#52545E] w-[16%]">
-                      Free Trial
-                    </th>
-                    <th className="py-4 px-4 text-xs font-mono font-bold uppercase tracking-wider text-[#52545E] w-[16%]">
-                      Starter
-                    </th>
-                    <th className="py-4 px-4 text-xs font-mono font-bold uppercase tracking-wider text-[#E84C2B] w-[17%]">
-                      Pro (Popular)
-                    </th>
-                    <th className="py-4 px-4 text-xs font-mono font-bold uppercase tracking-wider text-[#14151A] w-[17%]">
-                      Business
-                    </th>
-                  </tr>
-                </thead>
+          {/* Desktop & Mobile Responsive Table */}
+          <div className="overflow-x-auto rounded-2xl border border-[#E6E4DD] bg-white shadow-sm">
+            <table className="w-full text-left border-collapse min-w-[760px]">
+              <thead>
+                <tr className="border-b border-[#E6E4DD] bg-[#FAF9F5]/70">
+                  <th className="sticky left-0 bg-[#FAF9F5] z-20 py-4 px-6 text-xs font-mono font-bold uppercase tracking-wider text-[#52545E] w-[32%] shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
+                    Features & Limits
+                  </th>
+                  <th className="py-4 px-4 text-xs font-mono font-bold uppercase tracking-wider text-[#52545E] w-[17%]">
+                    Free ($0)
+                  </th>
+                  <th className="py-4 px-4 text-xs font-mono font-bold uppercase tracking-wider text-[#14151A] w-[17%]">
+                    Pro ($3)
+                  </th>
+                  <th className="py-4 px-4 text-xs font-mono font-bold uppercase tracking-wider text-[#E84C2B] w-[17%] bg-[#E84C2B]/[0.03]">
+                    Max ($10 — Popular)
+                  </th>
+                  <th className="py-4 px-4 text-xs font-mono font-bold uppercase tracking-wider text-[#14151A] w-[17%]">
+                    Business (Custom)
+                  </th>
+                </tr>
+              </thead>
 
-                <tbody className="divide-y divide-[#E6E4DD] text-xs">
-                  {COMPARISON_CATEGORIES.map((cat, cIdx) => (
-                    <React.Fragment key={cIdx}>
-                      {/* Category Header Row */}
-                      <tr className="bg-[#FAF9F5]/40 font-mono text-[11px] font-bold text-[#8C8E9A] uppercase tracking-wider">
-                        <td colSpan={5} className="sticky left-0 bg-[#FAF9F5] py-3 px-6 z-10">
-                          {cat.category}
+              <tbody className="divide-y divide-[#E6E4DD] text-xs">
+                {COMPARISON_CATEGORIES.map((cat, cIdx) => (
+                  <React.Fragment key={cIdx}>
+                    {/* Category Header Row */}
+                    <tr className="bg-[#FAF9F5]/60 font-mono text-[11px] font-bold text-[#8C8E9A] uppercase tracking-wider">
+                      <td colSpan={5} className="sticky left-0 bg-[#FAF9F5] py-3 px-6 z-10">
+                        {cat.category}
+                      </td>
+                    </tr>
+
+                    {/* Item Rows */}
+                    {cat.items.map((item, iIdx) => (
+                      <tr
+                        key={iIdx}
+                        className="hover:bg-[#FAF9F5]/50 transition-colors"
+                      >
+                        <td className="sticky left-0 bg-white z-10 py-3 px-6 space-y-0.5 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
+                          <div className="font-semibold text-[#14151A]">
+                            {item.name}
+                          </div>
+                          {item.description && (
+                            <div className="text-[10px] text-[#8C8E9A]">
+                              {item.description}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Free column */}
+                        <td className="py-3 px-4 text-[#52545E]">
+                          {typeof item.free === 'boolean' ? (
+                            item.free ? (
+                              <Check className="h-4 w-4 text-emerald-600" />
+                            ) : (
+                              <Minus className="h-4 w-4 text-[#8C8E9A]" />
+                            )
+                          ) : (
+                            <span>{item.free}</span>
+                          )}
+                        </td>
+
+                        {/* Pro column */}
+                        <td className="py-3 px-4 text-[#14151A] font-medium">
+                          {typeof item.pro === 'boolean' ? (
+                            item.pro ? (
+                              <Check className="h-4 w-4 text-emerald-600" />
+                            ) : (
+                              <Minus className="h-4 w-4 text-[#8C8E9A]" />
+                            )
+                          ) : (
+                            <span>{item.pro}</span>
+                          )}
+                        </td>
+
+                        {/* Max column (Highlighted) */}
+                        <td className="py-3 px-4 font-bold text-[#14151A] bg-[#E84C2B]/[0.02]">
+                          {typeof item.max === 'boolean' ? (
+                            item.max ? (
+                              <Check className="h-4 w-4 text-[#E84C2B]" />
+                            ) : (
+                              <Minus className="h-4 w-4 text-[#8C8E9A]" />
+                            )
+                          ) : (
+                            <span>{item.max}</span>
+                          )}
+                        </td>
+
+                        {/* Business column */}
+                        <td className="py-3 px-4 font-semibold text-[#14151A]">
+                          {typeof item.business === 'boolean' ? (
+                            item.business ? (
+                              <Check className="h-4 w-4 text-[#14151A]" />
+                            ) : (
+                              <Minus className="h-4 w-4 text-[#8C8E9A]" />
+                            )
+                          ) : (
+                            <span>{item.business}</span>
+                          )}
                         </td>
                       </tr>
-
-                      {/* Item Rows */}
-                      {cat.items.map((item, iIdx) => (
-                        <tr
-                          key={iIdx}
-                          className="hover:bg-[#FAF9F5]/50 transition-colors"
-                        >
-                          <td className="sticky left-0 bg-white z-10 py-3.5 px-6 space-y-0.5 shadow-[2px_0_5px_rgba(0,0,0,0.03)]">
-                            <div className="font-semibold text-[#14151A]">
-                              {item.name}
-                            </div>
-                            {item.description && (
-                              <div className="text-[11px] text-[#8C8E9A]">
-                                {item.description}
-                              </div>
-                            )}
-                          </td>
-
-                          {/* Free column */}
-                          <td className="py-3.5 px-4 text-[#52545E]">
-                            {typeof item.free === 'boolean' ? (
-                              item.free ? (
-                                <Check className="h-4 w-4 text-emerald-600" />
-                              ) : (
-                                <Minus className="h-4 w-4 text-[#8C8E9A]" />
-                              )
-                            ) : (
-                              <span>{item.free}</span>
-                            )}
-                          </td>
-
-                          {/* Starter column */}
-                          <td className="py-3.5 px-4 text-[#14151A]">
-                            {typeof item.starter === 'boolean' ? (
-                              item.starter ? (
-                                <Check className="h-4 w-4 text-emerald-600" />
-                              ) : (
-                                <Minus className="h-4 w-4 text-[#8C8E9A]" />
-                              )
-                            ) : (
-                              <span>{item.starter}</span>
-                            )}
-                          </td>
-
-                          {/* Pro column (Highlighted) */}
-                          <td className="py-3.5 px-4 font-semibold text-[#14151A] bg-[#E84C2B]/[0.02]">
-                            {typeof item.pro === 'boolean' ? (
-                              item.pro ? (
-                                <Check className="h-4 w-4 text-[#E84C2B]" />
-                              ) : (
-                                <Minus className="h-4 w-4 text-[#8C8E9A]" />
-                              )
-                            ) : (
-                              <span>{item.pro}</span>
-                            )}
-                          </td>
-
-                          {/* Business column */}
-                          <td className="py-3.5 px-4 font-semibold text-[#14151A]">
-                            {typeof item.business === 'boolean' ? (
-                              item.business ? (
-                                <Check className="h-4 w-4 text-[#14151A]" />
-                              ) : (
-                                <Minus className="h-4 w-4 text-[#8C8E9A]" />
-                              )
-                            ) : (
-                              <span>{item.business}</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                    ))}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
 
         {/* ========================================================= */}
         {/* SECTION 4: PRICING & CREDITS FAQ ACCORDION                */}
         {/* ========================================================= */}
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <section id="faq" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto space-y-8">
             <div className="text-center space-y-2">
               <div className="inline-flex items-center gap-2 rounded-full border border-[#E6E4DD] bg-white px-3 py-1 text-xs font-mono font-bold tracking-wider uppercase text-[#E84C2B] shadow-2xs">
@@ -904,7 +930,7 @@ export default function PricingPage(): JSX.Element {
                     <button
                       type="button"
                       onClick={() => toggleFaq(idx)}
-                      className="w-full flex items-center justify-between p-5 text-left transition-colors hover:bg-[#FAF9F5]"
+                      className="w-full flex items-center justify-between p-5 text-left transition-colors hover:bg-[#FAF9F5] cursor-pointer"
                     >
                       <span className="text-sm sm:text-base font-bold text-[#14151A] pr-4">
                         {faq.q}
@@ -933,7 +959,7 @@ export default function PricingPage(): JSX.Element {
       {/* SIMULATED PADDLE CHECKOUT DRAWER / MODAL                  */}
       {/* ========================================================= */}
       {selectedCheckout && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#14151A]/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#14151A]/60 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="relative w-full max-w-md rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-[#E6E4DD] space-y-6">
             {/* Modal Top Bar */}
             <div className="flex items-center justify-between border-b border-[#F0EFEA] pb-4">
@@ -958,7 +984,7 @@ export default function PricingPage(): JSX.Element {
               <button
                 type="button"
                 onClick={() => setSelectedCheckout(null)}
-                className="p-1.5 rounded-lg text-[#8C8E9A] hover:text-[#14151A] hover:bg-[#FAF9F5] transition-colors"
+                className="p-1.5 rounded-lg text-[#8C8E9A] hover:text-[#14151A] hover:bg-[#FAF9F5] transition-colors cursor-pointer"
                 aria-label="Close Checkout"
               >
                 <X className="h-4 w-4" />
@@ -988,7 +1014,13 @@ export default function PricingPage(): JSX.Element {
                   <div className="flex justify-between">
                     <span className="text-[#8C8E9A]">Credits Added:</span>
                     <span className="text-emerald-600 font-bold">
-                      {selectedCheckout.tier.id === 'starter' ? '+150 Credits' : '+300 Credits/mo (3,600/yr)'}
+                      {selectedCheckout.tier.id === 'pro'
+                        ? selectedCheckout.interval === 'annual'
+                          ? '+1,440 Credits / yr'
+                          : '+120 Credits / mo'
+                        : selectedCheckout.interval === 'annual'
+                        ? '+6,000 Credits / yr'
+                        : '+500 Credits / mo'}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -1002,13 +1034,13 @@ export default function PricingPage(): JSX.Element {
                     href="/dashboard"
                     className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white py-3 text-xs font-bold transition-all shadow-md active:scale-95"
                   >
-                    <span>Open Clip Generator</span>
+                    <span>Open Dashboard</span>
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <button
                     type="button"
                     onClick={() => setSelectedCheckout(null)}
-                    className="w-full py-2 text-xs font-semibold text-[#8C8E9A] hover:text-[#14151A]"
+                    className="w-full py-2 text-xs font-semibold text-[#8C8E9A] hover:text-[#14151A] cursor-pointer"
                   >
                     Close Window
                   </button>
@@ -1036,7 +1068,7 @@ export default function PricingPage(): JSX.Element {
                         : selectedCheckout.tier.price.monthly.billedNote}
                     </span>
                     <span className="text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-                      {selectedCheckout.interval === 'annual' ? 'Save up to 60%' : 'Cancel anytime'}
+                      {selectedCheckout.interval === 'annual' ? 'Save 20%' : 'Cancel anytime'}
                     </span>
                   </div>
 
@@ -1141,6 +1173,12 @@ export default function PricingPage(): JSX.Element {
           </div>
         </div>
       )}
+
+      {/* Business Contact Sales Modal */}
+      <BusinessContactModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+      />
 
       <SiteFooter />
     </div>

@@ -122,7 +122,7 @@ export default function RegisterPage(): JSX.Element {
               Create your creator studio
             </h1>
             <p className="text-xs sm:text-sm text-[#52545E] leading-relaxed">
-              Start free in 30 seconds. Plug in your own keys or use our starter credits.
+              Start free in 30 seconds. Plug in your own keys or use our 30 free trial credits.
             </p>
           </div>
 

@@ -43,8 +43,12 @@ export const clipsRoutes: FastifyPluginAsync = async (server) => {
     try {
       const exportJob = await projectsService.exportClip(request.user.id, clipId, parse.data);
       return reply.status(202).send(exportJob);
-    } catch {
-      return reply.status(404).send({ error: 'Clip not found' });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Export failed';
+      if (message.startsWith('UPGRADE_REQUIRED')) {
+        return reply.status(403).send({ error: 'UPGRADE_REQUIRED', message });
+      }
+      return reply.status(404).send({ error: 'Clip not found', message });
     }
   });
 };

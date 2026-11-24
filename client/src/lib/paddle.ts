@@ -46,13 +46,13 @@ export async function launchPaddleCheckout(options: CheckoutOptions): Promise<bo
 
     const defaultPriceId =
       options.priceId ||
-      (options.planName.toLowerCase().includes('pro')
+      (options.planName.toLowerCase().includes('max')
         ? options.interval === 'annual'
-          ? 'pri_pro_annual'
-          : 'pri_pro_monthly'
+          ? process.env.NEXT_PUBLIC_PADDLE_MAX_ANNUAL_PRICE_ID || 'pri_max_annual'
+          : process.env.NEXT_PUBLIC_PADDLE_MAX_PRICE_ID || 'pri_max_monthly'
         : options.interval === 'annual'
-        ? 'pri_starter_annual'
-        : 'pri_starter_monthly');
+        ? process.env.NEXT_PUBLIC_PADDLE_PRO_ANNUAL_PRICE_ID || 'pri_pro_annual'
+        : process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID || 'pri_pro_monthly');
 
     paddle.Checkout.open({
       items: [{ priceId: defaultPriceId, quantity: 1 }],
@@ -109,17 +109,19 @@ export async function fetchBillingStatus(): Promise<BillingStatusResponse> {
  */
 export function getDemoBillingState(): BillingStatusResponse {
   const billing: WorkspaceBillingState = {
-    planTier: 'STARTER',
+    planTier: 'PRO',
     billingInterval: 'monthly',
-    creditBalance: 142,
-    monthlyQuota: 150,
+    creditBalance: 120,
+    monthlyQuota: 120,
     status: 'active',
     currentPeriodEnd: new Date(Date.now() + 24 * 86400000).toISOString(),
     entitlements: {
+      maxResolution: '1080p',
       removeWatermark: true,
-      maxBrandTemplates: 1,
+      maxBrandTemplates: 2,
+      aiBRoll: false,
       xmlExport: false,
-      aiBRoll: true,
+      priorityQueue: false,
     },
   };
 
@@ -127,7 +129,7 @@ export function getDemoBillingState(): BillingStatusResponse {
     {
       id: 'tx-demo-1',
       userId: 'demo-user-1',
-      amount: 150,
+      amount: 120,
       reason: 'SUBSCRIPTION_RENEWAL',
       createdAt: new Date(Date.now() - 6 * 86400000).toISOString(),
     },

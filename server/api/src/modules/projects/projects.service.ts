@@ -6,6 +6,8 @@ import {
   UpdateProjectInput,
   IngestProjectInput,
   ClipExportInput,
+  getPlanEntitlements,
+  normalizePlanTier,
 } from '@frameflow/shared';
 import { getClipGenerationQueue } from '../../queues/clip-generation.queue.js';
 import { getClipExportQueue } from '../../queues/clip-export.queue.js';
@@ -440,17 +442,41 @@ export class ProjectsService {
       where: { userId },
     });
 
-    const isFree = !sub || sub.planTier === 'FREE';
-    const includeWatermark = input.includeWatermark !== undefined ? input.includeWatermark : isFree;
+    const tier = normalizePlanTier(sub?.planTier);
+    const entitlements = getPlanEntitlements(tier);
+
+    // Enforce 4K export entitlement
+    if (input.format === 'mp4_4k' && entitlements.maxResolution !== '4k') {
+      throw new Error('UPGRADE_REQUIRED_4K: 4K master exports require the Business plan.');
+    }
+
+    // Enforce XML timeline export entitlement
+    if (
+      (input.format === 'fcpxml_premiere' || input.format === 'fcpxml_davinci') &&
+      !entitlements.xmlExport
+    ) {
+      throw new Error('UPGRADE_REQUIRED_XML: Premiere Pro and DaVinci Resolve XML exports require the Business plan.');
+    }
+
+    // Enforce watermark removal entitlement
+    const includeWatermark = !entitlements.removeWatermark
+      ? true
+      : input.includeWatermark !== undefined
+      ? input.includeWatermark
+      : false;
 
     const queue = getClipExportQueue();
-    const job = await queue.add('export-clip', {
-      clipId: clip.id,
-      projectId: clip.projectId,
-      userId,
-      format: input.format,
-      includeWatermark,
-    });
+    const job = await queue.add(
+      'export-clip',
+      {
+        clipId: clip.id,
+        projectId: clip.projectId,
+        userId,
+        format: input.format,
+        includeWatermark,
+      },
+      entitlements.priorityQueue ? { priority: 1 } : undefined
+    );
 
     return {
       jobId: job.id,

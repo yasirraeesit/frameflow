@@ -842,11 +842,11 @@ export default function DashboardPage(): JSX.Element {
 
             <div className="p-3.5 rounded-xl bg-[#FAF9F5] border border-[#E6E4DD] text-xs space-y-1.5">
               <p className="font-semibold text-[#14151A]">
-                Upgrade to FrameFlow Starter or Pro:
+                Upgrade to FrameFlow Pro or Max:
               </p>
               <ul className="text-[#52545E] space-y-1">
-                <li>• Starter: 150 credits/mo ($12/mo)</li>
-                <li>• Pro: 300 credits/mo ($31/mo) with DaVinci &amp; XML export</li>
+                <li>• Pro: 120 credits/mo ($3/mo) with watermark-free 1080p</li>
+                <li>• Max: 500 credits/mo ($10/mo) with AI B-Roll &amp; priority rendering</li>
                 <li>• Unused credits rollover automatically</li>
               </ul>
             </div>

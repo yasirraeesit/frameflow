@@ -15,6 +15,7 @@ import { timelineRoutes } from './modules/timeline/timeline.routes.js';
 import { rendersRoutes } from './modules/renders/renders.routes.js';
 import { billingRoutes } from './modules/billing/billing.routes.js';
 import { paddleWebhookRoutes } from './modules/billing/paddle-webhook.routes.js';
+import { contactRoutes } from './modules/contact/contact.routes.js';
 import { wsGatewayPlugin } from './ws/ws.gateway.js';
 
 // Global BigInt JSON serialization
@@ -84,6 +85,7 @@ export function buildServer(): FastifyInstance {
   server.register(rendersRoutes, { prefix: '/api/projects' });
   server.register(billingRoutes, { prefix: '/api/billing' });
   server.register(paddleWebhookRoutes, { prefix: '/api/webhooks' });
+  server.register(contactRoutes, { prefix: '/api/contact' });
 
   // WebSocket Gateway
   server.register(wsGatewayPlugin);

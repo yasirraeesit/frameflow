@@ -9,6 +9,7 @@ import {
   RefundCreditsResponse,
   getPlanEntitlements,
   getPlanMonthlyQuota,
+  normalizePlanTier,
   CreditTransactionDTO,
 } from '@frameflow/shared';
 
@@ -92,7 +93,7 @@ export class BillingService {
     });
 
     const billingState: WorkspaceBillingState = {
-      planTier: sub.planTier as 'FREE' | 'STARTER' | 'PRO' | 'BUSINESS',
+      planTier: normalizePlanTier(sub.planTier),
       billingInterval: sub.billingInterval as 'monthly' | 'annual',
       creditBalance: sub.creditBalance,
       monthlyQuota: getPlanMonthlyQuota(sub.planTier, sub.billingInterval),
@@ -323,20 +324,39 @@ export class BillingService {
     const intervalStr = firstItem?.price?.billing_cycle?.interval || '';
     const isAnnual = intervalStr.toLowerCase().includes('year') || priceId.toLowerCase().includes('yr') || priceId.toLowerCase().includes('annual');
 
+    // Paddle Price ID environment variables
+    const proPriceId = process.env.PADDLE_PRO_PRICE_ID || '';
+    const proAnnualPriceId = process.env.PADDLE_PRO_ANNUAL_PRICE_ID || '';
+    const maxPriceId = process.env.PADDLE_MAX_PRICE_ID || '';
+    const maxAnnualPriceId = process.env.PADDLE_MAX_ANNUAL_PRICE_ID || '';
+
     // Map priceId to Plan Tier & Credits
-    let planTier: PlanTier = PlanTier.STARTER;
-    let creditsToAdd = isAnnual ? 1800 : 150;
+    let planTier: PlanTier = PlanTier.PRO;
+    let creditsToAdd = isAnnual ? 1440 : 120;
 
     const priceLower = priceId.toLowerCase();
-    if (priceLower.includes('pro')) {
-      planTier = PlanTier.PRO;
-      creditsToAdd = isAnnual ? 3600 : 300;
+    if (
+      (maxPriceId && priceId === maxPriceId) ||
+      (maxAnnualPriceId && priceId === maxAnnualPriceId) ||
+      priceLower.includes('max')
+    ) {
+      planTier = PlanTier.MAX;
+      creditsToAdd = isAnnual ? 6000 : 500;
     } else if (priceLower.includes('business') || priceLower.includes('agency')) {
       planTier = PlanTier.BUSINESS;
-      creditsToAdd = isAnnual ? 9600 : 800;
-    } else if (priceLower.includes('starter')) {
-      planTier = PlanTier.STARTER;
-      creditsToAdd = isAnnual ? 1800 : 150;
+      creditsToAdd = isAnnual ? 24000 : 2000;
+    } else if (
+      (proPriceId && priceId === proPriceId) ||
+      (proAnnualPriceId && priceId === proAnnualPriceId) ||
+      priceLower.includes('pro') ||
+      priceLower.includes('starter')
+    ) {
+      planTier = PlanTier.PRO;
+      creditsToAdd = isAnnual ? 1440 : 120;
+    } else {
+      // Defaults to PRO ($3/mo or $29/yr)
+      planTier = PlanTier.PRO;
+      creditsToAdd = isAnnual ? 1440 : 120;
     }
 
     const billingInterval: BillingInterval = isAnnual ? BillingInterval.annual : BillingInterval.monthly;

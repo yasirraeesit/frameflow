@@ -1,7 +1,19 @@
 import { z } from 'zod';
 
-export const PlanTierSchema = z.enum(['FREE', 'STARTER', 'PRO', 'BUSINESS']);
+export const PlanTierSchema = z.enum(['FREE', 'PRO', 'MAX', 'BUSINESS']);
 export type PlanTier = z.infer<typeof PlanTierSchema>;
+
+export const LegacyPlanTierSchema = z.enum(['FREE', 'STARTER', 'PRO', 'MAX', 'BUSINESS']);
+export type LegacyPlanTier = z.infer<typeof LegacyPlanTierSchema>;
+
+export function normalizePlanTier(raw: string | null | undefined): PlanTier {
+  if (!raw) return 'FREE';
+  const upper = raw.toUpperCase();
+  if (upper === 'MAX') return 'MAX';
+  if (upper === 'PRO' || upper === 'STARTER') return 'PRO';
+  if (upper === 'BUSINESS') return 'BUSINESS';
+  return 'FREE';
+}
 
 export const BillingIntervalSchema = z.enum(['monthly', 'annual']);
 export type BillingInterval = z.infer<typeof BillingIntervalSchema>;
@@ -10,10 +22,12 @@ export const BillingStatusSchema = z.enum(['active', 'past_due', 'canceled', 'tr
 export type BillingStatus = z.infer<typeof BillingStatusSchema>;
 
 export const PlanEntitlementsSchema = z.object({
+  maxResolution: z.enum(['720p', '1080p', '4k']),
   removeWatermark: z.boolean(),
   maxBrandTemplates: z.number(),
-  xmlExport: z.boolean(),
   aiBRoll: z.boolean(),
+  xmlExport: z.boolean(),
+  priorityQueue: z.boolean(),
 });
 export type PlanEntitlements = z.infer<typeof PlanEntitlementsSchema>;
 
@@ -79,45 +93,64 @@ export const RefundCreditsResponseSchema = z.object({
 });
 export type RefundCreditsResponse = z.infer<typeof RefundCreditsResponseSchema>;
 
+export const BusinessInquiryInputSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Valid work email required'),
+  companyOrChannel: z.string().min(1, 'Channel or agency name is required'),
+  monthlyVideoVolume: z.string().min(1, 'Monthly video volume selection is required'),
+  message: z.string().min(1, 'Workflow notes are required'),
+});
+export type BusinessInquiryInput = z.infer<typeof BusinessInquiryInputSchema>;
+
 export const PLAN_ENTITLEMENTS: Record<PlanTier, PlanEntitlements> = {
   FREE: {
+    maxResolution: '720p',
     removeWatermark: false,
     maxBrandTemplates: 1,
-    xmlExport: false,
     aiBRoll: false,
-  },
-  STARTER: {
-    removeWatermark: true,
-    maxBrandTemplates: 1,
     xmlExport: false,
-    aiBRoll: true,
+    priorityQueue: false,
   },
   PRO: {
+    maxResolution: '1080p',
     removeWatermark: true,
-    maxBrandTemplates: 4,
-    xmlExport: true,
+    maxBrandTemplates: 2,
+    aiBRoll: false,
+    xmlExport: false,
+    priorityQueue: false,
+  },
+  MAX: {
+    maxResolution: '1080p',
+    removeWatermark: true,
+    maxBrandTemplates: 5,
     aiBRoll: true,
+    xmlExport: false,
+    priorityQueue: true,
   },
   BUSINESS: {
+    maxResolution: '4k',
     removeWatermark: true,
-    maxBrandTemplates: 10,
-    xmlExport: true,
+    maxBrandTemplates: 99,
     aiBRoll: true,
+    xmlExport: true,
+    priorityQueue: true,
   },
 };
 
 export const PLAN_QUOTAS: Record<PlanTier, { monthly: number; annual: number }> = {
   FREE: { monthly: 30, annual: 30 },
-  STARTER: { monthly: 150, annual: 1800 },
-  PRO: { monthly: 300, annual: 3600 },
-  BUSINESS: { monthly: 800, annual: 9600 },
+  PRO: { monthly: 120, annual: 1440 },
+  MAX: { monthly: 500, annual: 6000 },
+  BUSINESS: { monthly: 2000, annual: 24000 },
 };
 
-export function getPlanEntitlements(tier: PlanTier): PlanEntitlements {
-  return PLAN_ENTITLEMENTS[tier] || PLAN_ENTITLEMENTS.FREE;
+export function getPlanEntitlements(tier: string | PlanTier): PlanEntitlements {
+  const normalized = normalizePlanTier(tier);
+  return PLAN_ENTITLEMENTS[normalized] || PLAN_ENTITLEMENTS.FREE;
 }
 
-export function getPlanMonthlyQuota(tier: PlanTier, interval: BillingInterval = 'monthly'): number {
-  const quota = PLAN_QUOTAS[tier] || PLAN_QUOTAS.FREE;
+export function getPlanMonthlyQuota(tier: string | PlanTier, interval: BillingInterval = 'monthly'): number {
+  const normalized = normalizePlanTier(tier);
+  const quota = PLAN_QUOTAS[normalized] || PLAN_QUOTAS.FREE;
   return interval === 'annual' ? quota.annual : quota.monthly;
 }

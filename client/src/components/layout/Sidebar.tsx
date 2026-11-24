@@ -173,12 +173,12 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps): JS
 
           <div className="space-y-1">
             <div className="flex items-baseline justify-between text-xs">
-              <span className="font-mono font-bold text-[#14151A]">142 / 150</span>
-              <span className="text-[10px] font-mono text-[#8C8E9A]">Starter Plan</span>
+              <span className="font-mono font-bold text-[#14151A]">112 / 120</span>
+              <span className="text-[10px] font-mono text-[#8C8E9A]">Pro Plan</span>
             </div>
             {/* Progress bar */}
             <div className="h-1.5 w-full bg-[#E6E4DD] rounded-full overflow-hidden">
-              <div className="h-full bg-[#E84C2B] rounded-full" style={{ width: '94%' }} />
+              <div className="h-full bg-[#E84C2B] rounded-full" style={{ width: '93%' }} />
             </div>
           </div>
 

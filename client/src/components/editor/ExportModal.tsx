@@ -326,7 +326,7 @@ export function ExportModal({
                         No FrameFlow Watermark
                       </span>
                       <span className="text-[10px] text-emerald-800">
-                        Starter Plan Active &bull; Clean commercial export
+                        Pro / Max Plan Active &bull; Clean commercial export
                       </span>
                     </div>
                   </div>

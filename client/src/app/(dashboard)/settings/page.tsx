@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fetchBillingStatus, launchPaddleCheckout } from '@/lib/paddle';
+import { BusinessContactModal } from '@/components/modals/BusinessContactModal';
 import { signOutUser, getStoredUser, StoredUser } from '@/lib/auth';
 import type { WorkspaceBillingState, CreditTransactionDTO } from '@frameflow/shared';
 import {
@@ -45,17 +46,18 @@ export default function WorkspaceAndBillingPage(): JSX.Element {
   // Billing & Plan State
   const [billingState, setBillingState] = useState<WorkspaceBillingState | null>(null);
   const [transactions, setTransactions] = useState<CreditTransactionDTO[]>([]);
-  const [currentPlan, setCurrentPlan] = useState<'free' | 'starter' | 'pro'>('starter');
-  const [creditsRemaining, setCreditsRemaining] = useState<number>(142);
-  const totalCredits = currentPlan === 'free' ? 30 : currentPlan === 'starter' ? 150 : 300;
+  const [currentPlan, setCurrentPlan] = useState<'free' | 'pro' | 'max' | 'business'>('pro');
+  const [creditsRemaining, setCreditsRemaining] = useState<number>(112);
+  const totalCredits = currentPlan === 'free' ? 30 : currentPlan === 'pro' ? 120 : currentPlan === 'max' ? 500 : 2000;
   const [topUpToast, setTopUpToast] = useState<string | null>(null);
+  const [isContactModalOpen, setIsContactModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     setStoredUser(getStoredUser());
     fetchBillingStatus().then((res) => {
       if (res?.billing) {
         setBillingState(res.billing);
-        setCurrentPlan(res.billing.planTier.toLowerCase() as 'free' | 'starter' | 'pro');
+        setCurrentPlan(res.billing.planTier.toLowerCase() as 'free' | 'pro' | 'max' | 'business');
         setCreditsRemaining(res.billing.creditBalance);
       }
       if (res?.transactions) {
@@ -223,22 +225,26 @@ export default function WorkspaceAndBillingPage(): JSX.Element {
               <div className="space-y-1">
                 <div className="flex items-center gap-2.5">
                   <h3 className="text-xl font-bold tracking-tight text-[#14151A]">
-                    {billingState?.planTier === 'PRO'
+                    {billingState?.planTier === 'MAX'
+                      ? 'Max Plan'
+                      : billingState?.planTier === 'PRO'
                       ? 'Pro Plan'
-                      : billingState?.planTier === 'FREE'
-                      ? 'Free Trial'
-                      : 'Starter Plan'}
+                      : billingState?.planTier === 'BUSINESS'
+                      ? 'Business Plan'
+                      : 'Free Trial'}
                   </h3>
                   <span className="rounded-full bg-[#FAF3EE] border border-[#E84C2B]/30 px-2 py-0.5 text-[10px] font-mono font-bold text-[#E84C2B]">
                     {billingState?.billingInterval === 'annual' ? 'ANNUAL BILLING' : 'MONTHLY BILLING'}
                   </span>
                 </div>
                 <p className="text-xs text-[#52545E]">
-                  {billingState?.planTier === 'PRO'
-                    ? '$39 USD / month ($372 billed annually via Paddle)'
-                    : billingState?.planTier === 'FREE'
-                    ? '30 trial credits included • No credit card required'
-                    : '$12 USD / month ($144 billed annually via Paddle)'}
+                  {billingState?.planTier === 'MAX'
+                    ? '$10 USD / month ($96 billed annually via Paddle) • 500 mins/mo'
+                    : billingState?.planTier === 'PRO'
+                    ? '$3 USD / month ($29 billed annually via Paddle) • 120 mins/mo'
+                    : billingState?.planTier === 'BUSINESS'
+                    ? 'Custom credit pool & dedicated Slack/WhatsApp support'
+                    : '30 trial credits included • No credit card required'}
                 </p>
               </div>
 
@@ -394,6 +400,70 @@ export default function WorkspaceAndBillingPage(): JSX.Element {
             <div className="text-[10px] font-mono text-[#8C8E9A] text-center pt-1">
               Instant activation &bull; Powered by Paddle
             </div>
+          </div>
+        </div>
+
+        {/* 4-Tier Plan Selection Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 pt-2">
+          {/* Free */}
+          <div className="rounded-xl border border-[#E6E4DD] bg-white p-4 space-y-3 flex flex-col justify-between shadow-2xs">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#14151A]">Free Trial</span>
+                <span className="font-mono text-xs font-bold text-[#8C8E9A]">$0</span>
+              </div>
+              <p className="text-[11px] text-[#52545E]">30 trial credits &bull; 720p clean exports &bull; 1 Brand Template</p>
+            </div>
+            {currentPlan === 'free' ? (
+              <span className="text-center py-1.5 rounded-lg bg-[#FAF9F5] text-[11px] font-bold text-[#8C8E9A] border border-[#E6E4DD]">Current Plan</span>
+            ) : (
+              <span className="text-center py-1.5 text-[11px] font-bold text-[#8C8E9A]">Included</span>
+            )}
+          </div>
+
+          {/* Pro */}
+          <div className="rounded-xl border border-[#E6E4DD] bg-white p-4 space-y-3 flex flex-col justify-between shadow-2xs">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#14151A]">Pro Creator</span>
+                <span className="font-mono text-xs font-bold text-[#14151A]">$3 / mo</span>
+              </div>
+              <p className="text-[11px] text-[#52545E]">120 mins/mo &bull; Watermark-free 1080p &bull; 2 Brand Templates</p>
+            </div>
+            {currentPlan === 'pro' ? (
+              <span className="text-center py-1.5 rounded-lg bg-emerald-50 text-[11px] font-bold text-emerald-700 border border-emerald-200">Current Plan</span>
+            ) : (
+              <Link href="/pricing" className="text-center py-1.5 rounded-lg bg-[#14151A] text-white text-[11px] font-bold hover:bg-black transition-all">Switch to Pro ($3/mo)</Link>
+            )}
+          </div>
+
+          {/* Max */}
+          <div className="rounded-xl border-2 border-[#E84C2B] bg-white p-4 space-y-3 flex flex-col justify-between relative shadow-xs">
+            <div className="absolute -top-2.5 right-3 bg-[#E84C2B] text-white text-[9px] font-mono font-bold px-2 py-0.2 rounded-full uppercase">Most Popular</div>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#14151A]">Max Studio</span>
+                <span className="font-mono text-xs font-bold text-[#E84C2B]">$10 / mo</span>
+              </div>
+              <p className="text-[11px] text-[#52545E]">500 mins/mo &bull; AI B-Roll (V2) &bull; 5 Brand Templates &bull; Priority Queue</p>
+            </div>
+            {currentPlan === 'max' ? (
+              <span className="text-center py-1.5 rounded-lg bg-emerald-50 text-[11px] font-bold text-emerald-700 border border-emerald-200">Current Plan</span>
+            ) : (
+              <Link href="/pricing" className="text-center py-1.5 rounded-lg bg-[#E84C2B] text-white text-[11px] font-bold hover:bg-[#D13B1C] transition-all">Upgrade to Max ($10/mo)</Link>
+            )}
+          </div>
+
+          {/* Business */}
+          <div className="rounded-xl border border-[#2A2C38] bg-[#121318] p-4 space-y-3 flex flex-col justify-between text-white shadow-xs">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-white">Business</span>
+                <span className="font-mono text-xs font-bold text-zinc-300">Custom</span>
+              </div>
+              <p className="text-[11px] text-zinc-400">Custom volume &bull; 4K exports &bull; DaVinci XML &bull; Dedicated SLA</p>
+            </div>
+            <button type="button" onClick={() => setIsContactModalOpen(true)} className="text-center py-1.5 rounded-lg bg-white text-[#14151A] text-[11px] font-bold hover:bg-[#FAF9F5] transition-all cursor-pointer">Contact Sales</button>
           </div>
         </div>
       </section>
@@ -694,6 +764,11 @@ export default function WorkspaceAndBillingPage(): JSX.Element {
           </div>
         </div>
       </section>
+
+      <BusinessContactModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+      />
     </div>
   );
 }

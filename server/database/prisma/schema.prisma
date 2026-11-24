@@ -11,6 +11,7 @@ enum PlanTier {
   FREE
   STARTER
   PRO
+  MAX
   BUSINESS
 }
 
@@ -253,4 +254,16 @@ model WebhookEvent {
   processedAt DateTime @default(now())
 
   @@map("webhook_events")
+}
+
+model BusinessInquiry {
+  id                 String   @id @default(uuid())
+  name               String
+  email              String
+  companyOrChannel   String
+  monthlyVideoVolume String
+  message            String
+  createdAt          DateTime @default(now())
+
+  @@map("business_inquiries")
 }
