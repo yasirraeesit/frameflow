@@ -113,52 +113,52 @@ export default function DashboardPage(): JSX.Element {
     highlightWord: string;
     styleSnippet: string;
   }[] = [
-    {
-      id: 'Hormozi Pop',
-      name: 'Hormozi Pop',
-      description: 'Bold kinetic pop with high-energy yellow/red keyword highlights.',
-      previewBg: 'bg-[#0E0F14]',
-      previewText: 'THIS CHANGES',
-      highlightWord: 'EVERYTHING',
-      styleSnippet: 'text-amber-400 font-black tracking-tight uppercase drop-shadow-[0_2px_10px_rgba(245,158,11,0.5)]',
-    },
-    {
-      id: 'Vice Neon',
-      name: 'Vice Neon',
-      description: 'Electrifying Vice City cyan & hot magenta glow engineered for GTA 6 and high-energy gaming.',
-      previewBg: 'bg-[#090514]',
-      previewText: '5-STAR CHASE',
-      highlightWord: 'ESCAPED',
-      styleSnippet: 'text-[#00F0FF] font-black tracking-tight uppercase drop-shadow-[0_0_12px_rgba(0,240,255,0.85)]',
-    },
-    {
-      id: 'Karaoke Glow',
-      name: 'Karaoke Glow',
-      description: 'Synchronized neon box highlight that follows spoken words.',
-      previewBg: 'bg-[#0C0C10]',
-      previewText: 'SCALE TO',
-      highlightWord: '$10M ARR',
-      styleSnippet: 'text-emerald-400 bg-emerald-500/20 px-1 rounded font-bold uppercase',
-    },
-    {
-      id: 'Clean Cinema',
-      name: 'Clean Cinema',
-      description: 'Editorial sans with balanced drop shadow for documentaries and essays.',
-      previewBg: 'bg-[#121318]',
-      previewText: 'Silicon physics at',
-      highlightWord: 'planetary scale',
-      styleSnippet: 'text-white font-medium italic underline decoration-coral decoration-[#E84C2B]/60 underline-offset-2',
-    },
-    {
-      id: 'Minimal Top',
-      name: 'Minimal Top',
-      description: 'Top-anchored caption pill preserving unobstructed lower footage.',
-      previewBg: 'bg-[#0F1015]',
-      previewText: 'FOUNDER LESSON:',
-      highlightWord: 'DAY ONE PRICING',
-      styleSnippet: 'text-zinc-200 font-mono text-[10px] tracking-wide',
-    },
-  ];
+      {
+        id: 'Hormozi Pop',
+        name: 'Hormozi Pop',
+        description: 'Bold kinetic pop with high-energy yellow/red keyword highlights.',
+        previewBg: 'bg-[#0E0F14]',
+        previewText: 'THIS CHANGES',
+        highlightWord: 'EVERYTHING',
+        styleSnippet: 'text-amber-400 font-black tracking-tight uppercase drop-shadow-[0_2px_10px_rgba(245,158,11,0.5)]',
+      },
+      {
+        id: 'Vice Neon',
+        name: 'Vice Neon',
+        description: 'Electrifying Vice City cyan & hot magenta glow engineered for GTA 6 and high-energy gaming.',
+        previewBg: 'bg-[#090514]',
+        previewText: '5-STAR CHASE',
+        highlightWord: 'ESCAPED',
+        styleSnippet: 'text-[#00F0FF] font-black tracking-tight uppercase drop-shadow-[0_0_12px_rgba(0,240,255,0.85)]',
+      },
+      {
+        id: 'Karaoke Glow',
+        name: 'Karaoke Glow',
+        description: 'Synchronized neon box highlight that follows spoken words.',
+        previewBg: 'bg-[#0C0C10]',
+        previewText: 'SCALE TO',
+        highlightWord: '$10M ARR',
+        styleSnippet: 'text-emerald-400 bg-emerald-500/20 px-1 rounded font-bold uppercase',
+      },
+      {
+        id: 'Clean Cinema',
+        name: 'Clean Cinema',
+        description: 'Editorial sans with balanced drop shadow for documentaries and essays.',
+        previewBg: 'bg-[#121318]',
+        previewText: 'Silicon physics at',
+        highlightWord: 'planetary scale',
+        styleSnippet: 'text-white font-medium italic underline decoration-coral decoration-[#E84C2B]/60 underline-offset-2',
+      },
+      {
+        id: 'Minimal Top',
+        name: 'Minimal Top',
+        description: 'Top-anchored caption pill preserving unobstructed lower footage.',
+        previewBg: 'bg-[#0F1015]',
+        previewText: 'FOUNDER LESSON:',
+        highlightWord: 'DAY ONE PRICING',
+        styleSnippet: 'text-zinc-200 font-mono text-[10px] tracking-wide',
+      },
+    ];
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -312,11 +312,10 @@ export default function DashboardPage(): JSX.Element {
             <button
               type="button"
               onClick={() => setInputMode('url')}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
-                inputMode === 'url'
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${inputMode === 'url'
                   ? 'bg-[#14151A] text-white shadow-sm'
                   : 'text-[#52545E] hover:text-[#14151A] hover:bg-[#FAF9F5]'
-              }`}
+                }`}
             >
               <LinkIcon className="h-3.5 w-3.5 text-[#E84C2B]" aria-hidden="true" />
               <span>Paste Video URL</span>
@@ -324,11 +323,10 @@ export default function DashboardPage(): JSX.Element {
             <button
               type="button"
               onClick={() => setInputMode('upload')}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
-                inputMode === 'upload'
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${inputMode === 'upload'
                   ? 'bg-[#14151A] text-white shadow-sm'
                   : 'text-[#52545E] hover:text-[#14151A] hover:bg-[#FAF9F5]'
-              }`}
+                }`}
             >
               <UploadCloud className="h-3.5 w-3.5 text-[#10B981]" aria-hidden="true" />
               <span>Upload Video File</span>
@@ -373,11 +371,10 @@ export default function DashboardPage(): JSX.Element {
                 e.preventDefault();
                 setIsDragging(false);
               }}
-              className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-all ${
-                isDragging
+              className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-all ${isDragging
                   ? 'border-[#E84C2B] bg-[#FAF3EE]'
                   : 'border-[#DCDAD2] bg-[#FAF9F5] hover:border-[#BDBBAF]'
-              }`}
+                }`}
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white border border-[#E6E4DD] text-[#E84C2B] mb-3 shadow-sm">
                 <UploadCloud className="h-6 w-6" aria-hidden="true" />
@@ -406,11 +403,10 @@ export default function DashboardPage(): JSX.Element {
                 <button
                   type="button"
                   onClick={() => setContentMode('talking_head')}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    contentMode === 'talking_head'
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${contentMode === 'talking_head'
                       ? 'bg-white text-[#14151A] shadow-xs border border-[#E6E4DD]'
                       : 'text-[#6E717D] hover:text-[#14151A]'
-                  }`}
+                    }`}
                 >
                   <Radio className="h-3.5 w-3.5 text-[#E84C2B]" />
                   <span>Podcast / Talking Head</span>
@@ -422,11 +418,10 @@ export default function DashboardPage(): JSX.Element {
                     setSelectedCaption('Vice Neon');
                     setLayoutMode('gameplay_cam');
                   }}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    contentMode === 'gaming'
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${contentMode === 'gaming'
                       ? 'bg-[#121318] text-[#00F0FF] shadow-xs border border-[#2A2C38]'
                       : 'text-[#6E717D] hover:text-[#14151A]'
-                  }`}
+                    }`}
                 >
                   <Gamepad2 className="h-3.5 w-3.5 text-[#FF007F]" />
                   <span>Gaming & GTA 6</span>
@@ -463,11 +458,10 @@ export default function DashboardPage(): JSX.Element {
                           setFocusPrompt(chip.prompt);
                           setLayoutMode('gameplay_cam');
                         }}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer flex items-center gap-1.5 ${
-                          isSelected
+                        className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer flex items-center gap-1.5 ${isSelected
                             ? 'bg-[#E84C2B] text-white border-[#E84C2B] shadow-sm'
                             : 'bg-[#1C1E26] text-zinc-200 border-[#2A2C38] hover:border-[#00F0FF] hover:text-[#00F0FF]'
-                        }`}
+                          }`}
                       >
                         {isSelected && <Check className="h-3 w-3" />}
                         <span>{chip.label}</span>
@@ -497,11 +491,10 @@ export default function DashboardPage(): JSX.Element {
               <button
                 type="button"
                 onClick={() => setSourceType('original')}
-                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
-                  sourceType === 'original'
+                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${sourceType === 'original'
                     ? 'border-[#E84C2B] bg-[#FAF3EE] shadow-2xs'
                     : 'border-[#E6E4DD] bg-white hover:border-[#14151A]'
-                }`}
+                  }`}
               >
                 <div className={`mt-0.5 p-1.5 rounded-lg shrink-0 ${sourceType === 'original' ? 'bg-[#E84C2B] text-white' : 'bg-[#F5F4EE] text-[#52545E]'}`}>
                   <CheckCircle2 className="h-4 w-4" />
@@ -520,11 +513,10 @@ export default function DashboardPage(): JSX.Element {
               <button
                 type="button"
                 onClick={() => setSourceType('commentary')}
-                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
-                  sourceType === 'commentary'
+                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${sourceType === 'commentary'
                     ? 'border-[#E84C2B] bg-[#FAF3EE] shadow-2xs'
                     : 'border-[#E6E4DD] bg-white hover:border-[#14151A]'
-                }`}
+                  }`}
               >
                 <div className={`mt-0.5 p-1.5 rounded-lg shrink-0 ${sourceType === 'commentary' ? 'bg-[#E84C2B] text-white' : 'bg-[#F5F4EE] text-[#52545E]'}`}>
                   <Sparkles className="h-4 w-4" />
@@ -614,11 +606,10 @@ export default function DashboardPage(): JSX.Element {
                     key={opt}
                     type="button"
                     onClick={() => setSelectedLength(opt)}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all text-center border cursor-pointer ${
-                      selectedLength === opt
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all text-center border cursor-pointer ${selectedLength === opt
                         ? 'bg-[#14151A] text-white border-[#14151A] shadow-sm'
                         : 'bg-white text-[#52545E] border-[#E6E4DD] hover:border-[#DCDAD2] hover:text-[#14151A]'
-                    }`}
+                      }`}
                   >
                     {opt}
                   </button>
@@ -643,11 +634,10 @@ export default function DashboardPage(): JSX.Element {
                       key={template.id}
                       type="button"
                       onClick={() => setSelectedCaption(template.id)}
-                      className={`relative flex flex-col rounded-2xl border text-left p-3 transition-all cursor-pointer ${
-                        isSelected
+                      className={`relative flex flex-col rounded-2xl border text-left p-3 transition-all cursor-pointer ${isSelected
                           ? 'border-[#E84C2B] ring-2 ring-[#E84C2B]/20 bg-white shadow-sm'
                           : 'border-[#E6E4DD] bg-white hover:border-[#DCDAD2]'
-                      }`}
+                        }`}
                     >
                       {/* Active Indicator Checkmark */}
                       {isSelected && (
