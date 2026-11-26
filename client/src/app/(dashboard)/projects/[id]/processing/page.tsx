@@ -62,11 +62,23 @@ const PIPELINE_STAGES: PipelineStage[] = [
   },
 ];
 
+interface ProjectDetails {
+  id: string;
+  title: string;
+  status: 'QUEUED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  durationSeconds?: number | null;
+  sourceUrl?: string | null;
+  sourceKey?: string | null;
+  progressPercent?: number;
+  errorMessage?: string | null;
+}
+
 export default function ProcessingPage(): JSX.Element {
   const params = useParams();
   const router = useRouter();
   const projectId = (params?.id as string) || 'demo-1';
 
+  const [project, setProject] = useState<ProjectDetails | null>(null);
   const [progress, setProgress] = useState<number>(projectId === 'demo-1' ? 58 : 10);
   const [notifyByEmail, setNotifyByEmail] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -96,6 +108,7 @@ export default function ProcessingPage(): JSX.Element {
           const data = await res.json();
           const p = data.project;
           if (p) {
+            setProject(p);
             if (p.progressPercent !== undefined) {
               setProgress(p.progressPercent);
             }
@@ -107,7 +120,9 @@ export default function ProcessingPage(): JSX.Element {
                 }
               }, 600);
             } else if (p.status === 'FAILED') {
-              setErrorMessage(p.errorMessage || 'AI pipeline encountered an error. Deducted credits were automatically refunded.');
+              setErrorMessage(
+                p.errorMessage || 'AI pipeline encountered an error. Deducted credits were automatically refunded.'
+              );
             }
           }
         }
@@ -124,8 +139,45 @@ export default function ProcessingPage(): JSX.Element {
     };
   }, [projectId, router]);
 
+  const isFailed = project?.status === 'FAILED' || Boolean(errorMessage);
+
   // Compute remaining seconds based on progress
   const secondsRemaining = Math.max(5, Math.round(((100 - progress) / 100) * 80));
+
+  // Dynamic Video Details
+  const getThumbnailUrl = (): string | null => {
+    if (!project?.sourceUrl) return null;
+    const match = project.sourceUrl.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([a-zA-Z0-9_-]{11})/);
+    return match ? `https://i.ytimg.com/vi/${match[1]}/hqdefault.jpg` : null;
+  };
+
+  const formatDuration = (totalSec?: number | null): string => {
+    if (!totalSec) return 'Processing...';
+    const mins = Math.floor(totalSec / 60);
+    const secs = Math.round(totalSec % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  const displayTitle =
+    project?.title ||
+    (projectId === 'demo-1'
+      ? 'Building a $10M SaaS Without VC Funding — Founder Podcast'
+      : 'Analyzing Source Video...');
+  const displayDuration = formatDuration(
+    project?.durationSeconds !== undefined ? project.durationSeconds : projectId === 'demo-1' ? 3494 : null
+  );
+  const isYouTube = Boolean(project?.sourceUrl?.includes('youtu'));
+  const displaySource = isYouTube ? 'YouTube Source' : project?.sourceKey ? 'MP4 Upload' : 'Video Ingest';
+  const thumbnailUrl =
+    getThumbnailUrl() ||
+    (projectId === 'demo-1'
+      ? 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=400&q=80'
+      : null);
+  const creditsUsed = project?.durationSeconds
+    ? Math.max(1, Math.ceil(project.durationSeconds / 60))
+    : projectId === 'demo-1'
+      ? 58
+      : 5;
 
   return (
     <div className="bg-[#FAF9F5] min-h-[calc(100vh-3.5rem)] flex flex-col justify-center py-10 px-4 text-[#14151A] select-none antialiased">
@@ -162,29 +214,40 @@ export default function ProcessingPage(): JSX.Element {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-[#E6E4DD] bg-[#FAF9F5]/70">
           <div className="flex items-center gap-3 min-w-0">
             {/* Thumbnail */}
-            <div className="relative h-12 w-16 rounded-lg bg-cover bg-center shrink-0 border border-[#E6E4DD] overflow-hidden"
-              style={{
-                backgroundImage:
-                  'url(https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=400&q=80)',
-              }}
+            <div
+              className="relative h-12 w-16 rounded-lg bg-cover bg-center shrink-0 border border-[#E6E4DD] overflow-hidden bg-[#14151A]"
+              style={
+                thumbnailUrl
+                  ? { backgroundImage: `url(${thumbnailUrl})` }
+                  : undefined
+              }
             >
-              <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                <Play className="h-3.5 w-3.5 text-white fill-white/80" />
-              </div>
-              <div className="absolute bottom-0.5 right-0.5 bg-black/80 text-[8px] font-mono text-white px-1 rounded">
-                58:14
-              </div>
+              {!thumbnailUrl && (
+                <div className="absolute inset-0 flex items-center justify-center text-white/50">
+                  <Film className="h-5 w-5" />
+                </div>
+              )}
+              {thumbnailUrl && (
+                <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                  <Play className="h-3.5 w-3.5 text-white fill-white/80" />
+                </div>
+              )}
+              {project?.durationSeconds ? (
+                <div className="absolute bottom-0.5 right-0.5 bg-black/80 text-[8px] font-mono text-white px-1 rounded">
+                  {displayDuration}
+                </div>
+              ) : null}
             </div>
 
             {/* Video Meta */}
             <div className="truncate">
-              <h3 className="text-xs font-bold text-[#14151A] truncate max-w-[320px] sm:max-w-[380px]">
-                Building a $10M SaaS Without VC Funding — Founder Podcast
+              <h3 className="text-xs font-bold text-[#14151A] truncate max-w-[320px] sm:max-w-[380px]" title={displayTitle}>
+                {displayTitle}
               </h3>
               <p className="text-[11px] text-[#52545E] flex items-center gap-2 mt-0.5">
-                <span>Duration: 58:14</span>
+                <span>Duration: {displayDuration}</span>
                 <span>&bull;</span>
-                <span>Source: YouTube 4K</span>
+                <span>{displaySource}</span>
               </p>
             </div>
           </div>
@@ -192,38 +255,60 @@ export default function ProcessingPage(): JSX.Element {
           {/* Credits Used Badge */}
           <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-[#FFF8F6] text-[#E84C2B] border border-[#E84C2B]/25 font-mono font-bold text-xs px-3 py-1 shadow-2xs">
             <Coins className="h-3 w-3" />
-            <span>58 credits used</span>
+            <span>{isFailed ? 'Credits Refunded' : `${creditsUsed} credits used`}</span>
           </span>
         </div>
 
         {/* Progress Header & Animated Bar */}
         <div className="space-y-2.5">
           <div className="flex items-center justify-between text-xs">
-            <div className="space-y-0.5">
-              <span className="text-xs font-mono uppercase tracking-wider text-[#E84C2B] font-bold flex items-center gap-1.5">
-                <Zap className="h-3.5 w-3.5 animate-pulse" />
-                <span>AI Processing In Progress</span>
-              </span>
-              <p className="text-xs text-[#52545E]">
-                Extracting high-retention shorts with AI Virality Scoring
-              </p>
-            </div>
+            {isFailed ? (
+              <div className="space-y-0.5">
+                <span className="text-xs font-mono uppercase tracking-wider text-red-600 font-bold flex items-center gap-1.5">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  <span>Processing Halted & Refunded</span>
+                </span>
+                <p className="text-xs text-[#52545E]">
+                  Credits were restored. Check the reason above or upload an MP4 directly.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-0.5">
+                <span className="text-xs font-mono uppercase tracking-wider text-[#E84C2B] font-bold flex items-center gap-1.5">
+                  <Zap className="h-3.5 w-3.5 animate-pulse" />
+                  <span>AI Processing In Progress</span>
+                </span>
+                <p className="text-xs text-[#52545E]">
+                  Extracting high-retention shorts with AI Virality Scoring
+                </p>
+              </div>
+            )}
 
             <div className="text-right">
-              <span className="text-2xl font-black font-mono text-[#14151A] tabular-nums">
-                {progress}%
-              </span>
-              <div className="text-[10px] font-mono text-[#8C8E9A]">
-                ~{secondsRemaining}s remaining
-              </div>
+              {isFailed ? (
+                <span className="text-xs font-bold font-mono text-red-700 bg-red-100 border border-red-200 px-2.5 py-1 rounded-md">
+                  FAILED
+                </span>
+              ) : (
+                <>
+                  <span className="text-2xl font-black font-mono text-[#14151A] tabular-nums">
+                    {progress}%
+                  </span>
+                  <div className="text-[10px] font-mono text-[#8C8E9A]">
+                    ~{secondsRemaining}s remaining
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Cinema Coral Progress Bar */}
+          {/* Progress Bar */}
           <div className="w-full bg-[#FAF9F5] rounded-full h-3 overflow-hidden border border-[#E6E4DD] p-0.5">
             <div
-              className="bg-[#E84C2B] h-full rounded-full transition-all duration-300 ease-out shadow-xs"
-              style={{ width: `${progress}%` }}
+              className={`h-full rounded-full transition-all duration-300 ease-out shadow-xs ${
+                isFailed ? 'bg-red-400' : 'bg-[#E84C2B]'
+              }`}
+              style={{ width: `${isFailed ? 100 : progress}%` }}
             />
           </div>
         </div>
@@ -236,25 +321,32 @@ export default function ProcessingPage(): JSX.Element {
 
           <div className="space-y-2">
             {PIPELINE_STAGES.map((stage) => {
-              const isCompleted = progress >= stage.endProgress;
+              const isCompleted = progress >= stage.endProgress && !isFailed;
               const isActive = progress >= stage.startProgress && progress < stage.endProgress;
-              const isQueued = progress < stage.startProgress;
+              const isCurrentFailed = isFailed && isActive;
 
               return (
                 <div
                   key={stage.id}
-                  className={`p-3.5 rounded-xl border transition-all flex items-start gap-3.5 ${isActive
-                      ? 'border-[#E84C2B] bg-[#FAF3EE] shadow-2xs'
-                      : isCompleted
-                        ? 'border-emerald-200/80 bg-emerald-50/50'
-                        : 'border-[#E6E4DD] bg-[#FAF9F5] opacity-60'
-                    }`}
+                  className={`p-3.5 rounded-xl border transition-all flex items-start gap-3.5 ${
+                    isCurrentFailed
+                      ? 'border-red-300 bg-red-50/60 shadow-2xs'
+                      : isActive
+                        ? 'border-[#E84C2B] bg-[#FAF3EE] shadow-2xs'
+                        : isCompleted
+                          ? 'border-emerald-200/80 bg-emerald-50/50'
+                          : 'border-[#E6E4DD] bg-[#FAF9F5] opacity-60'
+                  }`}
                 >
                   {/* Status Indicator Icon */}
                   <div className="shrink-0 mt-0.5">
                     {isCompleted ? (
                       <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white shadow-2xs">
                         <Check className="h-3 w-3 stroke-[3]" />
+                      </div>
+                    ) : isCurrentFailed ? (
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white shadow-2xs">
+                        <AlertCircle className="h-3 w-3 stroke-[2.5]" />
                       </div>
                     ) : isActive ? (
                       <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E84C2B] text-white shadow-2xs">
@@ -271,20 +363,36 @@ export default function ProcessingPage(): JSX.Element {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <h4
-                        className={`text-xs font-bold ${isActive ? 'text-[#E84C2B]' : isCompleted ? 'text-[#14151A]' : 'text-[#8C8E9A]'
-                          }`}
+                        className={`text-xs font-bold ${
+                          isCurrentFailed
+                            ? 'text-red-800'
+                            : isActive
+                              ? 'text-[#E84C2B]'
+                              : isCompleted
+                                ? 'text-[#14151A]'
+                                : 'text-[#8C8E9A]'
+                        }`}
                       >
                         {stage.label}
                       </h4>
                       <span
-                        className={`text-[10px] font-mono uppercase font-bold px-1.5 py-0.2 rounded ${isCompleted
+                        className={`text-[10px] font-mono uppercase font-bold px-1.5 py-0.2 rounded ${
+                          isCompleted
                             ? 'text-emerald-700 bg-emerald-100/70'
-                            : isActive
-                              ? 'text-[#E84C2B] bg-white border border-[#E84C2B]/30'
-                              : 'text-[#8C8E9A]'
-                          }`}
+                            : isCurrentFailed
+                              ? 'text-red-700 bg-red-100 border border-red-300'
+                              : isActive
+                                ? 'text-[#E84C2B] bg-white border border-[#E84C2B]/30'
+                                : 'text-[#8C8E9A]'
+                        }`}
                       >
-                        {isCompleted ? 'Completed' : isActive ? 'Processing' : 'Queued'}
+                        {isCompleted
+                          ? 'Completed'
+                          : isCurrentFailed
+                            ? 'Failed'
+                            : isActive
+                              ? 'Processing'
+                              : 'Queued'}
                       </span>
                     </div>
                     <p className="text-[11px] text-[#52545E] mt-0.5 leading-snug">
@@ -319,14 +427,24 @@ export default function ProcessingPage(): JSX.Element {
             </span>
           </div>
 
-          {/* Jump to Results Button */}
-          <Link
-            href={`/projects/${projectId}`}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white py-3 px-4 text-xs sm:text-sm font-bold transition-all shadow-md active:scale-[0.98]"
-          >
-            <span>{progress >= 100 ? 'View Generated Shorts Now' : 'Skip & View Generated Shorts Now'}</span>
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          {/* Jump to Results or Dashboard Button */}
+          {isFailed ? (
+            <Link
+              href="/dashboard"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#14151A] hover:bg-black text-white py-3 px-4 text-xs sm:text-sm font-bold transition-all shadow-md active:scale-[0.98]"
+            >
+              <span>Return to Dashboard</span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : (
+            <Link
+              href={`/projects/${projectId}`}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#E84C2B] hover:bg-[#D13B1C] text-white py-3 px-4 text-xs sm:text-sm font-bold transition-all shadow-md active:scale-[0.98]"
+            >
+              <span>{progress >= 100 ? 'View Generated Shorts Now' : 'Skip & View Generated Shorts Now'}</span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          )}
         </div>
       </div>
     </div>

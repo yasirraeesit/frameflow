@@ -187,7 +187,7 @@ export default function DashboardPage(): JSX.Element {
         },
         body: JSON.stringify({
           title: cleanUrl
-            ? (contentMode === 'gaming' ? `GTA 6 Gaming (${cleanUrl.slice(-11)})` : `Podcast (${cleanUrl.slice(-11)})`)
+            ? undefined
             : (contentMode === 'gaming' ? 'GTA 6 Gameplay VOD' : 'Studio Source Video'),
           youtubeUrl: cleanUrl || undefined,
           sourceType,

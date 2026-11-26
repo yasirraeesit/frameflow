@@ -35,7 +35,6 @@ export async function downloadYouTubeVideo(youtubeUrl: string, destinationPath: 
   const args = [
     '--no-playlist',
     '--no-warnings',
-    '--extractor-args', 'youtube:player_client=android,web',
     '-f', 'bv*[height<=720][ext=mp4]+ba[ext=m4a]/b[height<=720][ext=mp4]/b',
     '-o', destinationPath,
     ...cookieArgs,
@@ -53,6 +52,18 @@ export async function downloadYouTubeVideo(youtubeUrl: string, destinationPath: 
     if (errStr.includes("Sign in to confirm you're not a bot") || errStr.toLowerCase().includes('bot')) {
       throw new Error(
         "YouTube blocked cloud server download for this link. Upload the MP4 file directly in the Upload tab or configure YouTube session cookies."
+      );
+    }
+    if (
+      errStr.includes('Video unavailable') ||
+      errStr.includes('Private video') ||
+      errStr.includes('This video is not available') ||
+      errStr.includes('Failed to extract any player response') ||
+      errStr.includes('Incomplete YouTube ID') ||
+      errStr.includes('does not exist')
+    ) {
+      throw new Error(
+        "YouTube reported this video as unavailable, private, or deleted. Please check the URL or upload an MP4 directly."
       );
     }
     const msg = err instanceof Error ? err.message : String(err);

@@ -54,6 +54,29 @@ export async function inspectYouTubeVideo(url: string): Promise<YouTubePreflight
     throw err;
   }
 
+  // Fast pre-check via YouTube oEmbed API to verify public availability and fetch video title
+  let oembedTitle: string | undefined;
+  try {
+    const oembedRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`, {
+      signal: AbortSignal.timeout(6000),
+    });
+    if (oembedRes.ok) {
+      const oembedData = (await oembedRes.json()) as { title?: string; author_name?: string };
+      if (oembedData.title) {
+        oembedTitle = oembedData.title;
+      }
+    } else if (oembedRes.status === 400 || oembedRes.status === 404) {
+      const unavailErr = new Error('VIDEO_UNAVAILABLE');
+      (unavailErr as unknown as { userMessage: string }).userMessage =
+        'This YouTube video is unavailable, private, or deleted. Please check the URL or upload an MP4 directly.';
+      throw unavailErr;
+    }
+  } catch (oembedErr: unknown) {
+    if (oembedErr instanceof Error && 'userMessage' in oembedErr) {
+      throw oembedErr;
+    }
+  }
+
   const cookieArgs: string[] = [];
   const b64 = process.env.YT_DLP_COOKIES_BASE64?.trim();
   if (b64) {
@@ -75,8 +98,6 @@ export async function inspectYouTubeVideo(url: string): Promise<YouTubePreflight
         '--no-playlist',
         '--skip-download',
         '--no-warnings',
-        '--extractor-args',
-        'youtube:player_client=android,web',
         ...cookieArgs,
         url,
       ],
@@ -106,7 +127,7 @@ export async function inspectYouTubeVideo(url: string): Promise<YouTubePreflight
 
     return {
       durationSec: Math.max(10, Math.round(duration)),
-      title: data.title,
+      title: data.title || oembedTitle,
       isLive: false,
     };
   } catch (err: unknown) {
@@ -115,7 +136,8 @@ export async function inspectYouTubeVideo(url: string): Promise<YouTubePreflight
       ('userMessage' in err ||
         err.message === 'LIVE_STREAM_NOT_SUPPORTED' ||
         err.message === 'VIDEO_TOO_LONG' ||
-        err.message === 'INVALID_YOUTUBE_URL')
+        err.message === 'INVALID_YOUTUBE_URL' ||
+        err.message === 'VIDEO_UNAVAILABLE')
     ) {
       throw err;
     }
@@ -123,7 +145,7 @@ export async function inspectYouTubeVideo(url: string): Promise<YouTubePreflight
     const isMissingBinary = (err as { code?: string })?.code === 'ENOENT';
     if (isMissingBinary) {
       console.warn('[ProjectsService] yt-dlp not found on system PATH. Proceeding with URL regex validation.');
-      return { durationSec: 300, isLive: false };
+      return { durationSec: 300, title: oembedTitle, isLive: false };
     }
 
     const errStr = String(err);
@@ -139,21 +161,26 @@ export async function inspectYouTubeVideo(url: string): Promise<YouTubePreflight
       errStr.includes('Private video') ||
       errStr.includes('Sign in') ||
       errStr.includes('copyright') ||
-      errStr.includes('This video is not available')
+      errStr.includes('This video is not available') ||
+      errStr.includes('Failed to extract any player response') ||
+      errStr.includes('Incomplete YouTube ID') ||
+      errStr.includes('is not a valid URL') ||
+      errStr.includes('does not exist') ||
+      errStr.includes('404')
     ) {
       const unavailableErr = new Error('VIDEO_UNAVAILABLE');
       (unavailableErr as unknown as { userMessage: string }).userMessage =
-        'Video is private, unavailable, or restricted';
+        'This YouTube video is unavailable, private, or deleted. Please check the URL or upload an MP4 directly.';
       throw unavailableErr;
     }
 
     if ((err as { killed?: boolean })?.killed) {
       console.warn('[ProjectsService] yt-dlp inspection timed out after 20s. Proceeding with fallback duration.');
-      return { durationSec: 300, isLive: false };
+      return { durationSec: 300, title: oembedTitle, isLive: false };
     }
 
     console.warn('[ProjectsService] yt-dlp inspection warning:', err);
-    return { durationSec: 300, isLive: false };
+    return { durationSec: 300, title: oembedTitle, isLive: false };
   }
 }
 
@@ -183,7 +210,13 @@ export class ProjectsService {
     if (input.youtubeUrl) {
       const preflight = await inspectYouTubeVideo(input.youtubeUrl);
       durationSec = preflight.durationSec;
-      if (preflight.title && (!videoTitle || videoTitle === 'Untitled Project')) {
+      if (
+        preflight.title &&
+        (!videoTitle ||
+          videoTitle === 'Untitled Project' ||
+          videoTitle.startsWith('Podcast (') ||
+          videoTitle.startsWith('GTA 6 Gaming ('))
+      ) {
         videoTitle = preflight.title;
       }
     }

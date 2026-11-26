@@ -81,6 +81,8 @@ export default function ProjectShortsFeedPage(): JSX.Element {
   const [projectStatus, setProjectStatus] = useState<string>('COMPLETED');
   const [projectError, setProjectError] = useState<string | null>(null);
   const [projectSourceUrl, setProjectSourceUrl] = useState<string>('');
+  const [realTitle, setRealTitle] = useState<string | null>(null);
+  const [realDurationSec, setRealDurationSec] = useState<number | null>(null);
 
   // Video playback preview state
   const [playingClipId, setPlayingClipId] = useState<string | null>(null);
@@ -127,11 +129,13 @@ export default function ProjectShortsFeedPage(): JSX.Element {
     // 1. Fetch Project Details (for status/error)
     apiFetch(`/api/projects/${projectId}`)
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: { project?: { status?: string; errorMessage?: string; sourceUrl?: string } } | null) => {
+      .then((data: { project?: { status?: string; errorMessage?: string; sourceUrl?: string; title?: string; durationSeconds?: number | null } } | null) => {
         if (data?.project) {
           if (data.project.status) setProjectStatus(data.project.status);
           if (data.project.errorMessage) setProjectError(data.project.errorMessage);
           if (data.project.sourceUrl) setProjectSourceUrl(data.project.sourceUrl);
+          if (data.project.title) setRealTitle(data.project.title);
+          if (typeof data.project.durationSeconds === 'number') setRealDurationSec(data.project.durationSeconds);
         }
       })
       .catch((err) => console.warn('Failed to fetch project info:', err));
@@ -313,12 +317,23 @@ export default function ProjectShortsFeedPage(): JSX.Element {
               </span>
               <span className="text-[#8C8E9A]">•</span>
               <span className="text-[#52545E] font-medium">{project.channelName}</span>
-              <span className="text-[#8C8E9A]">•</span>
-              <span className="text-[#52545E] font-mono tabular-nums">Source: 58m 14s</span>
+              {realDurationSec ? (
+                <>
+                  <span className="text-[#8C8E9A]">•</span>
+                  <span className="text-[#52545E] font-mono tabular-nums">
+                    Source: {Math.floor(realDurationSec / 60)}m {Math.round(realDurationSec % 60)}s
+                  </span>
+                </>
+              ) : isDemo ? (
+                <>
+                  <span className="text-[#8C8E9A]">•</span>
+                  <span className="text-[#52545E] font-mono tabular-nums">Source: 58m 14s</span>
+                </>
+              ) : null}
             </div>
 
             <h1 className="text-2xl font-bold tracking-tight text-[#14151A]">
-              {project.title}
+              {realTitle || project.title}
             </h1>
             <p className="text-xs text-[#52545E] max-w-3xl line-clamp-1">
               {project.description}
